@@ -14,8 +14,8 @@ import {
   useElementDrag,
   useElementZoom,
   useStore,
-} from '@epic-designer/hooks';
-import { debounce } from '@epic-designer/utils';
+} from '@ies/hooks';
+import { debounce } from '@ies/utils';
 import { useElementSize, useResizeObserver, watchOnce } from '@vueuse/core';
 
 import Toolbar from './toolbar.vue';

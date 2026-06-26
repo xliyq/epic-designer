@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import type { ComponentSchema } from '@epic-designer/types';
+import type { ComponentSchema } from '@ies/types';
 
 import { inject } from 'vue';
 
-import { useEventBus } from '@epic-designer/hooks';
+import { useEventBus } from '@ies/hooks';
 import { Input } from 'ant-design-vue';
 
 const props = withDefaults(

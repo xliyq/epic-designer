@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import type { EventModel } from '@epic-designer/types';
+import type { EventModel } from '@ies/types';
 
 import { computed } from 'vue';
 
-import { useDesignerContext } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
-import { getValueByPath, setValueByPath } from '@epic-designer/utils';
+import { useDesignerContext } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
+import { getValueByPath, setValueByPath } from '@ies/utils';
 
 const designer = useDesignerContext();
 const revoke = designer.revoke;

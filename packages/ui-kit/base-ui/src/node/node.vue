@@ -3,7 +3,7 @@ import type {
   ComponentSchema,
   EpNodeInstance,
   FieldStateType,
-} from '@epic-designer/types';
+} from '@ies/types';
 
 import type { AsyncComponentLoader } from 'vue';
 
@@ -31,8 +31,8 @@ import {
   useFieldPathPrefix,
   useFormItem,
   usePageManager,
-} from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
+} from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
 import {
   capitalizeFirstLetter,
   deepClone,
@@ -40,7 +40,7 @@ import {
   deepEqual,
   getValueByPath,
   setValueByPath,
-} from '@epic-designer/utils';
+} from '@ies/utils';
 
 import dynamicFormItem from './dynamicFormItem.vue';
 

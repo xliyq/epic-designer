@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import type { PageSchema } from '@epic-designer/types';
+import type { PageSchema } from '@ies/types';
 
 import { onMounted, ref } from 'vue';
 
-import { EDesigner } from '@epic-designer/core';
+import { EDesigner } from '@ies/core';
 
 const designerRef = ref<InstanceType<typeof EDesigner>>();
 

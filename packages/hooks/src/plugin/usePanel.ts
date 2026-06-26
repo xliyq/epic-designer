@@ -2,13 +2,13 @@ import type {
   ActivitybarModel,
   RightSidebarModel,
   ViewsContainersModel,
-} from '@epic-designer/types';
+} from '@ies/types';
 
 import type { AsyncComponentLoader } from 'vue';
 
 import { computed, ref, shallowRef } from 'vue';
 
-import { loadAsyncComponent } from '@epic-designer/utils';
+import { loadAsyncComponent } from '@ies/utils';
 
 export type Attr = 'id' | 'title';
 

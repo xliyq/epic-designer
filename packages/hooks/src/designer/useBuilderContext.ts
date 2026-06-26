@@ -1,4 +1,4 @@
-import type { FieldStateMap } from '@epic-designer/types';
+import type { FieldStateMap } from '@ies/types';
 
 import type { ComputedRef, InjectionKey, Slots } from 'vue';
 

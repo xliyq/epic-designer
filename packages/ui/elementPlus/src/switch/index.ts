@@ -1,4 +1,4 @@
-import type { ComponentConfigModel } from '@epic-designer/types';
+import type { ComponentConfigModel } from '@ies/types';
 
 export default {
   component: async () => (await import('element-plus')).ElSwitch,

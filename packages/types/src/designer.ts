@@ -1,4 +1,4 @@
-import { PageSchema } from '@epic-designer/types';
+import { PageSchema } from '@ies/types';
 
 export interface TableColumn {
   columnName: string;

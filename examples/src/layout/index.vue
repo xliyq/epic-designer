@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useTheme } from '@epic-designer/hooks';
+import { useTheme } from '@ies/hooks';
 import {
   ConfigProvider,
   Layout,

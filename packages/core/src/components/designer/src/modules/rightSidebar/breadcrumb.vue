@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import type { ComponentSchema } from '@epic-designer/types';
+import type { ComponentSchema } from '@ies/types';
 
-import { EpicIcon } from '@epic-designer/base-ui';
-import { useDesignerContext } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
+import { EpicIcon } from '@ies/base-ui';
+import { useDesignerContext } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
 
 const designer = useDesignerContext();
 /**

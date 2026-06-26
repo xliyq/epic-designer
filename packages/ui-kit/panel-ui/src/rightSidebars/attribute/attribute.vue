@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { computed, watchEffect } from 'vue';
 
-import { EpicIcon } from '@epic-designer/base-ui';
-import { useDesignerContext, useTableMeta } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
+import { EpicIcon } from '@ies/base-ui';
+import { useDesignerContext, useTableMeta } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
 import { useClipboard } from '@vueuse/core';
 
 import EAttributeItem from './modules/attributeItem.vue';

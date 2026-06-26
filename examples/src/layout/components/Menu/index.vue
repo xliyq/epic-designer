@@ -24,7 +24,7 @@ const openKeys = computed(() => {
 
 // 修改后的递归函数用于遍历树形结构并修改数据
 function traverseRoutes(routes: RouteRecordRaw[]) {
-  return routes.map((route) => {
+  return routes.filter(item=>item?.meta?.hidden!=true).map((route) => {
     // 创建一个新的对象来存储修改后的节点信息
     const modifiedRoute: any = {
       key: route.name,

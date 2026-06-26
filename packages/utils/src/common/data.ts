@@ -1,8 +1,8 @@
-import type { ComponentSchema, PageSchema } from '@epic-designer/types';
+import type { ComponentSchema, PageSchema } from '@ies/types';
 
 import { isProxy, isRef, toRaw } from 'vue';
 
-import { pluginManager } from '@epic-designer/manager';
+import { pluginManager } from '@ies/manager';
 
 import { getUUID } from './string';
 

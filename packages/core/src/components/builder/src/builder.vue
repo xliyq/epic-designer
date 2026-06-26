@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import type { PageManager } from '@epic-designer/manager';
+import type { PageManager } from '@ies/manager';
 import type {
   EpNodeInstance,
   FieldStates,
   FormDataModel,
   PageSchema,
-} from '@epic-designer/types';
+} from '@ies/types';
 
 import {
   computed,
@@ -16,7 +16,7 @@ import {
   watch,
 } from 'vue';
 
-import { EpBaseLoader, EpicNode } from '@epic-designer/base-ui';
+import { EpBaseLoader, EpicNode } from '@ies/base-ui';
 import {
   BUILDER_KEY,
   createEventBus,
@@ -24,16 +24,16 @@ import {
   provideBuilderDisabled,
   provideBuilderReadonly,
   providePageManager,
-} from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
-import { setupPage } from '@epic-designer/panel-ui';
+} from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
+import { setupPage } from '@ies/panel-ui';
 import {
   deepClone,
   deepCompareAndModify,
   findSchemas,
   migrateComponentProps,
   reorganizeSchemasForTableView,
-} from '@epic-designer/utils';
+} from '@ies/utils';
 
 import { useBuilder } from '../hooks/useBuilder';
 

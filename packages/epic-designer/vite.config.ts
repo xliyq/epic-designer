@@ -26,7 +26,7 @@ export default defineConfig({
       },
       formats: ['es', 'cjs'],
       // 指定组件编译入口文件
-      name: 'epic-designer',
+      name: '@ies/designer',
     },
     outDir: 'dist',
     // 库编译模式配置
@@ -70,20 +70,20 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@epic-designer/base-ui': path.resolve(
+      '@ies/base-ui': path.resolve(
         __dirname,
         '../ui-kit/base-ui/src/index',
       ),
-      '@epic-designer/core': path.resolve(__dirname, '../core/src/index'),
-      '@epic-designer/hooks': path.resolve(__dirname, '../hooks/src/index'),
-      '@epic-designer/manager': path.resolve(__dirname, '../manager/src/index'),
-      '@epic-designer/panel-ui': path.resolve(
+      '@ies/core': path.resolve(__dirname, '../core/src/index'),
+      '@ies/hooks': path.resolve(__dirname, '../hooks/src/index'),
+      '@ies/manager': path.resolve(__dirname, '../manager/src/index'),
+      '@ies/panel-ui': path.resolve(
         __dirname,
         '../ui-kit/panel-ui/src/index',
       ),
-      '@epic-designer/types': path.resolve(__dirname, '../types/src/index'),
-      // '@epic-designer/ui': path.resolve(__dirname, '../ui/'),
-      '@epic-designer/utils': path.resolve(__dirname, '../utils/src/index'),
+      '@ies/types': path.resolve(__dirname, '../types/src/index'),
+      // '@ies/ui': path.resolve(__dirname, '../ui/'),
+      '@ies/utils': path.resolve(__dirname, '../utils/src/index'),
     },
   },
 });

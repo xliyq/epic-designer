@@ -1,4 +1,4 @@
-import type { PluginManager } from '@epic-designer/manager';
+import type { PluginManager } from '@ies/manager';
 
 import { setupActivitybar } from './activitybars';
 import { setupComponent } from './components';

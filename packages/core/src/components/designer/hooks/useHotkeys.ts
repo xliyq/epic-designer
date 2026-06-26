@@ -1,9 +1,9 @@
-import type { Revoke } from '@epic-designer/manager';
-import type { DesignerState, PageSchema } from '@epic-designer/types';
+import type { Revoke } from '@ies/manager';
+import type { DesignerState, PageSchema } from '@ies/types';
 
 import { onUnmounted } from 'vue';
 
-import { useClipboard } from '@epic-designer/hooks';
+import { useClipboard } from '@ies/hooks';
 
 interface DesignerHotkeysDeps {
   emit: (event: string, ...args: any[]) => void;

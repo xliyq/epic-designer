@@ -1,4 +1,4 @@
-import type { ComponentSchema, EpNodeInstance } from '@epic-designer/types';
+import type { ComponentSchema, EpNodeInstance } from '@ies/types';
 
 import { reactive, ref, watchEffect } from 'vue';
 
@@ -6,12 +6,12 @@ import {
   useHookManager,
   useMountMonitor,
   usePageSchema,
-} from '@epic-designer/hooks';
+} from '@ies/hooks';
 import {
   findSchemas,
   FormulaEngine,
   getValueByPath,
-} from '@epic-designer/utils';
+} from '@ies/utils';
 
 import { pluginManager } from './pluginManager';
 

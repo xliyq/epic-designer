@@ -282,7 +282,7 @@ import { EBuilder } from "epic-designer";
 import { ref,onMounted } from 'vue'
 import "epic-designer/dist/style.css";
 import { EDesigner, pluginManager } from "epic-designer";
-import { setupElementPlus } from "@epic-designer/element-plus";
+import { setupElementPlus } from "@ies/element-plus";
 import 'element-plus/dist/index.css'
 setupElementPlus(pluginManager);
 const ebForm = ref(null)

@@ -9,7 +9,7 @@ import {
   useHookManager,
   usePanel,
   usePublicMethods,
-} from '@epic-designer/hooks';
+} from '@ies/hooks';
 
 export interface PluginManager {
   component: ReturnType<typeof useComponentManager> & {

@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import type { ComponentSchema } from '@epic-designer/types';
+import type { ComponentSchema } from '@ies/types';
 
 import { computed, nextTick, ref } from 'vue';
 
-import { useDesignerContext } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
-import { findSchemas } from '@epic-designer/utils';
+import { useDesignerContext } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
+import { findSchemas } from '@ies/utils';
 
 import { EBuilder } from '../../../../builder';
 

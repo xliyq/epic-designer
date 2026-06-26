@@ -1,3 +1,3 @@
-import { defineConfig } from '@epic-designer/eslint-config';
+import { defineConfig } from '@ies/eslint-config';
 
 export default defineConfig();

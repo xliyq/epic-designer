@@ -62,6 +62,14 @@ export const frameworkRoutes = [
           title: '自定义校验组件',
         },
       },
+      {
+        path: 'panel',
+        name: 'panel',
+        component: () => import('@/views/designer/panel/index.vue'),
+        meta: {
+          title: '自定义面板',
+        },
+      },
     ],
   },
   {
@@ -121,6 +129,33 @@ export const frameworkRoutes = [
         },
       },
     ],
+  },
+  {
+    component:BaseLayout,
+    meta:{
+      title:'demo',
+    },
+    name:'demo',
+    path:'/:ui/demo',
+    children:[
+      {
+        path: 'formList',
+        name: 'formList',
+        component: () => import('@/views/demo/formList.vue'),
+        meta: {
+          title: '表单列表',
+        },
+      },
+      {
+        path: 'formPreview',
+        name: 'formPreview',
+        component: () => import('@/views/demo/preview.vue'),
+        meta: {
+          title: '表单预览',
+          hidden:true
+        },
+      },
+    ]
   },
 ];
 

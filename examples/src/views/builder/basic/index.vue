@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import type { PageSchema } from '@epic-designer/types';
+import type { PageSchema } from '@ies/types';
 
 import { ref } from 'vue';
 
-import { EBuilder } from '@epic-designer/core';
-import { pluginManager } from '@epic-designer/manager';
+import { EBuilder } from '@ies/core';
+import { pluginManager } from '@ies/manager';
 
 const ebRef = ref<InstanceType<typeof EBuilder>>();
 const Button = pluginManager.component.get('button');

@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import type { ActivitybarModel } from '@epic-designer/types';
+import type { ActivitybarModel } from '@ies/types';
 
 import { computed, ref, shallowRef } from 'vue';
 
-import { EpicIcon, EpTooltip } from '@epic-designer/base-ui';
-import { pluginManager } from '@epic-designer/manager';
+import { EpicIcon, EpTooltip } from '@ies/base-ui';
+import { pluginManager } from '@ies/manager';
 
 defineOptions({
   name: 'EActivityBar',

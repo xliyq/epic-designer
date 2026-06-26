@@ -1,22 +1,22 @@
 <script lang="ts" setup>
-import type { DesignerProps, PageSchema } from '@epic-designer/types';
+import type { DesignerProps, PageSchema } from '@ies/types';
 
 import { nextTick, onUnmounted, provide, ref, watchEffect } from 'vue';
 
-import { EpDesignerLoader } from '@epic-designer/base-ui';
+import { EpDesignerLoader } from '@ies/base-ui';
 import {
   createEventBus,
   DESIGNER_CONTEXT_KEY,
   providePageManager,
   useStore,
-} from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
-import { setupPanel } from '@epic-designer/panel-ui';
+} from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
+import { setupPanel } from '@ies/panel-ui';
 import {
   deepClone,
   loadAsyncComponent,
   migrateComponentProps,
-} from '@epic-designer/utils';
+} from '@ies/utils';
 
 import { useDesigner } from '../hooks/useDesigner';
 import { useHotkeys } from '../hooks/useHotkeys';

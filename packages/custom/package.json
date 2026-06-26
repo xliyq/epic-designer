@@ -1,0 +1,14 @@
+{
+  "name": "@ies/custom",
+  "version": "1.1.13",
+  "description": "Custom extensions for epic-designer",
+  "private": false,
+  "type": "module",
+  "main": "extensions/index.ts",
+  "dependencies": {
+    "element-plus": "catalog:"
+  },
+  "devDependencies": {
+    "vue": "catalog:"
+  }
+}

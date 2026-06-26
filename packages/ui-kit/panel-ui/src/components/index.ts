@@ -1,6 +1,6 @@
-import type { PluginManager } from '@epic-designer/manager';
+import type { PluginManager } from '@ies/manager';
 
-import { EpicNode } from '@epic-designer/base-ui';
+import { EpicNode } from '@ies/base-ui';
 
 import EpField from './EpField';
 import MonacoEditor from './MonacoEditor';

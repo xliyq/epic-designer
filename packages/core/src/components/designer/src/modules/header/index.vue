@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { EpicIcon } from '@epic-designer/base-ui';
-import { useDesignerContext } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
+import { EpicIcon } from '@ies/base-ui';
+import { useDesignerContext } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
 
 const emits = defineEmits(['save', 'reset', 'preview']);
 const Button = pluginManager.component.get('button');

@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import type { ComponentSchema } from '@epic-designer/types';
+import type { ComponentSchema } from '@ies/types';
 
 import { computed, ref } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
 
-import { EpCollapse, EpCollapsePanel, EpicIcon } from '@epic-designer/base-ui';
-import { useDesignerContext } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
-import { findSchemaInfoById, generateNewSchema } from '@epic-designer/utils';
+import { EpCollapse, EpCollapsePanel, EpicIcon } from '@ies/base-ui';
+import { useDesignerContext } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
+import { findSchemaInfoById, generateNewSchema } from '@ies/utils';
 import { useStorage } from '@vueuse/core';
 
 const Input = pluginManager.component.get('input');

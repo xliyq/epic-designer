@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import type { ComponentSchema, EpNodeInstance } from '@epic-designer/types';
+import type { ComponentSchema, EpNodeInstance } from '@ies/types';
 
 import type { VNode } from 'vue';
 
-import { usePageManager } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
+import { usePageManager } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
 
 type FormItemCheckPayload = {
   message?: string;

@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import type { ComponentSchema, FormDataModel } from '@epic-designer/types';
+import type { ComponentSchema, FormDataModel } from '@ies/types';
 import type { FormInst } from 'naive-ui';
 
 import { computed, onMounted, ref } from 'vue';
 
-import { provideBuilderDisabled, useForm } from '@epic-designer/hooks';
-import { findSchemas } from '@epic-designer/utils';
+import { provideBuilderDisabled, useForm } from '@ies/hooks';
+import { findSchemas } from '@ies/utils';
 import { NForm } from 'naive-ui/lib/form';
 
 interface FormInstance extends InstanceType<typeof NForm> {

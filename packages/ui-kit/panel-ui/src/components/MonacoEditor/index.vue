@@ -3,8 +3,8 @@ import type { editor } from 'monaco-editor';
 
 import { nextTick, onMounted, ref, watch } from 'vue';
 
-import { EpicIcon } from '@epic-designer/base-ui';
-import { useTheme } from '@epic-designer/hooks';
+import { EpicIcon } from '@ies/base-ui';
+import { useTheme } from '@ies/hooks';
 import * as monaco from 'monaco-editor';
 
 const props = withDefaults(

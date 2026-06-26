@@ -1,4 +1,4 @@
-import type { ActionsModel } from '@epic-designer/manager';
+import type { ActionsModel } from '@ies/manager';
 
 import type { TableMeta } from './designer';
 import type { FormItemRule } from './rules';

@@ -1,7 +1,7 @@
 {
-  "name": "epic-designer",
-  "version": "1.1.13",
-  "description": "基于vue3的设计器,可视化开发页面表单",
+  "name": "@ies/designer",
+  "version": "0.0.1",
+  "description": "基于vue3的低代码拖拽表单设计器",
   "private": false,
   "keywords": [
     "表单设计",
@@ -9,31 +9,29 @@
     "低代码",
     "可视化",
     "设计器",
-    "页面设计",
-    "设计工具",
-    "工作流",
     "form",
-    "designer",
-    "epic-designer"
+    "designer"
   ],
   "bugs": {
-    "url": "https://github.com/Kchengz/epic-designer/issues"
+    "url": "https://github.com/xliyq/epic-designer/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Kchengz/epic-designer"
+    "url": "https://github.com/xliyq/epic-designer"
   },
-  "author": "kchengz",
+  "author": "",
   "type": "module",
   "scripts": {
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest",
-    "lint": "eslint . --fix --ext .js,.jsx,.json,.ts,.tsx,.vue"
+    "test": "vitest"
   },
   "main": "dist/index.js",
   "module": "dist/index.js",
-  "typings": "dist/epic-designer/index.d.ts",
+  "typings": "dist/@ies/designer/index.d.ts",
+  "publishConfig": {
+    "registry": "https://npm.ies.work/"
+  },
   "peerDependencies": {
     "monaco-editor": ">=0.48.0",
     "vue": ">=3.1.0"
@@ -42,9 +40,9 @@
     "vue-draggable-plus": "catalog:"
   },
   "optionalDependencies": {
-    "@epic-designer/antd": ">=1.1.2",
-    "@epic-designer/element-plus": ">=1.1.2",
-    "@epic-designer/naive-ui": ">=1.1.2"
+    "@ies/antd": ">=1.1.2",
+    "@ies/element-plus": ">=1.1.2",
+    "@ies/naive-ui": ">=1.1.2"
   },
   "devDependencies": {
     "@types/node": "catalog:",

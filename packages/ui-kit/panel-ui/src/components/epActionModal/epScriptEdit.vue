@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 
-import { useDesignerContext, usePageManager } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
+import { useDesignerContext, usePageManager } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
 
 const MonacoEditor = pluginManager.component.get('monacoEditor');
 const MonacoEditorConfig = {

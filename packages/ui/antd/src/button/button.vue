@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { ComponentSchema } from '@epic-designer/types';
+import type { ComponentSchema } from '@ies/types';
 
 import type { PropType } from 'vue';
 

@@ -1,5 +1,5 @@
-import type { Revoke } from '@epic-designer/manager/src/revoke';
-import type { DesignerProps, PageSchema } from '@epic-designer/types';
+import type { Revoke } from '@ies/manager/src/revoke';
+import type { DesignerProps, PageSchema } from '@ies/types';
 
 import type { InjectionKey } from 'vue';
 

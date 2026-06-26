@@ -2,7 +2,7 @@ import type { AsyncComponentLoader, Component } from 'vue';
 
 import { defineAsyncComponent } from 'vue';
 
-import { EpBaseLoader } from '@epic-designer/base-ui';
+import { EpBaseLoader } from '@ies/base-ui';
 
 /**
  * 异步加载组件

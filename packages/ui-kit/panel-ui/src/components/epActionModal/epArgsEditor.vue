@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import type { ComponentSchema } from '@epic-designer/types';
+import type { ComponentSchema } from '@ies/types';
 
 import { computed } from 'vue';
 
-import { EpicNode } from '@epic-designer/base-ui';
+import { EpicNode } from '@ies/base-ui';
 
 const props = defineProps<{
   actionArgsConfigs: ComponentSchema[];

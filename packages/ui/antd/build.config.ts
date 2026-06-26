@@ -8,8 +8,8 @@ export default defineBuildConfig({
   // 让 unbuild 处理类型生成
   declaration: true,
   entries: ['./src/index'],
-  // 外部依赖 - 移除 @epic-designer/manager，改用 epic-designer
-  externals: ['vue', 'ant-design-vue', 'epic-designer'],
+  // 外部依赖 - 移除 @ies/manager，改用 epic-designer
+  externals: ['vue', 'ant-design-vue', '@ies/designer'],
   // 确保 .vue 文件被正确处理
   failOnWarn: false,
   hooks: {
@@ -38,20 +38,20 @@ export default defineBuildConfig({
         alias({
           entries: [
             {
-              find: '@epic-designer/manager',
-              replacement: 'epic-designer',
+              find: '@ies/manager',
+              replacement: '@ies/designer',
             },
             {
-              find: '@epic-designer/types',
-              replacement: 'epic-designer',
+              find: '@ies/types',
+              replacement: '@ies/designer',
             },
             {
-              find: '@epic-designer/utils',
-              replacement: 'epic-designer',
+              find: '@ies/utils',
+              replacement: '@ies/designer',
             },
             {
-              find: '@epic-designer/hooks',
-              replacement: 'epic-designer',
+              find: '@ies/hooks',
+              replacement: '@ies/designer',
             },
           ],
         }),

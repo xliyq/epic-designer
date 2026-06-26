@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 
-import { useDesignerContext } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
-import { ComponentSchema } from '@epic-designer/types';
+import { useDesignerContext } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
+import { ComponentSchema } from '@ies/types';
 
 import EAttributeItem from '../attribute/modules/attributeItem.vue';
 

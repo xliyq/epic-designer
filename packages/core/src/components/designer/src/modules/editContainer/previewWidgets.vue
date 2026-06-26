@@ -1,17 +1,17 @@
 <script lang="ts" setup>
-import type { ComponentSchema } from '@epic-designer/types';
+import type { ComponentSchema } from '@ies/types';
 
 import { computed, ref, watch } from 'vue';
 
-import { EpicIcon } from '@epic-designer/base-ui';
+import { EpicIcon } from '@ies/base-ui';
 import {
   useDesignerContext,
   usePageManager,
   useStore,
   useTimedQuery,
-} from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
-import { findSchemaInfoById } from '@epic-designer/utils';
+} from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
+import { findSchemaInfoById } from '@ies/utils';
 import { useResizeObserver } from '@vueuse/core';
 
 const pageManager = usePageManager();

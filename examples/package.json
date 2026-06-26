@@ -14,6 +14,7 @@
     "ant-design-vue": "catalog:",
     "dayjs": "catalog:",
     "element-plus": "catalog:",
+    "jsonc-parser": "^3.3.1",
     "magic-string": "catalog:",
     "monaco-editor": "catalog:",
     "shiki": "catalog:",

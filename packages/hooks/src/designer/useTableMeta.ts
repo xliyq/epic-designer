@@ -1,8 +1,8 @@
-import type { PluginManager } from '@epic-designer/manager';
+import type { PluginManager } from '@ies/manager';
 
 import { computed } from 'vue';
 
-import { ComponentSchema, TableMeta } from '@epic-designer/types';
+import { ComponentSchema, TableMeta } from '@ies/types';
 
 import { useDesignerContext } from './useDesignerContext';
 

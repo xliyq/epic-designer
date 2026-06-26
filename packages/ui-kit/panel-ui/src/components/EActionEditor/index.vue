@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { computed, PropType, ref, toRaw, watch } from 'vue';
 
-import { EpCollapse, EpCollapsePanel } from '@epic-designer/base-ui';
-import { pluginManager } from '@epic-designer/manager';
+import { EpCollapse, EpCollapsePanel } from '@ies/base-ui';
+import { pluginManager } from '@ies/manager';
 
 import EActionEditorItem from './src/EActionEditorItem.vue';
 

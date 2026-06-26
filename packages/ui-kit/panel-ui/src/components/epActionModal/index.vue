@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import type { ComponentSchema, FormDataModel } from '@epic-designer/types';
+import type { ComponentSchema, FormDataModel } from '@ies/types';
 
 import { computed, nextTick, reactive, ref, toRaw } from 'vue';
 
-import { EpicIcon, EpicTree } from '@epic-designer/base-ui';
-import { useDesignerContext, usePageManager } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
-import { deepClone, findSchemaById, getUUID } from '@epic-designer/utils';
+import { EpicIcon, EpicTree } from '@ies/base-ui';
+import { useDesignerContext, usePageManager } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
+import { deepClone, findSchemaById, getUUID } from '@ies/utils';
 import { useClipboard } from '@vueuse/core';
 
 import epArgsEditor from './epArgsEditor.vue';

@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import type { ComponentSchema } from '@epic-designer/types';
+import type { ComponentSchema } from '@ies/types';
 
 import { computed, ref } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
 
-import { useDesignerContext, usePageManager } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
+import { useDesignerContext, usePageManager } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
 
 import EpicNodeItem from './nodeItem.vue';
 

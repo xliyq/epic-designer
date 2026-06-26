@@ -1,0 +1,1 @@
+export { setupExtensions } from './extensions/index'

@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import type { ComponentSchema, FormDataModel } from '@epic-designer/types';
+import type { ComponentSchema, FormDataModel } from '@ies/types';
 
 import { computed, onMounted, ref } from 'vue';
 
-import { provideBuilderDisabled, useForm } from '@epic-designer/hooks';
+import { provideBuilderDisabled, useForm } from '@ies/hooks';
 import { ElForm } from 'element-plus';
 
 interface FormInstance extends InstanceType<typeof ElForm> {

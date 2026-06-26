@@ -1,5 +1,5 @@
 {
-  "name": "@epic-designer/element-plus",
+  "name": "@ies/element-plus",
   "version": "1.1.13",
   "description": "epic-designer base ui",
   "private": false,
@@ -25,7 +25,7 @@
   },
   "peerDependencies": {
     "element-plus": ">=2.11.9",
-    "epic-designer": ">=1.1.2",
+    "@ies/designer": "workspace:*",
     "vue": ">=3.1.0"
   },
   "devDependencies": {
