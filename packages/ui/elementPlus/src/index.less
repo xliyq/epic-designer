@@ -95,7 +95,8 @@
 
 // 网格布局处理
 .grid-content{
-  & > .ep-draggable-range {
+  min-height: 60px;
+  & > .ep-draggable-range:has(> .ep-node-item) {
     display: contents !important;
   }
 }
