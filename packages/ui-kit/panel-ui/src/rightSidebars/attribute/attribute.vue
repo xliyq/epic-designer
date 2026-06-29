@@ -35,6 +35,21 @@ const componentAttributes = computed(() => {
     componentConfigs[selectedNode.value.type]?.config?.attribute ?? [];
   const allAttributes = [...baseAttributes];
 
+  // 所有组件统一注入公共属性
+  const matched = designer.state.matched
+  const parent = matched.length >= 2 ? matched[matched.length - 2] : undefined
+  const gridCols = parent?.props?.gridCols ?? 4
+  allAttributes.push({
+    field: 'props.span',
+    label: '栅格占列',
+    props: {
+      min: 1,
+      max: gridCols,
+    },
+    show: ({ parent }) => parent?.props?.formMode === 'grid',
+    type: 'number',
+  });
+
   if (selectedNode.value.id === pageSchema.schemas[0]?.id) {
     allAttributes.push(
       {

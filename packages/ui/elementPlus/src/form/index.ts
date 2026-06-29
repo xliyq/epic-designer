@@ -113,9 +113,44 @@ export default {
         type: 'switch',
       },
       {
-        field: 'props.inline',
-        label: '行内模式',
-        type: 'switch',
+        field: 'props.formMode',
+        label: '表单模式',
+        onChange: ({ value, values }) => {
+          const props = values.props ?? {}
+          switch(value){
+            case 'grid':
+              props.gridCols = 2;
+              delete props.inline
+              break;
+            case 'inline':
+              props.inline = true
+              delete props.gridCols
+              break;  
+            case 'normal':
+              delete props.gridCols
+              delete props.inline
+              break;
+          }
+        },
+        props: {
+          options: [
+            { label: '普通', value: 'normal' },
+            { label: '网格', value: 'grid' },
+            { label: '行内', value: 'inline' },
+          ],
+          radioButton: true,
+        },
+        type: 'radio',
+      },
+      {
+        field: 'props.gridCols',
+        label: '栅格列数',
+        props: {
+          min: 2,
+          max: 4,
+        },
+        show: ({ values }) => values.props?.formMode === 'grid',
+        type: 'number',
       },
       {
         field: 'props.disabled',
@@ -135,6 +170,7 @@ export default {
       'label-position': 'left',
       labelWidth: '100px',
       name: 'default',
+      formMode: 'normal',
     },
     type: 'form',
     children: [],

@@ -10,8 +10,7 @@
     "stub": "tsx dev-stub.ts"
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
@@ -25,7 +24,7 @@
   },
   "peerDependencies": {
     "element-plus": ">=2.11.9",
-    "@ies/designer": "workspace:*",
+    "@ies/designer": ">=0.0.1",
     "vue": ">=3.1.0"
   },
   "devDependencies": {

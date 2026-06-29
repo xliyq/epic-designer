@@ -3,10 +3,10 @@
 ## 安装 epic-designer
 
 ```bash
-npm i epic-designer
+npm i @ies/designer
 ```
 
-epic-designer 目标是支持多 UI 兼容,目前支持以下 UI
+@ies/designer 目标是支持多 UI 兼容,目前支持以下 UI
 
 - element-plus
 - ant-design-vue
@@ -27,7 +27,7 @@ main.ts 或者 main.js 引入注册组件
 
 ```javascript
 // 引入epic-designer样式
-import "epic-designer/dist/style.css";
+
 
 // 引入Element plus样式
 import "element-plus/dist/index.css";
@@ -49,7 +49,7 @@ main.ts 或者 main.js 引入注册组件
 
 ```javascript
 // 引入epic-designer样式
-import "epic-designer/dist/style.css";
+
 
 // 引入antd UI 重置样式
 import "ant-design-vue/dist/reset.css";
@@ -65,7 +65,7 @@ setupAntd();
 
 ```javascript
 // 引入epic-designer样式
-import "epic-designer/dist/style.css";
+
 
 // 引入antd UI样式
 import "ant-design-vue/dist/antd.css";
@@ -87,7 +87,7 @@ main.ts 或者 main.js 引入注册组件
 
 ```javascript
 // 引入epic-designer样式
-import "epic-designer/dist/style.css";
+
 
 import { setupNaiveUi } from "@ies/naive-ui";
 // 注册Naive Ui
@@ -103,7 +103,7 @@ setupNaiveUi();
   </div>
 </template>
 <script setup lang="ts">
-import { EDesigner } from "epic-designer";
+import { EDesigner } from "@ies/designer";
 </script>
 <style>
 .h-full {
@@ -121,7 +121,8 @@ import { EDesigner } from "epic-designer";
   </div>
 </template>
 <script setup>
-import { EBuilder } from "epic-designer";
+import "@ies/designer/dist/designer.css";
+import { EBuilder } from "@ies/designer";
 
 const pageSchema = {
   schemas: [

@@ -257,6 +257,7 @@ const getFormItemProps = computed<ComponentSchema>(() => {
     field: model,
     rule: rules,
     rules,
+    span: innerSchema.props?.span,
     style: {
       ...style,
       width: undefined,
@@ -301,18 +302,24 @@ const getProps = computed(() => {
       });
   }
 
-  const style = innerSchema.props?.style ?? {};
+  const innerProps = innerSchema.props ?? {}
+  const { span, ...restInnerProps } = innerProps
+  const style = innerProps.style ?? {};
+  // span 对 Col 组件是栅格跨度（el-col-12），对其他组件是 grid 占列
+  const shouldAddGridColumn = span && innerSchema.type !== 'col'
+  // Col 需要保留 span 作为 prop，其他组件的 span 已转为 gridColumn，不再下传
+  const finalInnerProps = innerSchema.type === 'col' ? innerProps : restInnerProps
   const finalStyle = hasFormItem.value
     ? Object.fromEntries(
         (['height', 'width'] as const)
           .filter((k) => style[k] !== undefined && style[k] !== null)
           .map((k) => [k, style[k]]),
       )
-    : style;
+    : { ...style, ...(shouldAddGridColumn ? { gridColumn: `span ${span}` } : {}) };
   return {
     ...props,
     ...attrs,
-    ...innerSchema.props,
+    ...finalInnerProps,
     bindModel,
     disabled:
       fieldStateType.value !== 'WRITE' &&

@@ -34,7 +34,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { EDesigner, type PageSchema } from "epic-designer";
+import { EDesigner, type PageSchema } from "@ies/designer";
 
 /**
  * 点击保存按钮操作
@@ -54,8 +54,8 @@ function handleSubmit(e:PageSchema) {
 ```
 
 <script setup>
-import "epic-designer/dist/style.css";
-import { EDesigner, pluginManager } from "epic-designer";
+import "@ies/designer/dist/designer.css";
+import { EDesigner, pluginManager } from "@ies/designer";
 import { setupAntd } from "@ies/antd";
 import { ConfigProvider, theme } from 'ant-design-vue'
 import { useTheme } from '@ies/hooks'

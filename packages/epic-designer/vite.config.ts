@@ -4,7 +4,6 @@ import path from 'node:path';
 
 import vue from '@vitejs/plugin-vue';
 import rollupCopy from 'rollup-plugin-copy';
-import nodeExternals from 'rollup-plugin-node-externals';
 import UnoCSS from 'unocss/vite';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
@@ -31,14 +30,23 @@ export default defineConfig({
     outDir: 'dist',
     // 库编译模式配置
     rollupOptions: {
+      // Externalize all dependencies
+      external: [
+        'vue',
+        'vue-draggable-plus',
+        'jsep',
+        'monaco-editor',
+        '@vueuse/core',
+        'ant-design-vue',
+        'element-plus',
+        'naive-ui',
+        // Do NOT externalize @ies/* - they are internal packages that should be bundled
+      ],
       output: {
         // 在 UMD 构建模式下为这些外部化的依赖提供一个全局变量
         globals: {
           vue: 'Vue',
         },
-        // 保留模块的原始目录结构
-        preserveModules: true,
-        preserveModulesRoot: '../',
       },
       plugins: [
         rollupCopy({
@@ -50,7 +58,7 @@ export default defineConfig({
             {
               dest: './dist/',
               rename: 'style.css',
-              src: './dist/epic-designer.css',
+              src: './dist/designer.css',
             },
           ],
           verbose: true, // 在终端进行console.log
@@ -66,7 +74,6 @@ export default defineConfig({
       exclude: ['../**/__test__/**', '../ui/**'],
       outDir: 'dist',
     }),
-    nodeExternals(),
   ],
   resolve: {
     alias: {

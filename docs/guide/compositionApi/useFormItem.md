@@ -10,7 +10,7 @@
 
 ```vue
 <script lang="ts" setup>
-import { useFormItem } from 'epic-designer'
+import { useFormItem } from '@ies/designer'
 
 const { formData } = useFormItem()
 

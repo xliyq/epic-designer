@@ -15,7 +15,7 @@
 > 通过`pluginManager`对象的`addPublicMethod`方法添加公共函数
 
 ```ts
-import { pluginManager, type PublicMethodModel } from 'epic-designer'
+import { pluginManager, type PublicMethodModel } from '@ies/designer'
 
 const methodItem: PublicMethodModel = {
     name: "myFun",

@@ -84,7 +84,7 @@ onMounted(async () => {
 });
 
 const formProps = computed(() => {
-  const recordProps = props.componentSchema!.props;
+  const recordProps = { ...props.componentSchema!.props };
   let labelCol = recordProps.labelCol;
   let wrapperCol = recordProps.wrapperCol;
   if (recordProps.labelLayout === 'fixed') {
@@ -93,12 +93,39 @@ const formProps = computed(() => {
     };
     wrapperCol = { style: 'width:auto;flex:1' };
   }
+  const formMode = recordProps.formMode
+  const isGrid = formMode === 'grid'
+  const isInline = formMode === 'inline'
+
+  if (isGrid) {
+    // 网格模式下剥离 layout、style，避免冲突
+    delete recordProps.layout
+    delete recordProps.style
+  } else if (isInline) {
+    recordProps.layout = 'inline'
+  }
+
   return {
     ...recordProps,
+    class: isGrid ? 'form-grid' : '',
     labelCol,
     wrapperCol,
   };
 });
+
+const gridStyle = computed(() => {
+  const p = props.componentSchema?.props
+  if (p?.formMode === 'grid') {
+    const columns = p.gridCols ?? 3
+    return {
+      display: 'grid',
+      gridTemplateColumns: `repeat(${columns}, 1fr)`,
+      gridAutoRows: 'auto',
+      gap: '16px',
+    }
+  }
+  return {}
+})
 
 const children = computed(() => {
   return props.componentSchema!.children ?? [];
@@ -114,7 +141,7 @@ defineExpose({
 </script>
 
 <template>
-  <ElForm ref="form" :model="formData" v-bind="formProps">
+  <ElForm ref="form" :model="formData" v-bind="formProps" :style="gridStyle">
     <slot name="edit-node">
       <slot
         v-for="item in children"
@@ -124,3 +151,14 @@ defineExpose({
     </slot>
   </ElForm>
 </template>
+<style lang="less" scoped>
+/* 设计模式下，ep-draggable-range 作为拖拽容器会导致 grid 布局异常，
+   使用 display: contents 使其盒模型透明化，让子项直接参与 grid 布局 */
+.form-grid {
+  min-height: 60px;
+
+  &:deep(> .ep-draggable-range) {
+    display: contents !important;
+  }
+}
+</style>

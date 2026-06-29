@@ -37,7 +37,9 @@
     "vue": ">=3.1.0"
   },
   "dependencies": {
-    "vue-draggable-plus": "catalog:"
+    "@vueuse/core": "^13.0.0",
+    "jsep": "^1.4.0",
+    "vue-draggable-plus": "^0.6.1"
   },
   "optionalDependencies": {
     "@ies/antd": ">=1.1.2",
@@ -45,12 +47,12 @@
     "@ies/naive-ui": ">=1.1.2"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "@unocss/preset-rem-to-px": "catalog:",
-    "rollup-plugin-copy": "catalog:",
-    "rollup-plugin-node-externals": "catalog:",
-    "unocss": "catalog:",
-    "vitest": "catalog:",
-    "vue-tsc": "catalog:"
+    "@types/node": "^22.10.6",
+    "@unocss/preset-rem-to-px": "^0.65.3",
+    "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-node-externals": "^8.0.0",
+    "unocss": "^0.65.3",
+    "vitest": "^2.1.8",
+    "vue-tsc": "^2.2.0"
   }
 }

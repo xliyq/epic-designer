@@ -267,8 +267,8 @@ epic.json 数据
 </ConfigProvider>
 
 <script setup>
-import "epic-designer/dist/style.css";
-import { EDesigner,EBuilder,pluginManager } from "epic-designer";
+import "@ies/designer/dist/designer.css";
+import { EDesigner,EBuilder,pluginManager } from "@ies/designer";
 import { ref, onMounted } from 'vue';
 import { setupAntd } from "@ies/antd";
 import { ConfigProvider, theme } from 'ant-design-vue'

@@ -7,6 +7,7 @@
     "build": "pnpm i && turbo run build -F epic-examples && turbo run build",
     "dev": "turbo run dev",
     "lib": "vitest run && turbo run build -F epic-designer",
+    "pack": "pnpm run build && cd packages/epic-designer && npm pack && cd ../ui/elementPlus && npm pack && cd ../..",
     "test": "vitest",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",

@@ -19,7 +19,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { EBuilder } from "epic-designer";
+import { EBuilder } from "@ies/designer";
 
 const pageSchema = {
   schemas: [
@@ -69,7 +69,7 @@ const pageSchema = {
 </template>
 <script lang="ts" setup>
 import { ref } from "vue";
-import { EBuilder } from "epic-designer";
+import { EBuilder } from "@ies/designer";
 
 const pageSchema = {
   schemas: [
@@ -206,7 +206,7 @@ async function handleValidate(){
 
 <script lang="ts" setup>
 import { ref, onMounted } from "vue";
-import { EBuilder, PageSchema } from "epic-designer";
+import { EBuilder, PageSchema } from "@ies/designer";
 
 const ebRef = ref<any>(null);
 
@@ -278,10 +278,11 @@ onMounted(async () => {
 ```
 
 <script setup>
-import { EBuilder } from "epic-designer";
+import "@ies/designer/dist/designer.css";
+import { EBuilder } from "@ies/designer";
 import { ref,onMounted } from 'vue'
-import "epic-designer/dist/style.css";
-import { EDesigner, pluginManager } from "epic-designer";
+
+import { EDesigner, pluginManager } from "@ies/designer";
 import { setupElementPlus } from "@ies/element-plus";
 import 'element-plus/dist/index.css'
 setupElementPlus(pluginManager);

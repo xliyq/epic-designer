@@ -19,7 +19,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
-import { EBuilder, PageManager, PageSchema } from 'epic-designer'
+import { EBuilder, PageManager, PageSchema } from '@ies/designer'
     
 const pageSchema = ref<PageSchema>({
   "schemas": [

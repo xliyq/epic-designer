@@ -25,7 +25,7 @@ CSS 变量是一个非常有用的功能，几乎所有浏览器都支持。
 
 ```tsx
 // main.ts
-import "epic-designer/dist/style.css";
+
 import './styles/common-vars.css'
 ```
 
