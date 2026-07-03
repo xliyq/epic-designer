@@ -27,6 +27,7 @@ import {
 } from '@ies/hooks';
 import { pluginManager } from '@ies/manager';
 import { setupPage } from '@ies/panel-ui';
+import { setupExtensions } from '@ies/custom';
 import {
   deepClone,
   deepCompareAndModify,
@@ -64,6 +65,7 @@ const emit = defineEmits<{
 }>();
 
 setupPage(pluginManager);
+setupExtensions(pluginManager);
 
 const epBuilderSlot = pluginManager.component.get('epBuilderSlot');
 // 使用 hooks 获取表单相关方法和状态

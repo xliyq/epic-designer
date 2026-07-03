@@ -12,6 +12,7 @@ import {
 } from '@ies/hooks';
 import { pluginManager } from '@ies/manager';
 import { setupPanel } from '@ies/panel-ui';
+import { setupExtensions } from '@ies/custom';
 import {
   deepClone,
   loadAsyncComponent,
@@ -42,6 +43,7 @@ const emit = defineEmits([
 ]);
 
 setupPanel(pluginManager);
+setupExtensions(pluginManager);
 const EHeader = loadAsyncComponent(() => import('./modules/header/index.vue'));
 const EActivityBar = loadAsyncComponent(
   () => import('./modules/activityBar/index.vue'),
