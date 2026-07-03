@@ -4,6 +4,7 @@ import type { ComponentSchema, FormDataModel } from '@ies/types';
 import { computed, onMounted, ref } from 'vue';
 
 import { provideBuilderDisabled, useForm } from '@ies/hooks';
+import { deepCompareAndModify } from '@ies/utils';
 import { ElForm } from 'element-plus';
 
 interface FormInstance extends InstanceType<typeof ElForm> {
@@ -42,11 +43,12 @@ function getData(): FormDataModel {
 }
 
 /**
- * 设置表单数据
+ * 设置表单数据（深合并，保留响应式引用与子表单未覆盖字段）
  * @param data
  */
 function setData(data: FormDataModel) {
-  Object.assign(formData, data);
+  if (!data) return;
+  deepCompareAndModify(formData, data, false);
 }
 
 /**
@@ -122,6 +124,7 @@ const gridStyle = computed(() => {
       gridTemplateColumns: `repeat(${columns}, 1fr)`,
       gridAutoRows: 'auto',
       gap: '16px',
+      minHeight: 'auto',
     }
   }
   return {}

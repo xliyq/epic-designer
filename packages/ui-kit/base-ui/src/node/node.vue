@@ -78,10 +78,26 @@ const pageManager = usePageManager();
 // 校验前缀字段
 const fieldPathPrefix = useFieldPathPrefix();
 const scopeName = computed(() => {
-  if (fieldPathPrefix) {
-    return fieldPathPrefix.join('.');
+  const prefix = fieldPathPrefix.value;
+  if (prefix && prefix.length > 0) {
+    return prefix.join('.');
   }
   return 'default';
+});
+
+/**
+ * 计算带前缀的完整字段路径。
+ * 用于读写 formData / 派发 formChange / 匹配 fieldStateMap。
+ * 例如：SubForm(field=a) 内的 field=x 会被拼接为 'a.x'。
+ */
+const fullField = computed<string | undefined>(() => {
+  const field = innerSchema.field;
+  if (!field) return field as any;
+  const prefix = fieldPathPrefix.value;
+  if (prefix && prefix.length > 0) {
+    return `${prefix.join('.')}.${field}`;
+  }
+  return field;
 });
 
 // 内部schema数据
@@ -117,7 +133,7 @@ watch(
  * 获取表单项 数据
  */
 function getBindValue() {
-  return props.modelValue ?? getValueByPath(formData, innerSchema.field ?? '');
+  return props.modelValue ?? getValueByPath(formData, fullField.value ?? '');
 }
 
 /**
@@ -157,7 +173,7 @@ const fieldStateType = ref<FieldStateType | null>(null);
 const fieldRequired = ref<boolean | null | undefined>(null);
 
 watchEffect(() => {
-  const fieldName = innerSchema?.field;
+  const fieldName = fullField.value;
   const currentFieldState = fieldName && fieldStateMap.value?.[fieldName];
 
   if (!currentFieldState) {
@@ -244,9 +260,13 @@ const getFormItemProps = computed<ComponentSchema>(() => {
   if (props.ruleField && props.ruleField.length > 0) {
     // 设置为父级传入的校验字段
     model = props.ruleField;
-  } else if (fieldPathPrefix && innerSchema.field) {
+  } else if (
+    fieldPathPrefix.value &&
+    fieldPathPrefix.value.length > 0 &&
+    innerSchema.field
+  ) {
     // 添加校验字段前缀
-    model = deepClone(fieldPathPrefix) as [];
+    model = deepClone(fieldPathPrefix.value) as [];
     model.push(innerSchema.field);
   }
 
@@ -405,7 +425,8 @@ async function initComponent() {
   if (innerSchema.props?.defaultValue !== undefined) {
     const defaultValue = pageManager.isDesignMode.value
       ? innerSchema.props?.defaultValue
-      : (formData[innerSchema.field!] ?? innerSchema.props?.defaultValue);
+      : (getValueByPath(formData, fullField.value ?? '') ??
+          innerSchema.props?.defaultValue);
 
     handleUpdate(deepClone(defaultValue), true);
   }
@@ -460,12 +481,13 @@ function handleUpdate(value: any, isInit?: boolean) {
   if (value === oldValue) {
     return;
   }
-  if (innerSchema.field) {
-    setValueByPath(formData, innerSchema.field, value);
+  const writePath = fullField.value;
+  if (writePath) {
+    setValueByPath(formData, writePath, value);
     // 触发formChange钩子
     if (!isInit) {
       pageManager.hook.execute('formChange', {
-        field: innerSchema.field,
+        field: writePath,
         formData,
         value,
       });

@@ -82,6 +82,8 @@ export interface ComponentConfigModel {
   icon?: string;
   // 是否为子表组件
   isSubTable?: boolean;
+  // 是否为子表单组件（对象型嵌套表单，数据结构为 formData.field.xxx）
+  isSubForm?: boolean;
   // 组件优先级, 默认值99,数字越大, 优先级越高, 优先使用高优先级组件
   priority?: number;
   // 用于组件排序，可选 默认值1000, 值越小，组件越靠前
@@ -91,6 +93,7 @@ export interface ComponentConfigModel {
 export type ComponentConfigModelRecords = Record<string, ComponentConfigModel>;
 
 export interface PublicMethodModel {
+  argsConfigs?: ComponentSchema[];
   /**
    * @deprecated 此属性用于兼容旧版，后期可能会移除，请使用description属性代替。
    */

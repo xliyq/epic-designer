@@ -30,6 +30,7 @@ import Radio from './radio';
 import Row from './row';
 import Select from './select';
 import Slider from './slider';
+import SubForm from './sub-form';
 import Switch from './switch';
 import TabsPane from './tab-pane';
 import Tabs from './tabs';
@@ -51,6 +52,7 @@ export function setupElementPlus(
   const componentArray = [
     Form,
     FormItem,
+    SubForm,
     Input,
     Textarea,
     InputNumber,
