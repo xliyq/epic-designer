@@ -45,6 +45,7 @@ export function usePublicMethods() {
     const description = publicMethod.describe ?? publicMethod.description;
 
     methodsMap[name] = {
+      argsConfigs: publicMethod.argsConfigs,
       description,
       handler,
       name,

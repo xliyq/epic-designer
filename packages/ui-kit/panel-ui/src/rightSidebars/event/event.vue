@@ -16,6 +16,12 @@ const selectedNode = computed(() => {
   return designer.state.selectedNode;
 });
 
+const selectedNodeLabel = computed(() => {
+  if (!selectedNode.value) return '';
+  const config = componentConfigs[selectedNode.value.type ?? ''];
+  return selectedNode.value.label ?? config?.defaultSchema.label ?? '';
+});
+
 // 定义事件组的类型
 type EventGroup = {
   events: EventModel[];
@@ -96,6 +102,7 @@ function handleSetValue(value: any, field: string) {
         :key="selectedNode.id"
         :event-list="eventList"
         :model-value="getValueByPath(selectedNode!, `on`)"
+        :component-label="selectedNodeLabel"
         @update:model-value="handleSetValue($event, `on`)"
       />
     </div>

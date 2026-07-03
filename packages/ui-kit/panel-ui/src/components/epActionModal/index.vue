@@ -34,6 +34,8 @@ const state = reactive({
     type: 'custom',
   } as FormDataModel,
   cacheData: {},
+  contextLabel: '',
+  contextEvent: '',
 });
 
 const actionTypeText = computed(() => {
@@ -115,23 +117,33 @@ const actionArgsConfigs = computed(() => {
 
     return actionItem?.argsConfigs ?? [];
   }
+
+  if (state.actionItem.type === 'public') {
+    const publicMethod = pluginManager.publicMethods.methodsMap[state.actionItem.methodName];
+    return publicMethod?.argsConfigs ?? [];
+  }
+
   return [];
 });
 
-function handleOpen() {
+function handleOpen(contextLabel?: string, contextEvent?: string) {
   visible.value = true;
   isAdd.value = true;
   state.actionItem.type = 'custom';
   state.actionItem.componentId = null;
+  state.contextLabel = contextLabel ?? '';
+  state.contextEvent = contextEvent ?? '';
   if (methodOptions.value?.length) {
     handleCheckedMethod(methodOptions.value[0].value);
   }
 }
 
-function handleOpenEdit(action: any) {
+function handleOpenEdit(action: any, contextLabel?: string, contextEvent?: string) {
   visible.value = true;
   isAdd.value = false;
   componentSchema.value = null;
+  state.contextLabel = contextLabel ?? '';
+  state.contextEvent = contextEvent ?? '';
 
   if (action.componentId) {
     const schema = findSchemaById(pageSchema.schemas, action.componentId);
@@ -232,6 +244,17 @@ function handleCheckedMethod(value: string) {
     state.cacheData[state.actionItem.componentId + state.actionItem.methodName];
 }
 
+const modalTitle = computed(() => {
+  let title = '动作配置';
+  if (state.contextLabel) {
+    title += ` — ${state.contextLabel}`;
+    if (state.contextEvent) {
+      title += ` | ${state.contextEvent}`;
+    }
+  }
+  return title;
+});
+
 defineExpose({
   handleOpen,
   handleOpenEdit,
@@ -241,7 +264,7 @@ defineExpose({
   <Modal
     v-model="visible"
     width="1200px"
-    title="动作配置"
+    :title="modalTitle"
     @close="handleClose"
     @ok="handleSave"
   >
@@ -264,6 +287,7 @@ defineExpose({
             公共函数
           </div>
           组件
+          <div class="mb-1 text-xs text-gray-400">选择目标组件，配置在当前事件触发时要调用的组件方法</div>
           <div class="h-0 flex-1">
             <EpicTree
               v-model:selected-keys="selectedKeys"

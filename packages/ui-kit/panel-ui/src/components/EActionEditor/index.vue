@@ -15,6 +15,10 @@ const props = defineProps({
     default: () => ({}),
     type: Object as PropType<any>,
   },
+  componentLabel: {
+    default: '',
+    type: String,
+  },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -98,7 +102,9 @@ let currentType: string = '';
  * @param type
  */
 function handleOpen(type: string) {
-  epActionModalRef.value?.handleOpen();
+  const eventItem = allEvents.value.find((e: any) => e.type === type);
+  const contextEvent = eventItem?.description ?? eventItem?.describe ?? type;
+  epActionModalRef.value?.handleOpen(props.componentLabel, contextEvent);
   currentType = type;
 }
 
@@ -109,8 +115,9 @@ function handleOpen(type: string) {
  * @param {any} action - 要执行的动作
  */
 function handleOpenEdit(index: number, type: string, action) {
-  // 如果 epActionModalRef.value 不为 null 或 undefined，则调用其 handleOpenEdit 方法
-  epActionModalRef.value?.handleOpenEdit(action);
+  const eventItem = allEvents.value.find((e: any) => e.type === type);
+  const contextEvent = eventItem?.description ?? eventItem?.describe ?? type;
+  epActionModalRef.value?.handleOpenEdit(action, props.componentLabel, contextEvent);
 
   // 将要编辑的事件的索引赋值给 editIndex
   editIndex = index;

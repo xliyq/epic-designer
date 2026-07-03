@@ -22,6 +22,9 @@ const hasScriptError = computed(() => pageManager.scriptError.value !== null);
     <div class="pb-2">
       <span>自定义函数编辑</span>
     </div>
+    <div class="mb-2 text-xs text-gray-400">
+      提示：脚本为页面级别，所有组件的自定义函数均在此定义
+    </div>
     <MonacoEditor
       v-model="pageSchema.script"
       auto-toggle-theme
