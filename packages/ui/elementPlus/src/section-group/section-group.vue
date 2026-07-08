@@ -3,6 +3,7 @@ import type { ComponentSchema } from '@ies/designer';
 
 import { computed, inject, provide, ref, watch } from 'vue';
 
+import { EpicNode } from '@ies/base-ui';
 import {
   SECTION_GROUP_CTX_KEY,
   useFormItem,
@@ -124,22 +125,27 @@ function getSectionLabel(tpl: ComponentSchema): string {
   return tpl.label ?? tpl.props?.optionKey ?? tpl.optionKey ?? '';
 }
 
-// 运行时：解析子组件
-function resolveComponent(type: string) {
-  return pluginManager.component.get(type);
+// 运行时：为每个区块构建子组件的增强 schema
+// 清空 field 防止 EpNode 走 formData 读写
+function getRowChildSchema(child: ComponentSchema): ComponentSchema {
+  return {
+    ...child,
+    field: undefined,
+    noFormItem: true,
+  };
 }
 
-// 运行时：渲染区块内子组件的 v-model proxy
-// setter 中显式 emit，替代 watch(internalData)
-function getFieldProxy(item: Record<string, any>, fieldName: string) {
-  return computed({
-    get: () => item[fieldName],
-    set: (val: any) => {
-      item[fieldName] = val;
-      emitOutput();
-    },
+// 为每个可见区块预构建子组件 schema 列表
+const rowSchemas = computed(() => {
+  return internalData.value.map((item, i) => {
+    if (!item) return [];
+    const tpl = children.value[i];
+    return (tpl?.children ?? []).map((child) => ({
+      schema: getRowChildSchema(child),
+      fieldKey: child.field ?? '',
+    }));
   });
-}
+});
 
 // 容器视觉属性
 const title = computed(
@@ -196,36 +202,27 @@ const visibleCount = computed(
       </slot>
     </div>
 
-    <!-- 运行模式：自管理渲染 -->
+    <!-- 运行模式：用 EpNode 渲染 -->
     <div v-else v-show="!collapsed" class="ep-section-group__body">
       <template v-for="(item, i) in internalData" :key="i">
-        <div v-if="item" class="ep-section-group__card">
+        <div v-if="item && rowSchemas[i]" class="ep-section-group__card">
           <div class="ep-section-group__card-header">
             {{ getSectionLabel(children[i]) }}
           </div>
           <div class="ep-section-group__card-body">
-            <template v-for="child in children[i]?.children" :key="child.id">
-              <div v-if="child.field" class="ep-section-group__field">
-                <label class="ep-section-group__field-label">
-                  {{ child.label ?? '' }}
+            <template v-for="entry in rowSchemas[i]" :key="entry.schema.id">
+              <div class="ep-section-group__field">
+                <label v-if="entry.schema.label" class="ep-section-group__field-label">
+                  {{ entry.schema.label }}
                 </label>
                 <div class="ep-section-group__field-control">
-                  <component
-                    :is="resolveComponent(child.type)"
-                    v-model="getFieldProxy(item, child.field).value"
-                    v-bind="child.props ?? {}"
+                  <EpicNode
+                    :component-schema="entry.schema"
+                    :model-value="item[entry.fieldKey]"
+                    @update:model-value="(val: any) => { item[entry.fieldKey] = val; emitOutput() }"
                   />
                 </div>
               </div>
-              <!-- 嵌套 attribute-group -->
-              <template v-else-if="child.type === 'attribute-group'">
-                <component
-                  :is="resolveComponent(child.type)"
-                  :component-schema="child"
-                  :model-value="item[child.field ?? '']"
-                  @update:model-value="(val: any) => { item[child.field ?? ''] = val; emitOutput() }"
-                />
-              </template>
             </template>
           </div>
         </div>
