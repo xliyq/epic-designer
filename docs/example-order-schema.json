@@ -20,7 +20,7 @@
             {
               "id": "input_createStaffName",
               "type": "input",
-              "label": "创建人姓�?,
+              "label": "创建人姓名",
               "field": "createStaffName",
               "input": true,
               "props": { "placeholder": "请输入创建人姓名" }
@@ -31,7 +31,7 @@
               "label": "客户名称",
               "field": "customerName",
               "input": true,
-              "props": { "placeholder": "请输入客户名�? }
+              "props": { "placeholder": "请输入客户名称" }
             },
             {
               "id": "checkbox_selectedOffers",
@@ -42,12 +42,11 @@
               "props": {
                 "placeholder": "请选择套餐",
                 "options": [
-                  { "label": "企业学培-尊享�?, "value": "2025999480006336" },
-                  { "label": "企业学培-基础�?, "value": "2025999480006337" }
+                  { "label": "企业学培-尊享包", "value": "2025999480006336" },
+                  { "label": "企业学培-基础包", "value": "2025999480006337" }
                 ]
               }
             },
-
             {
               "id": "subform_packages",
               "type": "subForm",
@@ -65,7 +64,7 @@
                   "label": "商品名称",
                   "field": "offerName",
                   "input": true,
-                  "props": { "placeholder": "请输入商品名�? }
+                  "props": { "placeholder": "请输入商品名称" }
                 },
                 {
                   "id": "input_packageNum",
@@ -73,17 +72,16 @@
                   "label": "包裹编号",
                   "field": "packageNum",
                   "input": true,
-                  "props": { "placeholder": "请输入包裹编�? }
+                  "props": { "placeholder": "请输入包裹编号" }
                 },
-
                 {
                   "id": "attrgroup_poordCharacters",
                   "type": "attribute-group",
-                  "label": "商品属�?,
+                  "label": "商品属性",
                   "field": "poordCharacters",
                   "input": true,
                   "props": {
-                    "title": "商品属�?,
+                    "title": "商品属性",
                     "bordered": true,
                     "collapsible": true,
                     "gridEnable": true,
@@ -93,7 +91,7 @@
                     {
                       "id": "attr_8044",
                       "type": "select",
-                      "label": "一级渠道类�?,
+                      "label": "一级渠道类型",
                       "field": "",
                       "input": true,
                       "props": {
@@ -134,13 +132,13 @@
                     {
                       "id": "attr_8045",
                       "type": "select",
-                      "label": "业务用�?,
+                      "label": "业务用途",
                       "field": "",
                       "input": true,
                       "props": {
                         "charNum": "8045",
                         "syncFields": ["charValue", "charDisplay"],
-                        "placeholder": "请选择业务用�?,
+                        "placeholder": "请选择业务用途",
                         "options": [
                           { "label": "自用业务", "value": "1" },
                           { "label": "测试业务", "value": "2" }
@@ -149,7 +147,6 @@
                     }
                   ]
                 },
-
                 {
                   "id": "sectiongroup_prodordSkus",
                   "type": "section-group",
@@ -167,7 +164,7 @@
                     {
                       "id": "tpl_sku_36",
                       "type": "section-template",
-                      "label": "企业学培-尊享�?,
+                      "label": "企业学培-尊享包",
                       "props": { "optionKey": "2025999480006336" },
                       "children": [
                         {
@@ -176,7 +173,7 @@
                           "label": "套餐名称",
                           "field": "skuName",
                           "input": true,
-                          "props": { "placeholder": "请输入套餐名�? }
+                          "props": { "placeholder": "请输入套餐名称" }
                         },
                         {
                           "id": "sku_36_type",
@@ -195,11 +192,11 @@
                         {
                           "id": "attrgroup_prodordCharacters",
                           "type": "attribute-group",
-                          "label": "套餐属�?,
+                          "label": "套餐属性",
                           "field": "prodordCharacters",
                           "input": true,
                           "props": {
-                            "title": "套餐属�?,
+                            "title": "套餐属性",
                             "bordered": true,
                             "collapsible": true,
                             "gridEnable": true,
@@ -225,7 +222,7 @@
                             {
                               "id": "sku_attr_002",
                               "type": "input",
-                              "label": "企业管理员姓�?,
+                              "label": "企业管理员姓名",
                               "field": "",
                               "input": true,
                               "props": {
@@ -253,7 +250,7 @@
                     {
                       "id": "tpl_sku_37",
                       "type": "section-template",
-                      "label": "企业学培-基础�?,
+                      "label": "企业学培-基础包",
                       "props": { "optionKey": "2025999480006337" },
                       "children": [
                         {
@@ -262,7 +259,7 @@
                           "label": "套餐名称",
                           "field": "skuName",
                           "input": true,
-                          "props": { "placeholder": "请输入套餐名�? }
+                          "props": { "placeholder": "请输入套餐名称" }
                         },
                         {
                           "id": "sku_37_count",
@@ -270,7 +267,7 @@
                           "label": "成员数量",
                           "field": "skuCount",
                           "input": true,
-                          "props": { "placeholder": "请输入成员数�?, "min": 0 }
+                          "props": { "placeholder": "请输入成员数量", "min": 0 }
                         }
                       ]
                     }
