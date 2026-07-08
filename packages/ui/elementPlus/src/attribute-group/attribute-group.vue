@@ -138,16 +138,21 @@ function getFieldValue(child: ComponentSchema): any {
   const componentConfig = pluginManager.component.getConfigByType(child.type);
   const sync = componentConfig?.attributeSync;
 
+  // syncFields 配置优先：只读取已选中的同步字段
+  const syncFields = child.props?.syncFields as string[] | undefined;
+
   if (sync) {
-    // 找到有 read 方法的字段，用 read 还原组件原始值
-    for (const [fieldKey, entry] of Object.entries(sync)) {
-      if (entry.read) {
+    const keys = syncFields && syncFields.length > 0
+      ? syncFields
+      : Object.keys(sync);
+    for (const fieldKey of keys) {
+      const entry = sync[fieldKey];
+      if (entry?.read) {
         return entry.read(item[fieldKey]);
       }
     }
-    // 没有 read 方法的，取第一个字段的值
-    const primaryKey = Object.keys(sync)[0];
-    return item[primaryKey] ?? null;
+    // 没有 read 方法，取第一个字段的值
+    return item[keys[0]] ?? null;
   }
 
   return item.charValue ?? null;
@@ -162,9 +167,18 @@ function setFieldValue(child: ComponentSchema, rawValue: any): void {
   const componentConfig = pluginManager.component.getConfigByType(child.type);
   const sync = componentConfig?.attributeSync;
 
+  // syncFields 配置优先：只写入已选中的同步字段
+  const syncFields = child.props?.syncFields as string[] | undefined;
+
   if (sync) {
-    for (const [fieldKey, entry] of Object.entries(sync)) {
-      item[fieldKey] = entry.write(rawValue, { option: null });
+    const keys = syncFields && syncFields.length > 0
+      ? syncFields
+      : Object.keys(sync);
+    for (const fieldKey of keys) {
+      const entry = sync[fieldKey];
+      if (entry) {
+        item[fieldKey] = entry.write(rawValue, { option: null });
+      }
     }
   } else {
     item.charValue = rawValue;
@@ -172,7 +186,10 @@ function setFieldValue(child: ComponentSchema, rawValue: any): void {
 
   if (rawValue == null || rawValue === '') {
     if (sync) {
-      for (const fieldKey of Object.keys(sync)) {
+      const keys = syncFields && syncFields.length > 0
+        ? syncFields
+        : Object.keys(sync);
+      for (const fieldKey of keys) {
         if (fieldKey !== 'charValue') {
           item[fieldKey] = fieldKey === 'prodordAttachFiles' ? [] : null;
         }

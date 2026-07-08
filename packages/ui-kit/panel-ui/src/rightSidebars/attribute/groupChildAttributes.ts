@@ -1,9 +1,17 @@
+import type { PluginManager } from '@ies/manager';
+
 /**
  * attribute-group 子组件在设计时面板中显示的属性配置。
  * 当子组件处于 attribute-group 内时，替换标准属性面板。
+ * syncFields 的选项动态来自该组件类型的 attributeSync 声明。
  */
+export function getAttributeGroupChildAttributes(
+  pluginManager: PluginManager,
+  selectedNodeType?: string,
+) {
+  // 根据选中组件类型获取可用的同步字段
+  const syncOptions = getSyncFieldsForType(pluginManager, selectedNodeType ?? '');
 
-export function getAttributeGroupChildAttributes() {
   return [
     {
       field: 'props.bindAttribute',
@@ -20,6 +28,15 @@ export function getAttributeGroupChildAttributes() {
       type: 'input',
       props: {
         placeholder: '运行时由 API 定义覆盖',
+      },
+    },
+    {
+      field: 'props.syncFields',
+      label: '同步字段',
+      type: 'checkbox',
+      description: '选择该组件需要同步写入的属性字段',
+      props: {
+        options: syncOptions,
       },
     },
     {
@@ -63,6 +80,22 @@ export function getSectionGroupTemplateAttributes() {
       },
     },
   ];
+}
+
+/**
+ * 获取指定组件类型的 syncFields 可选项。
+ * 从该组件的 attributeSync 声明中提取所有 key。
+ */
+export function getSyncFieldsForType(
+  pluginManager: PluginManager,
+  type: string,
+): { label: string; value: string }[] {
+  const config = pluginManager.component.getConfigByType(type);
+  const sync = config?.attributeSync;
+  if (!sync) {
+    return [{ label: 'charValue', value: 'charValue' }];
+  }
+  return Object.keys(sync).map((key) => ({ label: key, value: key }));
 }
 
 /**

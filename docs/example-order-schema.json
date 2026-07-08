@@ -98,6 +98,7 @@
                       "input": true,
                       "props": {
                         "bindAttribute": "8044",
+                        "syncFields": ["charValue", "charDisplay"],
                         "placeholder": "请选择渠道类型",
                         "options": [
                           { "label": "政企渠道", "value": "政企渠道" },
@@ -114,6 +115,7 @@
                       "input": true,
                       "props": {
                         "bindAttribute": "8028",
+                        "syncFields": ["charValue"],
                         "placeholder": "输入发展渠道编码"
                       }
                     },
@@ -125,6 +127,7 @@
                       "input": true,
                       "props": {
                         "bindAttribute": "8043",
+                        "syncFields": ["charValue"],
                         "placeholder": "输入发展渠道名称"
                       }
                     },
@@ -136,6 +139,7 @@
                       "input": true,
                       "props": {
                         "bindAttribute": "8045",
+                        "syncFields": ["charValue", "charDisplay"],
                         "placeholder": "请选择业务用途",
                         "options": [
                           { "label": "自用业务", "value": "1" },
@@ -210,6 +214,7 @@
                               "input": true,
                               "props": {
                                 "bindAttribute": "6001702001",
+                                "syncFields": ["charValue", "charDisplay"],
                                 "placeholder": "请选择统付类型",
                                 "options": [
                                   { "label": "统付", "value": "01" },
@@ -225,6 +230,7 @@
                               "input": true,
                               "props": {
                                 "bindAttribute": "6001702002",
+                                "syncFields": ["charValue"],
                                 "placeholder": "请输入管理员姓名"
                               }
                             },
@@ -236,6 +242,7 @@
                               "input": true,
                               "props": {
                                 "bindAttribute": "6001702003",
+                                "syncFields": ["charValue"],
                                 "placeholder": "请输入手机号"
                               }
                             }

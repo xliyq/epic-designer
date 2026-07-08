@@ -39,7 +39,10 @@ const contextAttributes = computed(() => {
 
   // 在 attribute-group 内 -> 显示属性组子配置面板
   if (isInAttributeGroup(matched)) {
-    return getAttributeGroupChildAttributes();
+    return getAttributeGroupChildAttributes(
+      pluginManager,
+      selectedNode.value.type,
+    );
   }
 
   // section-group 区块模板 -> 显示区块模板配置面板
