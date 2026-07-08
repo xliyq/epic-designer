@@ -1,0 +1,505 @@
+{
+  "schemas": [
+    {
+      "id": "root",
+      "label": "页面",
+      "type": "page",
+      "children": [
+        {
+          "id": "form_order",
+          "label": "订单表单",
+          "type": "form",
+          "name": "default",
+          "props": {
+            "labelWidth": 120,
+            "labelLayout": "fixed",
+            "labelAlign": "right",
+            "layout": "horizontal"
+          },
+          "children": [
+            {
+              "id": "input_createStaffName",
+              "type": "input",
+              "label": "创建人姓名",
+              "field": "createStaffName",
+              "input": true,
+              "props": { "placeholder": "请输入创建人姓名" }
+            },
+            {
+              "id": "input_createStaffNum",
+              "type": "input",
+              "label": "创建人工号",
+              "field": "createStaffNum",
+              "input": true,
+              "props": { "placeholder": "请输入工号" }
+            },
+            {
+              "id": "input_customerName",
+              "type": "input",
+              "label": "客户名称",
+              "field": "customerName",
+              "input": true,
+              "props": { "placeholder": "请输入客户名称" }
+            },
+            {
+              "id": "input_customerNum",
+              "type": "input",
+              "label": "客户编号",
+              "field": "customerNum",
+              "input": true,
+              "props": { "placeholder": "请输入客户编号" }
+            },
+            {
+              "id": "select_orderSource",
+              "type": "select",
+              "label": "订单来源",
+              "field": "orderSource",
+              "input": true,
+              "props": {
+                "placeholder": "请选择订单来源",
+                "options": [
+                  { "label": "Web", "value": "web" },
+                  { "label": "APP", "value": "app" },
+                  { "label": "API", "value": "api" }
+                ]
+              }
+            },
+            {
+              "id": "checkbox_selectedOffers",
+              "type": "checkbox",
+              "label": "选择套餐",
+              "field": "selectedOffers",
+              "input": true,
+              "props": {
+                "placeholder": "请选择套餐",
+                "options": [
+                  { "label": "企业学培-尊享包", "value": "2025999480006336" },
+                  { "label": "企业学培-基础包", "value": "2025999480006337" }
+                ]
+              }
+            },
+
+            {
+              "id": "subform_packages",
+              "type": "subForm",
+              "label": "包裹信息",
+              "field": "packages",
+              "props": {
+                "title": "包裹信息",
+                "bordered": true,
+                "collapsible": false
+              },
+              "children": [
+                {
+                  "id": "input_offerName",
+                  "type": "input",
+                  "label": "商品名称",
+                  "field": "offerName",
+                  "input": true,
+                  "props": { "placeholder": "请输入商品名称" }
+                },
+                {
+                  "id": "input_packageName",
+                  "type": "input",
+                  "label": "包裹名称",
+                  "field": "packageName",
+                  "input": true,
+                  "props": { "placeholder": "请输入包裹名称" }
+                },
+                {
+                  "id": "input_packageNum",
+                  "type": "input",
+                  "label": "包裹编号",
+                  "field": "packageNum",
+                  "input": true,
+                  "props": { "placeholder": "请输入包裹编号" }
+                },
+                {
+                  "id": "select_validateMode",
+                  "type": "select",
+                  "label": "生效方式",
+                  "field": "validateModeNum",
+                  "input": true,
+                  "props": {
+                    "placeholder": "请选择生效方式",
+                    "options": [
+                      { "label": "立即生效", "value": "1" },
+                      { "label": "预约生效", "value": "2" }
+                    ]
+                  }
+                },
+                {
+                  "id": "select_orderMode",
+                  "type": "select",
+                  "label": "受理模式",
+                  "field": "orderModeNum",
+                  "input": true,
+                  "props": {
+                    "placeholder": "请选择受理模式",
+                    "options": [
+                      { "label": "主办省一点受理，一点支付", "value": "3" },
+                      { "label": "分别受理", "value": "1" }
+                    ]
+                  }
+                },
+
+                {
+                  "id": "attrgroup_poordCharacters",
+                  "type": "attribute-group",
+                  "label": "商品属性",
+                  "field": "poordCharacters",
+                  "input": true,
+                  "props": {
+                    "title": "商品属性",
+                    "bordered": true,
+                    "collapsible": true,
+                    "gridEnable": true,
+                    "gridCols": 2
+                  },
+                  "children": [
+                    {
+                      "id": "attr_8044",
+                      "type": "select",
+                      "label": "一级渠道类型",
+                      "field": "",
+                      "input": true,
+                      "props": {
+                        "bindAttribute": "8044",
+                        "placeholder": "请选择渠道类型"
+                      }
+                    },
+                    {
+                      "id": "attr_8028",
+                      "type": "input",
+                      "label": "发展渠道编码",
+                      "field": "",
+                      "input": true,
+                      "props": {
+                        "bindAttribute": "8028",
+                        "placeholder": "输入发展渠道编码"
+                      }
+                    },
+                    {
+                      "id": "attr_8043",
+                      "type": "input",
+                      "label": "发展渠道名称",
+                      "field": "",
+                      "input": true,
+                      "props": {
+                        "bindAttribute": "8043",
+                        "placeholder": "输入发展渠道名称"
+                      }
+                    },
+                    {
+                      "id": "attr_8045",
+                      "type": "select",
+                      "label": "业务用途",
+                      "field": "",
+                      "input": true,
+                      "props": {
+                        "bindAttribute": "8045",
+                        "placeholder": "请选择业务用途"
+                      }
+                    },
+                    {
+                      "id": "attr_8046",
+                      "type": "select",
+                      "label": "统谈统签统付业务",
+                      "field": "",
+                      "input": true,
+                      "props": {
+                        "bindAttribute": "8046",
+                        "placeholder": "请选择统谈统签统付业务"
+                      }
+                    },
+                    {
+                      "id": "attr_8032",
+                      "type": "input",
+                      "label": "酬金结算比例",
+                      "field": "",
+                      "input": true,
+                      "props": {
+                        "bindAttribute": "8032",
+                        "placeholder": "请输入发展渠道酬金结算比例"
+                      }
+                    }
+                  ]
+                },
+
+                {
+                  "id": "attrgroup_poordExtendCharacters",
+                  "type": "attribute-group",
+                  "label": "扩展属性",
+                  "field": "poordExtendCharacters",
+                  "input": true,
+                  "props": {
+                    "title": "扩展属性",
+                    "bordered": true,
+                    "collapsible": true
+                  },
+                  "children": [
+                    {
+                      "id": "ext_7001",
+                      "type": "select",
+                      "label": "付费类型",
+                      "field": "",
+                      "input": true,
+                      "props": {
+                        "bindAttribute": "7001",
+                        "placeholder": "请选择付费类型"
+                      }
+                    },
+                    {
+                      "id": "ext_7002",
+                      "type": "select",
+                      "label": "缴费周期",
+                      "field": "",
+                      "input": true,
+                      "props": {
+                        "bindAttribute": "7002",
+                        "placeholder": "请选择缴费周期"
+                      }
+                    },
+                    {
+                      "id": "ext_7003",
+                      "type": "input",
+                      "label": "缴费周期时长",
+                      "field": "",
+                      "input": true,
+                      "props": {
+                        "bindAttribute": "7003",
+                        "placeholder": "请输入缴费周期时长"
+                      }
+                    }
+                  ]
+                },
+
+                {
+                  "id": "sectiongroup_poordContacts",
+                  "type": "section-group",
+                  "label": "联系人信息",
+                  "field": "poordContacts",
+                  "input": true,
+                  "props": {
+                    "title": "联系人信息",
+                    "keyField": "contactorType",
+                    "selectionField": "selectedContacts",
+                    "bordered": true,
+                    "collapsible": false
+                  },
+                  "children": [
+                    {
+                      "optionKey": "2",
+                      "label": "业务联系人",
+                      "children": [
+                        {
+                          "id": "contact_2_name",
+                          "type": "input",
+                          "label": "联系人姓名",
+                          "field": "contactorName",
+                          "input": true,
+                          "props": { "placeholder": "请输入联系人姓名" }
+                        },
+                        {
+                          "id": "contact_2_phone",
+                          "type": "input",
+                          "label": "联系电话",
+                          "field": "contactorPhoneNum",
+                          "input": true,
+                          "props": { "placeholder": "请输入联系电话" }
+                        }
+                      ]
+                    },
+                    {
+                      "optionKey": "5",
+                      "label": "创建人",
+                      "children": [
+                        {
+                          "id": "contact_5_name",
+                          "type": "input",
+                          "label": "联系人姓名",
+                          "field": "contactorName",
+                          "input": true,
+                          "props": { "placeholder": "请输入联系人姓名" }
+                        },
+                        {
+                          "id": "contact_5_phone",
+                          "type": "input",
+                          "label": "联系电话",
+                          "field": "contactorPhoneNum",
+                          "input": true,
+                          "props": { "placeholder": "请输入联系电话" }
+                        }
+                      ]
+                    },
+                    {
+                      "optionKey": "4",
+                      "label": "管理员",
+                      "children": [
+                        {
+                          "id": "contact_4_name",
+                          "type": "input",
+                          "label": "联系人姓名",
+                          "field": "contactorName",
+                          "input": true,
+                          "props": { "placeholder": "请输入联系人姓名" }
+                        },
+                        {
+                          "id": "contact_4_phone",
+                          "type": "input",
+                          "label": "联系电话",
+                          "field": "contactorPhoneNum",
+                          "input": true,
+                          "props": { "placeholder": "请输入联系电话" }
+                        }
+                      ]
+                    }
+                  ]
+                },
+
+                {
+                  "id": "sectiongroup_prodordSkus",
+                  "type": "section-group",
+                  "label": "套餐信息",
+                  "field": "prodordSkus",
+                  "input": true,
+                  "props": {
+                    "title": "套餐信息",
+                    "keyField": "skuNum",
+                    "selectionField": "selectedOffers",
+                    "bordered": true,
+                    "collapsible": false
+                  },
+                  "children": [
+                    {
+                      "optionKey": "2025999480006336",
+                      "label": "企业学培-尊享包",
+                      "children": [
+                        {
+                          "id": "sku_36_name",
+                          "type": "input",
+                          "label": "套餐名称",
+                          "field": "skuName",
+                          "input": true,
+                          "props": { "placeholder": "请输入套餐名称" }
+                        },
+                        {
+                          "id": "sku_36_type",
+                          "type": "select",
+                          "label": "产品类型",
+                          "field": "productType",
+                          "input": true,
+                          "props": {
+                            "placeholder": "请选择产品类型",
+                            "options": [
+                              { "label": "集团产品", "value": "2" },
+                              { "label": "个人产品", "value": "1" }
+                            ]
+                          }
+                        },
+                        {
+                          "id": "attrgroup_prodordCharacters",
+                          "type": "attribute-group",
+                          "label": "套餐属性",
+                          "field": "prodordCharacters",
+                          "input": true,
+                          "props": {
+                            "title": "套餐属性",
+                            "bordered": true,
+                            "collapsible": true,
+                            "gridEnable": true,
+                            "gridCols": 2
+                          },
+                          "children": [
+                            {
+                              "id": "sku_attr_001",
+                              "type": "select",
+                              "label": "统付类型",
+                              "field": "",
+                              "input": true,
+                              "props": {
+                                "bindAttribute": "6001702001",
+                                "placeholder": "请选择统付类型"
+                              }
+                            },
+                            {
+                              "id": "sku_attr_002",
+                              "type": "input",
+                              "label": "企业管理员姓名",
+                              "field": "",
+                              "input": true,
+                              "props": {
+                                "bindAttribute": "6001702002",
+                                "placeholder": "请输入管理员姓名"
+                              }
+                            },
+                            {
+                              "id": "sku_attr_003",
+                              "type": "input",
+                              "label": "企业管理员手机号",
+                              "field": "",
+                              "input": true,
+                              "props": {
+                                "bindAttribute": "6001702003",
+                                "placeholder": "请输入手机号"
+                              }
+                            },
+                            {
+                              "id": "sku_attr_004",
+                              "type": "input",
+                              "label": "企业管理员邮箱",
+                              "field": "",
+                              "input": true,
+                              "props": {
+                                "bindAttribute": "6001702004",
+                                "placeholder": "请输入邮箱"
+                              }
+                            },
+                            {
+                              "id": "sku_attr_005",
+                              "type": "textarea",
+                              "label": "业务需求描述",
+                              "field": "",
+                              "input": true,
+                              "props": {
+                                "bindAttribute": "6001702005",
+                                "placeholder": "请输入业务需求描述"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "optionKey": "2025999480006337",
+                      "label": "企业学培-基础包",
+                      "children": [
+                        {
+                          "id": "sku_37_name",
+                          "type": "input",
+                          "label": "套餐名称",
+                          "field": "skuName",
+                          "input": true,
+                          "props": { "placeholder": "请输入套餐名称" }
+                        },
+                        {
+                          "id": "sku_37_count",
+                          "type": "input",
+                          "label": "成员数量",
+                          "field": "skuCount",
+                          "input": true,
+                          "props": { "placeholder": "请输入成员数量" }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "script": ""
+}
