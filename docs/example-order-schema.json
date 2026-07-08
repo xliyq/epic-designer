@@ -9,8 +9,8 @@
           "id": "form_order",
           "label": "订单表单",
           "type": "form",
-          "name": "default",
           "props": {
+            "name": "default",
             "labelWidth": 120,
             "labelLayout": "fixed",
             "labelAlign": "right",
