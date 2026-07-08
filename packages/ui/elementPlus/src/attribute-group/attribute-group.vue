@@ -3,6 +3,7 @@ import type { ComponentSchema } from '@ies/designer';
 
 import { computed, inject, onMounted, provide, ref, watch } from 'vue';
 
+import { EpicNode } from '@ies/base-ui';
 import {
   ATTRIBUTE_GROUP_CTX_KEY,
   ATTRIBUTE_META_KEY,
@@ -167,6 +168,31 @@ function getFieldProxy(child: ComponentSchema) {
   });
 }
 
+// 为每个子组件构建增强后的 schema（合并 API 定义覆盖）
+function getEnhancedSchema(child: ComponentSchema): ComponentSchema {
+  const mergedProps = getMergedProps(child);
+  return {
+    ...child,
+    field: undefined,  // 清空 field，EpNode 不会走 formData 读写
+    props: mergedProps,
+    noFormItem: true,  // 不包裹 FormItem，attribute-group 自己管理 label
+  };
+}
+
+// 为每个子组件缓存 proxy 和 enhancedSchema
+const childContext = computed(() => {
+  const list: { schema: ComponentSchema; proxy: any }[] = [];
+  for (const child of children.value) {
+    if (child.props?.bindAttribute) {
+      list.push({
+        schema: getEnhancedSchema(child),
+        proxy: getFieldProxy(child),
+      });
+    }
+  }
+  return list;
+});
+
 function getMergedProps(child: ComponentSchema): Record<string, any> {
   const bindAttr = child.props?.bindAttribute;
   const def = bindAttr ? findAttrDef(bindAttr) : null;
@@ -192,11 +218,6 @@ function getMergedProps(child: ComponentSchema): Record<string, any> {
 
   const { bindAttribute, syncFields, metaOverrides, ...rest } = designProps;
   return { ...rest, ...merged };
-}
-
-function resolveComponent(type: string) {
-  const cmp = pluginManager.component.get(type);
-  return cmp;
 }
 
 // 容器视觉属性
@@ -291,18 +312,18 @@ const gridStyle = computed(() => {
       </slot>
     </div>
 
-    <!-- 运行模式：自管理渲染 -->
+    <!-- 运行模式：用 EpNode 渲染，通过 modelValue 控制数据绑定 -->
     <div v-else v-show="!collapsed" class="ep-attr-group__body" :style="gridStyle">
-      <template v-for="child in children" :key="child.id">
-        <div v-if="child.props?.bindAttribute" class="ep-attr-group__field">
+      <template v-for="ctx in childContext" :key="ctx.schema.id">
+        <div class="ep-attr-group__field">
           <label class="ep-attr-group__field-label">
-            {{ getMergedProps(child).label ?? child.label ?? '' }}
+            {{ ctx.schema.props?.label ?? '' }}
           </label>
           <div class="ep-attr-group__field-control">
-            <component
-              :is="resolveComponent(child.type)"
-              v-model="getFieldProxy(child).value"
-              v-bind="getMergedProps(child)"
+            <EpicNode
+              :component-schema="ctx.schema"
+              :model-value="ctx.proxy.value"
+              @update:model-value="ctx.proxy.value = $event"
             />
           </div>
         </div>
