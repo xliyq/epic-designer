@@ -44,6 +44,10 @@ const children = computed(() => props.componentSchema?.children ?? []);
 // 内部数据：固定长度 = children.length，null = 隐藏
 const internalData = ref<(Record<string, any> | null)[]>([]);
 
+// 防止 watch 互相触发的死循环标记
+let isUpdatingFromModelValue = false;
+let isUpdatingFromSelection = false;
+
 function initFromModelValue(arr: any[]) {
   if (!Array.isArray(arr) || arr.length === 0) {
     internalData.value = children.value.map(() => null);
@@ -61,7 +65,10 @@ function initFromModelValue(arr: any[]) {
 watch(
   () => props.modelValue,
   (arr) => {
+    if (isUpdatingFromSelection) return;
+    isUpdatingFromModelValue = true;
     initFromModelValue(arr ?? []);
+    isUpdatingFromModelValue = false;
   },
   { immediate: true, deep: true },
 );
@@ -71,6 +78,7 @@ watch(
   () => (formData as any)[selectionField.value],
   (selected: any) => {
     if (!selectionField.value || !Array.isArray(selected)) return;
+    isUpdatingFromSelection = true;
     children.value.forEach((tpl, i) => {
       const optKey = tpl.optionKey ?? tpl.props?.optionKey ?? '';
       const isSelected = selected.includes(optKey);
@@ -81,6 +89,7 @@ watch(
       }
     });
     emitOutput();
+    isUpdatingFromSelection = false;
   },
   { deep: true },
 );
@@ -88,6 +97,7 @@ watch(
 watch(
   internalData,
   () => {
+    if (isUpdatingFromModelValue) return;
     emitOutput();
   },
   { deep: true },
