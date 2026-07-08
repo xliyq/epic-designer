@@ -38,6 +38,7 @@ import Textarea from './textarea';
 import UploadFile from './upload-file';
 import UploadImage from './upload-image';
 import AttributeGroup from './attribute-group';
+import SectionGroup from './section-group';
 
 // 引入样式
 import './index.less';
@@ -55,6 +56,7 @@ export function setupElementPlus(
     FormItem,
     SubForm,
     AttributeGroup,
+    SectionGroup,
     Input,
     Textarea,
     InputNumber,
