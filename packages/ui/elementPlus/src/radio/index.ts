@@ -119,4 +119,8 @@ export default {
   groupName: '表单',
   icon: 'icon--epic--radio-button-checked-outline',
   sort: 850,
+  attributeSync: {
+    charValue: (rawValue) => rawValue,
+    charDisplay: (rawValue, extra) => extra?.option?.label ?? null,
+  },
 } as ComponentConfigModel;

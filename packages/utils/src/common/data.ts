@@ -578,8 +578,12 @@ export function getFormSchemas(
     },
     false,
     (currentNode: ComponentSchema) => {
-      // 过滤子表单子节点
-      return currentNode.type !== 'subform';
+      // 过滤子表单、属性组、区块组子节点
+      return (
+        currentNode.type !== 'subform' &&
+        currentNode.type !== 'attribute-group' &&
+        currentNode.type !== 'section-group'
+      );
     },
   ) as ComponentSchema[];
 
@@ -1035,6 +1039,11 @@ export function reorganizeSchemasForTableView(
           return false;
         }
         if (config?.isSubForm) {
+          item.class = 'ep-sub-form-block ep-full-width';
+          subForms.push(item);
+          return false;
+        }
+        if (config?.isAttributeGroup || config?.isSectionGroup) {
           item.class = 'ep-sub-form-block ep-full-width';
           subForms.push(item);
           return false;

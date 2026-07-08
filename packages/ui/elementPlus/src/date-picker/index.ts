@@ -213,4 +213,7 @@ export default {
   groupName: '表单',
   icon: 'icon--epic--calendar-month-outline-rounded',
   sort: 910,
+  attributeSync: {
+    charValue: (rawValue) => (rawValue ? String(rawValue) : null),
+  },
 } as ComponentConfigModel;

@@ -37,6 +37,7 @@ import Tabs from './tabs';
 import Textarea from './textarea';
 import UploadFile from './upload-file';
 import UploadImage from './upload-image';
+import AttributeGroup from './attribute-group';
 
 // 引入样式
 import './index.less';
@@ -53,6 +54,7 @@ export function setupElementPlus(
     Form,
     FormItem,
     SubForm,
+    AttributeGroup,
     Input,
     Textarea,
     InputNumber,

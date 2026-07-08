@@ -132,4 +132,10 @@ export default {
   groupName: '表单',
   icon: 'icon--epic--dialogs-outline-rounded',
   sort: 860,
+  attributeSync: {
+    charValue: (rawValue) =>
+      Array.isArray(rawValue) ? rawValue.join(',') : String(rawValue ?? ''),
+    charDisplay: (rawValue, extra) =>
+      Array.isArray(rawValue) ? rawValue.join(',') : String(rawValue ?? ''),
+  },
 } as ComponentConfigModel;

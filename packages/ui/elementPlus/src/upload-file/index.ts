@@ -84,4 +84,11 @@ export default {
   groupName: '表单',
   icon: 'icon--epic--upload-rounded',
   sort: 920,
+  attributeSync: {
+    charValue: (rawValue) =>
+      Array.isArray(rawValue)
+        ? rawValue.map((f: any) => f.fileId ?? f.uid ?? '').join(',')
+        : '',
+    prodordAttachFiles: (rawValue) => (Array.isArray(rawValue) ? rawValue : []),
+  },
 } as ComponentConfigModel;
