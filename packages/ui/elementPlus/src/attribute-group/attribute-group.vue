@@ -169,13 +169,6 @@ function setFieldValue(child: ComponentSchema, rawValue: any): void {
   emitOutput();
 }
 
-function getFieldProxy(child: ComponentSchema) {
-  return computed({
-    get: () => getFieldValue(child),
-    set: (val: any) => setFieldValue(child, val),
-  });
-}
-
 // 为每个子组件构建增强后的 schema（合并 API 定义覆盖）
 function getEnhancedSchema(child: ComponentSchema): ComponentSchema {
   const mergedProps = getMergedProps(child);
@@ -190,18 +183,27 @@ function getEnhancedSchema(child: ComponentSchema): ComponentSchema {
 }
 
 // 为每个子组件缓存 proxy 和 enhancedSchema
-const childContext = computed(() => {
-  const list: { schema: ComponentSchema; proxy: any }[] = [];
-  for (const child of children.value) {
-    if (child.props?.bindAttribute) {
-      list.push({
-        schema: getEnhancedSchema(child),
-        proxy: getFieldProxy(child),
-      });
-    }
-  }
-  return list;
-});
+// 用 ref 缓存避免 computed 重建
+const childContext = ref<{ schema: ComponentSchema; child: ComponentSchema }[]>([]);
+
+function rebuildChildContext() {
+  childContext.value = children.value
+    .filter((c) => c.props?.bindAttribute)
+    .map((c) => ({
+      schema: getEnhancedSchema(c),
+      child: c,
+    }));
+}
+
+watch(children, rebuildChildContext, { immediate: true });
+
+function getChildValue(child: ComponentSchema): any {
+  return getFieldValue(child);
+}
+
+function setChildValue(child: ComponentSchema, val: any): void {
+  setFieldValue(child, val);
+}
 
 function getMergedProps(child: ComponentSchema): Record<string, any> {
   const bindAttr = child.props?.bindAttribute;
@@ -332,8 +334,8 @@ const gridStyle = computed(() => {
           <div class="ep-attr-group__field-control">
             <EpicNode
               :component-schema="ctx.schema"
-              :model-value="ctx.proxy.value"
-              @update:model-value="ctx.proxy.value = $event"
+              :model-value="getChildValue(ctx.child)"
+              @update:model-value="setChildValue(ctx.child, $event)"
             />
           </div>
         </div>
