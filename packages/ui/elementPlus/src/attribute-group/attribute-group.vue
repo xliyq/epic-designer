@@ -75,9 +75,17 @@ function emitOutput() {
 }
 
 function initFromModelValue(arr: any[]) {
-  if (!Array.isArray(arr)) {
-    internalArray.value = [];
-    lastEmitted = [];
+  if (!Array.isArray(arr) || arr.length === 0) {
+    // 没有外部数据时，根据子组件的 bindAttribute 初始化空项
+    internalArray.value = children.value
+      .filter((c) => c.props?.bindAttribute)
+      .map((c) => ({
+        charNum: c.props.bindAttribute,
+        charValue: null,
+        charDisplay: null,
+        prodordAttachFiles: [],
+      }));
+    lastEmitted = buildOutput();
     return;
   }
   internalArray.value = arr.map((item) => ({ ...item }));
@@ -171,9 +179,11 @@ function getFieldProxy(child: ComponentSchema) {
 // 为每个子组件构建增强后的 schema（合并 API 定义覆盖）
 function getEnhancedSchema(child: ComponentSchema): ComponentSchema {
   const mergedProps = getMergedProps(child);
+  const def = child.props?.bindAttribute ? findAttrDef(child.props.bindAttribute) : null;
   return {
     ...child,
     field: undefined,  // 清空 field，EpNode 不会走 formData 读写
+    label: def?.charName ?? child.label ?? '',
     props: mergedProps,
     noFormItem: true,  // 不包裹 FormItem，attribute-group 自己管理 label
   };
@@ -316,8 +326,8 @@ const gridStyle = computed(() => {
     <div v-else v-show="!collapsed" class="ep-attr-group__body" :style="gridStyle">
       <template v-for="ctx in childContext" :key="ctx.schema.id">
         <div class="ep-attr-group__field">
-          <label class="ep-attr-group__field-label">
-            {{ ctx.schema.props?.label ?? '' }}
+          <label v-if="ctx.schema.label" class="ep-attr-group__field-label">
+            {{ ctx.schema.label }}
           </label>
           <div class="ep-attr-group__field-control">
             <EpicNode
