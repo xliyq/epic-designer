@@ -9,6 +9,7 @@ import {
   usePageManager,
 } from '@ies/designer';
 import { pluginManager } from '@ies/manager';
+import { deepEqual } from '@ies/utils';
 
 defineOptions({
   name: 'EpSectionGroup',
@@ -44,13 +45,27 @@ const children = computed(() => props.componentSchema?.children ?? []);
 // 内部数据：固定长度 = children.length，null = 隐藏
 const internalData = ref<(Record<string, any> | null)[]>([]);
 
-// 防止 watch 互相触发的死循环标记
-let isUpdatingFromModelValue = false;
-let isUpdatingFromSelection = false;
+// 上次 emit 的快照，用于跳过 EpNode 回写引发的 echo
+let lastEmitted: any[] = [];
+
+function buildOutput(): any[] {
+  return internalData.value.filter(
+    (item): item is Record<string, any> => item !== null,
+  );
+}
+
+function emitOutput() {
+  const output = buildOutput();
+  // 只在数据真正变化时 emit，跳过回写 echo
+  if (deepEqual(output, lastEmitted)) return;
+  lastEmitted = output;
+  emit('update:modelValue', output);
+}
 
 function initFromModelValue(arr: any[]) {
   if (!Array.isArray(arr) || arr.length === 0) {
     internalData.value = children.value.map(() => null);
+    lastEmitted = [];
     return;
   }
   internalData.value = children.value.map((tpl) => {
@@ -60,25 +75,25 @@ function initFromModelValue(arr: any[]) {
     );
     return match ? { ...match } : null;
   });
+  lastEmitted = buildOutput();
 }
 
+// 外部 modelValue 变化 -> 初始化内部数据（setData 回填场景）
+// 用 deepEqual 跳过 EpNode 回写引发的 echo
 watch(
   () => props.modelValue,
   (arr) => {
-    if (isUpdatingFromSelection) return;
-    isUpdatingFromModelValue = true;
+    if (deepEqual(arr, lastEmitted)) return;
     initFromModelValue(arr ?? []);
-    isUpdatingFromModelValue = false;
   },
   { immediate: true, deep: true },
 );
 
-// 监听选择字段变化
+// 监听选择字段变化 -> 控制显隐
 watch(
   () => (formData as any)[selectionField.value],
   (selected: any) => {
     if (!selectionField.value || !Array.isArray(selected)) return;
-    isUpdatingFromSelection = true;
     children.value.forEach((tpl, i) => {
       const optKey = tpl.optionKey ?? tpl.props?.optionKey ?? '';
       const isSelected = selected.includes(optKey);
@@ -89,26 +104,12 @@ watch(
       }
     });
     emitOutput();
-    isUpdatingFromSelection = false;
   },
   { deep: true },
 );
 
-watch(
-  internalData,
-  () => {
-    if (isUpdatingFromModelValue) return;
-    emitOutput();
-  },
-  { deep: true },
-);
-
-function emitOutput() {
-  const output = internalData.value.filter(
-    (item): item is Record<string, any> => item !== null,
-  );
-  emit('update:modelValue', output);
-}
+// 不再 watch(internalData) 自动 emit
+// 用户编辑子组件时通过 getFieldProxy 的 setter 显式调用 emitOutput
 
 // 设计时上下文
 if (isDesignMode.value) {
@@ -129,11 +130,13 @@ function resolveComponent(type: string) {
 }
 
 // 运行时：渲染区块内子组件的 v-model proxy
-function getFieldProxy(item: Record<string, any>, field: string) {
+// setter 中显式 emit，替代 watch(internalData)
+function getFieldProxy(item: Record<string, any>, fieldName: string) {
   return computed({
-    get: () => item[field],
+    get: () => item[fieldName],
     set: (val: any) => {
-      item[field] = val;
+      item[fieldName] = val;
+      emitOutput();
     },
   });
 }
@@ -214,13 +217,13 @@ const visibleCount = computed(
                   />
                 </div>
               </div>
-              <!-- 嵌套 attribute-group：由 EpNode 渲染 -->
+              <!-- 嵌套 attribute-group -->
               <template v-else-if="child.type === 'attribute-group'">
                 <component
                   :is="resolveComponent(child.type)"
                   :component-schema="child"
                   :model-value="item[child.field ?? '']"
-                  @update:model-value="(val: any) => { item[child.field ?? ''] = val }"
+                  @update:model-value="(val: any) => { item[child.field ?? ''] = val; emitOutput() }"
                 />
               </template>
             </template>

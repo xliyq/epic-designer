@@ -10,6 +10,7 @@ import {
   usePageManager,
 } from '@ies/designer';
 import { pluginManager } from '@ies/manager';
+import { deepEqual } from '@ies/utils';
 
 defineOptions({
   name: 'EpAttributeGroup',
@@ -53,37 +54,47 @@ const groupMeta = computed<Record<string, any>>(() => {
 });
 
 const internalArray = ref<any[]>([]);
+let lastEmitted: any[] = [];
+
+function buildOutput(): any[] {
+  return internalArray.value.map((item) => {
+    const merged = { ...item };
+    for (const [k, v] of Object.entries(groupMeta.value)) {
+      if (!(k in merged)) merged[k] = v;
+    }
+    return merged;
+  });
+}
+
+function emitOutput() {
+  const output = buildOutput();
+  if (deepEqual(output, lastEmitted)) return;
+  lastEmitted = output;
+  emit('update:modelValue', output);
+}
 
 function initFromModelValue(arr: any[]) {
   if (!Array.isArray(arr)) {
     internalArray.value = [];
+    lastEmitted = [];
     return;
   }
   internalArray.value = arr.map((item) => ({ ...item }));
+  lastEmitted = buildOutput();
 }
 
+// 外部 modelValue 变化 -> 初始化（跳过 echo）
 watch(
   () => props.modelValue,
   (arr) => {
+    if (deepEqual(arr, lastEmitted)) return;
     initFromModelValue(arr ?? []);
   },
   { immediate: true, deep: true },
 );
 
-watch(
-  internalArray,
-  (val) => {
-    const output = val.map((item) => {
-      const merged = { ...item };
-      for (const [k, v] of Object.entries(groupMeta.value)) {
-        if (!(k in merged)) merged[k] = v;
-      }
-      return merged;
-    });
-    emit('update:modelValue', output);
-  },
-  { deep: true },
-);
+// 不再 watch(internalArray) 自动 emit
+// 用户编辑时通过 setFieldValue -> emitOutput 显式触发
 
 // 设计时上下文注入
 watch(
@@ -145,6 +156,8 @@ function setFieldValue(child: ComponentSchema, rawValue: any): void {
       item.prodordAttachFiles = [];
     }
   }
+
+  emitOutput();
 }
 
 function getFieldProxy(child: ComponentSchema) {
