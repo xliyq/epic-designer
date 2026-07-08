@@ -1,3 +1,4 @@
+export * from './useAttributeGroup';
 export * from './useBuiderDisabled';
 export * from './useBuiderReadonly';
 export * from './useBuilderContext';

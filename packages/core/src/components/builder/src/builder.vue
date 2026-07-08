@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { PageManager } from '@ies/manager';
 import type {
+  AttributeMeta,
   EpNodeInstance,
   FieldStates,
   FormDataModel,
@@ -18,6 +19,7 @@ import {
 
 import { EpBaseLoader, EpicNode } from '@ies/base-ui';
 import {
+  ATTRIBUTE_META_KEY,
   BUILDER_KEY,
   createEventBus,
   FORM_INSTANCES_KEY,
@@ -40,6 +42,8 @@ import { useBuilder } from '../hooks/useBuilder';
 
 // 定义组件的 props 类型
 const props = defineProps<{
+  /** 属性组 API 定义数据，供 attribute-group 组件运行时使用 */
+  attributeMeta?: AttributeMeta;
   /** 禁用表单 */
   disabled?: boolean;
   /** 字段状态规则 */
@@ -141,6 +145,11 @@ provide(BUILDER_KEY, {
 providePageManager(pageManager);
 
 provide(FORM_INSTANCES_KEY, formInstances);
+
+provide(
+  ATTRIBUTE_META_KEY,
+  computed(() => props.attributeMeta ?? {}),
+);
 
 /**
  * 组件加载完成后的处理函数，注: pageSchema更新会触发组件重新加载
