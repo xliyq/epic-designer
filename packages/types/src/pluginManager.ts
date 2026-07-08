@@ -6,14 +6,16 @@ export type ComponentType = AsyncComponentLoader | Component | string;
 
 /**
  * attribute-group 内子组件的数据产出规则。
- * key = 要写入的属性字段名，value = 从组件原始值推导出最终值的函数。
- * rawValue: 组件 v-model 的原始值
- * extra: 额外上下文（如 Select 的选中项 label）
+ * 每个字段包含 write（组件值 -> 数组项字段）和 read（数组项字段 -> 组件值）两个方向。
  */
-export type AttributeSyncMap = Record<
-  string,
-  (rawValue: any, extra?: { option?: any; options?: any[] }) => any
->;
+export interface AttributeSyncEntry {
+  /** 从组件原始值推导出数组项字段值 */
+  write: (rawValue: any, extra?: { option?: any; options?: any[] }) => any;
+  /** 从数组项字段值还原为组件原始值 */
+  read?: (fieldValue: any) => any;
+}
+
+export type AttributeSyncMap = Record<string, AttributeSyncEntry>;
 
 export interface ActivitybarModel {
   component: ComponentType;

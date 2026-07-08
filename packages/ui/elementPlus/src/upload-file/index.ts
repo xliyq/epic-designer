@@ -85,10 +85,15 @@ export default {
   icon: 'icon--epic--upload-rounded',
   sort: 920,
   attributeSync: {
-    charValue: (rawValue) =>
-      Array.isArray(rawValue)
-        ? rawValue.map((f: any) => f.fileId ?? f.uid ?? '').join(',')
-        : '',
-    prodordAttachFiles: (rawValue) => (Array.isArray(rawValue) ? rawValue : []),
+    charValue: {
+      write: (rawValue) =>
+        Array.isArray(rawValue)
+          ? rawValue.map((f: any) => f.fileId ?? f.uid ?? '').join(',')
+          : '',
+    },
+    prodordAttachFiles: {
+      write: (rawValue) => (Array.isArray(rawValue) ? rawValue : []),
+      read: (fieldValue) => (Array.isArray(fieldValue) ? fieldValue : []),
+    },
   },
 } as ComponentConfigModel;

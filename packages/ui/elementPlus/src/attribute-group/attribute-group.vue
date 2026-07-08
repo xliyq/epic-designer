@@ -133,7 +133,24 @@ function getFieldValue(child: ComponentSchema): any {
   const bindAttr = child.props?.bindAttribute;
   if (!bindAttr) return undefined;
   const item = findAttrItem(bindAttr);
-  return item?.charValue ?? null;
+  if (!item) return null;
+
+  const componentConfig = pluginManager.component.getConfigByType(child.type);
+  const sync = componentConfig?.attributeSync;
+
+  if (sync) {
+    // 找到有 read 方法的字段，用 read 还原组件原始值
+    for (const [fieldKey, entry] of Object.entries(sync)) {
+      if (entry.read) {
+        return entry.read(item[fieldKey]);
+      }
+    }
+    // 没有 read 方法的，取第一个字段的值
+    const primaryKey = Object.keys(sync)[0];
+    return item[primaryKey] ?? null;
+  }
+
+  return item.charValue ?? null;
 }
 
 function setFieldValue(child: ComponentSchema, rawValue: any): void {
@@ -146,8 +163,8 @@ function setFieldValue(child: ComponentSchema, rawValue: any): void {
   const sync = componentConfig?.attributeSync;
 
   if (sync) {
-    for (const [fieldKey, derive] of Object.entries(sync)) {
-      item[fieldKey] = (derive as Function)(rawValue, { option: null });
+    for (const [fieldKey, entry] of Object.entries(sync)) {
+      item[fieldKey] = entry.write(rawValue, { option: null });
     }
   } else {
     item.charValue = rawValue;

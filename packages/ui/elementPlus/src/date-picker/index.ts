@@ -214,6 +214,9 @@ export default {
   icon: 'icon--epic--calendar-month-outline-rounded',
   sort: 910,
   attributeSync: {
-    charValue: (rawValue) => (rawValue ? String(rawValue) : null),
+    charValue: {
+      write: (rawValue) => (rawValue ? String(rawValue) : null),
+      read: (fieldValue) => fieldValue ?? null,
+    },
   },
 } as ComponentConfigModel;

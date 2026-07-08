@@ -120,7 +120,12 @@ export default {
   icon: 'icon--epic--radio-button-checked-outline',
   sort: 850,
   attributeSync: {
-    charValue: (rawValue) => rawValue,
-    charDisplay: (rawValue, extra) => extra?.option?.label ?? null,
+    charValue: {
+      write: (rawValue) => rawValue,
+      read: (fieldValue) => fieldValue,
+    },
+    charDisplay: {
+      write: (rawValue, extra) => extra?.option?.label ?? null,
+    },
   },
 } as ComponentConfigModel;
