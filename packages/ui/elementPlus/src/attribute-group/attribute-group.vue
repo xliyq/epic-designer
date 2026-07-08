@@ -76,11 +76,11 @@ function emitOutput() {
 
 function initFromModelValue(arr: any[]) {
   if (!Array.isArray(arr) || arr.length === 0) {
-    // 没有外部数据时，根据子组件的 bindAttribute 初始化空项
+    // 没有外部数据时，根据子组件的 charNum 初始化空项
     internalArray.value = children.value
-      .filter((c) => c.props?.bindAttribute)
+      .filter((c) => c.props?.charNum)
       .map((c) => ({
-        charNum: c.props.bindAttribute,
+        charNum: c.props.charNum,
         charValue: null,
         charDisplay: null,
         prodordAttachFiles: [],
@@ -130,15 +130,14 @@ function findAttrItem(charNum: string) {
 }
 
 function getFieldValue(child: ComponentSchema): any {
-  const bindAttr = child.props?.bindAttribute;
-  if (!bindAttr) return undefined;
-  const item = findAttrItem(bindAttr);
+  const charNum = child.props?.charNum;
+  if (!charNum) return undefined;
+  const item = findAttrItem(charNum);
   if (!item) return null;
 
   const componentConfig = pluginManager.component.getConfigByType(child.type);
   const sync = componentConfig?.attributeSync;
 
-  // syncFields 配置优先：只读取已选中的同步字段
   const syncFields = child.props?.syncFields as string[] | undefined;
 
   if (sync) {
@@ -151,7 +150,6 @@ function getFieldValue(child: ComponentSchema): any {
         return entry.read(item[fieldKey]);
       }
     }
-    // 没有 read 方法，取第一个字段的值
     return item[keys[0]] ?? null;
   }
 
@@ -159,25 +157,45 @@ function getFieldValue(child: ComponentSchema): any {
 }
 
 function setFieldValue(child: ComponentSchema, rawValue: any): void {
-  const bindAttr = child.props?.bindAttribute;
-  if (!bindAttr) return;
-  const item = findAttrItem(bindAttr);
+  const charNum = child.props?.charNum;
+  if (!charNum) return;
+  const item = findAttrItem(charNum);
   if (!item) return;
 
   const componentConfig = pluginManager.component.getConfigByType(child.type);
   const sync = componentConfig?.attributeSync;
 
-  // syncFields 配置优先：只写入已选中的同步字段
   const syncFields = child.props?.syncFields as string[] | undefined;
 
   if (sync) {
     const keys = syncFields && syncFields.length > 0
       ? syncFields
       : Object.keys(sync);
+
+    // 查找标签（用于 charDisplay 同步）
+    let matchedLabel: string | null = null;
+    const options = child.props?.options ?? [];
+    if (Array.isArray(options)) {
+      const matched = options.find((o: any) => String(o.value ?? o.code) === String(rawValue));
+      if (matched) matchedLabel = matched.label ?? matched.name ?? null;
+    }
+    // 如果没有在设计时 options 中找到，尝试从 API 定义中查找
+    if (!matchedLabel) {
+      const def = charNum ? findAttrDef(charNum) : null;
+      if (def?.bizCharEnumSpecLst) {
+        const matched = def.bizCharEnumSpecLst.find(
+          (e: any) => String(e.code ?? e.value) === String(rawValue),
+        );
+        if (matched) matchedLabel = matched.value ?? matched.label ?? null;
+      }
+    }
+
     for (const fieldKey of keys) {
       const entry = sync[fieldKey];
       if (entry) {
-        item[fieldKey] = entry.write(rawValue, { option: null });
+        item[fieldKey] = entry.write(rawValue, {
+          option: matchedLabel ? { label: matchedLabel } : null,
+        });
       }
     }
   } else {
@@ -206,23 +224,22 @@ function setFieldValue(child: ComponentSchema, rawValue: any): void {
 // 为每个子组件构建增强后的 schema（合并 API 定义覆盖）
 function getEnhancedSchema(child: ComponentSchema): ComponentSchema {
   const mergedProps = getMergedProps(child);
-  const def = child.props?.bindAttribute ? findAttrDef(child.props.bindAttribute) : null;
+  const charNum = child.props?.charNum;
+  const def = charNum ? findAttrDef(charNum) : null;
   return {
     ...child,
-    field: undefined,  // 清空 field，EpNode 不会走 formData 读写
+    field: undefined,
     label: def?.charName ?? child.label ?? '',
     props: mergedProps,
-    noFormItem: true,  // 不包裹 FormItem，attribute-group 自己管理 label
+    noFormItem: true,
   };
 }
 
-// 为每个子组件缓存 proxy 和 enhancedSchema
-// 用 ref 缓存避免 computed 重建
 const childContext = ref<{ schema: ComponentSchema; child: ComponentSchema }[]>([]);
 
 function rebuildChildContext() {
   childContext.value = children.value
-    .filter((c) => c.props?.bindAttribute)
+    .filter((c) => c.props?.charNum)
     .map((c) => ({
       schema: getEnhancedSchema(c),
       child: c,
@@ -231,17 +248,48 @@ function rebuildChildContext() {
 
 watch(children, rebuildChildContext, { immediate: true });
 
-function getChildValue(child: ComponentSchema): any {
-  return getFieldValue(child);
-}
+// 改用 computed 映射，确保每个子组件的值响应式更新
+const childBindings = computed(() => {
+  const map = new Map<string, any>();
+  for (const entry of childContext.value) {
+    const charNum = entry.child.props?.charNum;
+    if (!charNum) continue;
+    const item = findAttrItem(charNum);
+    if (!item) {
+      map.set(entry.schema.id!, null);
+      continue;
+    }
 
-function setChildValue(child: ComponentSchema, val: any): void {
-  setFieldValue(child, val);
-}
+    const componentConfig = pluginManager.component.getConfigByType(entry.child.type);
+    const sync = componentConfig?.attributeSync;
+    const syncFields = entry.child.props?.syncFields as string[] | undefined;
+
+    let value = null;
+    if (sync) {
+      const keys = syncFields && syncFields.length > 0
+        ? syncFields
+        : Object.keys(sync);
+      for (const fieldKey of keys) {
+        const syncEntry = sync[fieldKey];
+        if (syncEntry?.read) {
+          value = syncEntry.read(item[fieldKey]);
+          break;
+        }
+      }
+      if (value === null) {
+        value = item[keys[0]] ?? null;
+      }
+    } else {
+      value = item.charValue ?? null;
+    }
+    map.set(entry.schema.id!, value);
+  }
+  return map;
+});
 
 function getMergedProps(child: ComponentSchema): Record<string, any> {
-  const bindAttr = child.props?.bindAttribute;
-  const def = bindAttr ? findAttrDef(bindAttr) : null;
+  const charNum = child.props?.charNum;
+  const def = charNum ? findAttrDef(charNum) : null;
   const designProps = child.props ?? {};
 
   const merged: Record<string, any> = {};
@@ -262,7 +310,7 @@ function getMergedProps(child: ComponentSchema): Record<string, any> {
     Object.assign(merged, overrides);
   }
 
-  const { bindAttribute, syncFields, metaOverrides, ...rest } = designProps;
+  const { charNum: _, syncFields, metaOverrides, ...rest } = designProps;
   return { ...rest, ...merged };
 }
 
@@ -358,22 +406,20 @@ const gridStyle = computed(() => {
       </slot>
     </div>
 
-    <!-- 运行模式：用 EpNode 渲染，通过 modelValue 控制数据绑定 -->
+    <!-- 运行模式 -->
     <div v-else v-show="!collapsed" class="ep-attr-group__body" :style="gridStyle">
-      <template v-for="ctx in childContext" :key="ctx.schema.id">
-        <div class="ep-attr-group__field">
-          <label v-if="ctx.schema.label" class="ep-attr-group__field-label">
-            {{ ctx.schema.label }}
-          </label>
-          <div class="ep-attr-group__field-control">
-            <EpicNode
-              :component-schema="ctx.schema"
-              :model-value="getChildValue(ctx.child)"
-              @update:model-value="setChildValue(ctx.child, $event)"
-            />
-          </div>
+      <div v-for="ctx in childContext" :key="ctx.schema.id" class="ep-attr-group__field">
+        <label v-if="ctx.schema.label" class="ep-attr-group__field-label">
+          {{ ctx.schema.label }}
+        </label>
+        <div class="ep-attr-group__field-control">
+          <EpicNode
+            :component-schema="ctx.schema"
+            :model-value="childBindings[ctx.schema.id!]"
+            @update:model-value="(val: any) => setFieldValue(ctx.child, val)"
+          />
         </div>
-      </template>
+      </div>
     </div>
   </div>
 </template>

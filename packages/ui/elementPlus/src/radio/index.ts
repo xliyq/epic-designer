@@ -123,9 +123,11 @@ export default {
     charValue: {
       write: (rawValue) => rawValue,
       read: (fieldValue) => fieldValue,
+      source: '选中值 (code)',
     },
     charDisplay: {
       write: (rawValue, extra) => extra?.option?.label ?? null,
+      source: '选中项中文名 (label)',
     },
   },
 } as ComponentConfigModel;

@@ -138,10 +138,12 @@ export default {
         Array.isArray(rawValue) ? rawValue.join(',') : String(rawValue ?? ''),
       read: (fieldValue) =>
         fieldValue ? String(fieldValue).split(',') : [],
+      source: '选中值列表 (逗号拼接)',
     },
     charDisplay: {
       write: (rawValue) =>
         Array.isArray(rawValue) ? rawValue.join(',') : String(rawValue ?? ''),
+      source: '选中项中文名 (逗号拼接)',
     },
   },
 } as ComponentConfigModel;

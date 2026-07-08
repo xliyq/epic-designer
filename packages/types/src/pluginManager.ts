@@ -5,14 +5,16 @@ import type { ComponentSchema } from './epic-designer';
 export type ComponentType = AsyncComponentLoader | Component | string;
 
 /**
- * attribute-group 内子组件的数据产出规则。
- * 每个字段包含 write（组件值 -> 数组项字段）和 read（数组项字段 -> 组件值）两个方向。
+ * attribute-group 内子组件的字段映射声明。
+ * 每个条目描述：数组项的哪个字段，从组件的什么值推导，以及可读的来源说明。
  */
 export interface AttributeSyncEntry {
   /** 从组件原始值推导出数组项字段值 */
   write: (rawValue: any, extra?: { option?: any; options?: any[] }) => any;
   /** 从数组项字段值还原为组件原始值 */
   read?: (fieldValue: any) => any;
+  /** 取值来源的中文描述，显示在面板中让设计人员理解 */
+  source?: string;
 }
 
 export type AttributeSyncMap = Record<string, AttributeSyncEntry>;

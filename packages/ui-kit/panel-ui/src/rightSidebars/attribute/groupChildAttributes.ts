@@ -3,19 +3,18 @@ import type { PluginManager } from '@ies/manager';
 /**
  * attribute-group 子组件在设计时面板中显示的属性配置。
  * 当子组件处于 attribute-group 内时，替换标准属性面板。
- * syncFields 的选项动态来自该组件类型的 attributeSync 声明。
  */
 export function getAttributeGroupChildAttributes(
   pluginManager: PluginManager,
   selectedNodeType?: string,
 ) {
-  // 根据选中组件类型获取可用的同步字段
-  const syncOptions = getSyncFieldsForType(pluginManager, selectedNodeType ?? '');
+  // 获取该组件类型的字段映射声明
+  const syncEntries = getSyncEntriesForType(pluginManager, selectedNodeType ?? '');
 
   return [
     {
-      field: 'props.bindAttribute',
-      label: '绑定属性',
+      field: 'props.charNum',
+      label: '属性编号',
       type: 'input',
       description: '对应 API 属性定义中的 charNum',
       props: {
@@ -30,13 +29,21 @@ export function getAttributeGroupChildAttributes(
         placeholder: '运行时由 API 定义覆盖',
       },
     },
+    // 字段映射：结构化展示每个字段的取值来源
+    // 用 EOptionsEditor 或自定义编辑器展示，这里先用描述性文本
+    // syncFields 存储为 string[]，如 ["charValue", "charDisplay"]
     {
       field: 'props.syncFields',
-      label: '同步字段',
+      label: '字段映射',
       type: 'checkbox',
-      description: '选择该组件需要同步写入的属性字段',
+      description: syncEntries
+        .map((e) => `${e.field} <- ${e.source}`)
+        .join('\n'),
       props: {
-        options: syncOptions,
+        options: syncEntries.map((e) => ({
+          label: `${e.field} (${e.source})`,
+          value: e.field,
+        })),
       },
     },
     {
@@ -57,13 +64,31 @@ export function getAttributeGroupChildAttributes(
 }
 
 /**
+ * 获取指定组件类型的字段映射声明。
+ * 返回每个字段的名称和取值来源描述。
+ */
+export function getSyncEntriesForType(
+  pluginManager: PluginManager,
+  type: string,
+): { field: string; source: string }[] {
+  const config = pluginManager.component.getConfigByType(type);
+  const sync = config?.attributeSync;
+  if (!sync) {
+    return [{ field: 'charValue', source: '组件值' }];
+  }
+  return Object.entries(sync).map(([key, entry]) => ({
+    field: key,
+    source: entry.source ?? '组件值',
+  }));
+}
+
+/**
  * section-group 区块模板在设计时面板中显示的属性配置。
- * 当选中区块模板（children 中带 optionKey 的节点）时显示。
  */
 export function getSectionGroupTemplateAttributes() {
   return [
     {
-      field: 'optionKey',
+      field: 'props.optionKey',
       label: '选项 Key',
       type: 'input',
       description: '与选择组件的 option value 匹配',
@@ -83,28 +108,9 @@ export function getSectionGroupTemplateAttributes() {
 }
 
 /**
- * 获取指定组件类型的 syncFields 可选项。
- * 从该组件的 attributeSync 声明中提取所有 key。
- */
-export function getSyncFieldsForType(
-  pluginManager: PluginManager,
-  type: string,
-): { label: string; value: string }[] {
-  const config = pluginManager.component.getConfigByType(type);
-  const sync = config?.attributeSync;
-  if (!sync) {
-    return [{ label: 'charValue', value: 'charValue' }];
-  }
-  return Object.keys(sync).map((key) => ({ label: key, value: key }));
-}
-
-/**
  * 检测选中节点的父节点是否为指定类型。
  */
-export function getParentType(
-  matched: any[],
-  parentType: string,
-): boolean {
+export function getParentType(matched: any[], parentType: string): boolean {
   if (!matched || matched.length < 2) return false;
   const parent = matched[matched.length - 2];
   return parent?.type === parentType;
@@ -119,7 +125,6 @@ export function isInAttributeGroup(matched: any[]): boolean {
 
 /**
  * 判断选中节点是否在 section-group 内且为区块模板。
- * section-group 的直接子节点（type=section-template 或带 optionKey）即为区块模板。
  */
 export function isSectionGroupTemplate(matched: any[]): boolean {
   if (!matched || matched.length < 2) return false;

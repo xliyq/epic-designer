@@ -217,6 +217,7 @@ export default {
     charValue: {
       write: (rawValue) => (rawValue ? String(rawValue) : null),
       read: (fieldValue) => fieldValue ?? null,
+      source: '日期值',
     },
   },
 } as ComponentConfigModel;

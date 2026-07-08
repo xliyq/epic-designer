@@ -90,10 +90,12 @@ export default {
         Array.isArray(rawValue)
           ? rawValue.map((f: any) => f.fileId ?? f.uid ?? '').join(',')
           : '',
+      source: '文件ID列表 (逗号拼接)',
     },
     prodordAttachFiles: {
       write: (rawValue) => (Array.isArray(rawValue) ? rawValue : []),
       read: (fieldValue) => (Array.isArray(fieldValue) ? fieldValue : []),
+      source: '文件对象数组',
     },
   },
 } as ComponentConfigModel;

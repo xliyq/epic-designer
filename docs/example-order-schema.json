@@ -20,7 +20,7 @@
             {
               "id": "input_createStaffName",
               "type": "input",
-              "label": "创建人姓名",
+              "label": "创建人姓�?,
               "field": "createStaffName",
               "input": true,
               "props": { "placeholder": "请输入创建人姓名" }
@@ -31,7 +31,7 @@
               "label": "客户名称",
               "field": "customerName",
               "input": true,
-              "props": { "placeholder": "请输入客户名称" }
+              "props": { "placeholder": "请输入客户名�? }
             },
             {
               "id": "checkbox_selectedOffers",
@@ -42,8 +42,8 @@
               "props": {
                 "placeholder": "请选择套餐",
                 "options": [
-                  { "label": "企业学培-尊享包", "value": "2025999480006336" },
-                  { "label": "企业学培-基础包", "value": "2025999480006337" }
+                  { "label": "企业学培-尊享�?, "value": "2025999480006336" },
+                  { "label": "企业学培-基础�?, "value": "2025999480006337" }
                 ]
               }
             },
@@ -65,7 +65,7 @@
                   "label": "商品名称",
                   "field": "offerName",
                   "input": true,
-                  "props": { "placeholder": "请输入商品名称" }
+                  "props": { "placeholder": "请输入商品名�? }
                 },
                 {
                   "id": "input_packageNum",
@@ -73,17 +73,17 @@
                   "label": "包裹编号",
                   "field": "packageNum",
                   "input": true,
-                  "props": { "placeholder": "请输入包裹编号" }
+                  "props": { "placeholder": "请输入包裹编�? }
                 },
 
                 {
                   "id": "attrgroup_poordCharacters",
                   "type": "attribute-group",
-                  "label": "商品属性",
+                  "label": "商品属�?,
                   "field": "poordCharacters",
                   "input": true,
                   "props": {
-                    "title": "商品属性",
+                    "title": "商品属�?,
                     "bordered": true,
                     "collapsible": true,
                     "gridEnable": true,
@@ -93,11 +93,11 @@
                     {
                       "id": "attr_8044",
                       "type": "select",
-                      "label": "一级渠道类型",
+                      "label": "一级渠道类�?,
                       "field": "",
                       "input": true,
                       "props": {
-                        "bindAttribute": "8044",
+                        "charNum": "8044",
                         "syncFields": ["charValue", "charDisplay"],
                         "placeholder": "请选择渠道类型",
                         "options": [
@@ -114,7 +114,7 @@
                       "field": "",
                       "input": true,
                       "props": {
-                        "bindAttribute": "8028",
+                        "charNum": "8028",
                         "syncFields": ["charValue"],
                         "placeholder": "输入发展渠道编码"
                       }
@@ -126,7 +126,7 @@
                       "field": "",
                       "input": true,
                       "props": {
-                        "bindAttribute": "8043",
+                        "charNum": "8043",
                         "syncFields": ["charValue"],
                         "placeholder": "输入发展渠道名称"
                       }
@@ -134,13 +134,13 @@
                     {
                       "id": "attr_8045",
                       "type": "select",
-                      "label": "业务用途",
+                      "label": "业务用�?,
                       "field": "",
                       "input": true,
                       "props": {
-                        "bindAttribute": "8045",
+                        "charNum": "8045",
                         "syncFields": ["charValue", "charDisplay"],
-                        "placeholder": "请选择业务用途",
+                        "placeholder": "请选择业务用�?,
                         "options": [
                           { "label": "自用业务", "value": "1" },
                           { "label": "测试业务", "value": "2" }
@@ -167,7 +167,7 @@
                     {
                       "id": "tpl_sku_36",
                       "type": "section-template",
-                      "label": "企业学培-尊享包",
+                      "label": "企业学培-尊享�?,
                       "props": { "optionKey": "2025999480006336" },
                       "children": [
                         {
@@ -176,7 +176,7 @@
                           "label": "套餐名称",
                           "field": "skuName",
                           "input": true,
-                          "props": { "placeholder": "请输入套餐名称" }
+                          "props": { "placeholder": "请输入套餐名�? }
                         },
                         {
                           "id": "sku_36_type",
@@ -195,11 +195,11 @@
                         {
                           "id": "attrgroup_prodordCharacters",
                           "type": "attribute-group",
-                          "label": "套餐属性",
+                          "label": "套餐属�?,
                           "field": "prodordCharacters",
                           "input": true,
                           "props": {
-                            "title": "套餐属性",
+                            "title": "套餐属�?,
                             "bordered": true,
                             "collapsible": true,
                             "gridEnable": true,
@@ -213,7 +213,7 @@
                               "field": "",
                               "input": true,
                               "props": {
-                                "bindAttribute": "6001702001",
+                                "charNum": "6001702001",
                                 "syncFields": ["charValue", "charDisplay"],
                                 "placeholder": "请选择统付类型",
                                 "options": [
@@ -225,11 +225,11 @@
                             {
                               "id": "sku_attr_002",
                               "type": "input",
-                              "label": "企业管理员姓名",
+                              "label": "企业管理员姓�?,
                               "field": "",
                               "input": true,
                               "props": {
-                                "bindAttribute": "6001702002",
+                                "charNum": "6001702002",
                                 "syncFields": ["charValue"],
                                 "placeholder": "请输入管理员姓名"
                               }
@@ -241,7 +241,7 @@
                               "field": "",
                               "input": true,
                               "props": {
-                                "bindAttribute": "6001702003",
+                                "charNum": "6001702003",
                                 "syncFields": ["charValue"],
                                 "placeholder": "请输入手机号"
                               }
@@ -253,7 +253,7 @@
                     {
                       "id": "tpl_sku_37",
                       "type": "section-template",
-                      "label": "企业学培-基础包",
+                      "label": "企业学培-基础�?,
                       "props": { "optionKey": "2025999480006337" },
                       "children": [
                         {
@@ -262,7 +262,7 @@
                           "label": "套餐名称",
                           "field": "skuName",
                           "input": true,
-                          "props": { "placeholder": "请输入套餐名称" }
+                          "props": { "placeholder": "请输入套餐名�? }
                         },
                         {
                           "id": "sku_37_count",
@@ -270,7 +270,7 @@
                           "label": "成员数量",
                           "field": "skuCount",
                           "input": true,
-                          "props": { "placeholder": "请输入成员数量", "min": 0 }
+                          "props": { "placeholder": "请输入成员数�?, "min": 0 }
                         }
                       ]
                     }
