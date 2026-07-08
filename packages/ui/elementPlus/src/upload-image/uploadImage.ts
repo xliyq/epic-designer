@@ -1,9 +1,9 @@
-import type { UploadProps, UploadUserFile } from 'element-plus';
+﻿import type { UploadProps, UploadUserFile } from 'element-plus';
 
 import { computed, defineComponent, h, ref, watch } from 'vue';
 
-import { pluginManager } from '@ies/manager';
-import { getUUID } from '@ies/utils';
+import { pluginManager } from '@ies/designer';
+import { getUUID } from '@ies/designer';
 import { ElImageViewer, ElMessage, ElUpload } from 'element-plus';
 
 // 封装上传文件组件

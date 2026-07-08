@@ -1,5 +1,5 @@
-<script setup lang="ts">
-import type { ComponentSchema } from '@ies/types';
+﻿<script setup lang="ts">
+import type { ComponentSchema } from '@ies/designer';
 
 import { computed } from 'vue';
 

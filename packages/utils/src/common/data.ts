@@ -520,11 +520,12 @@ export function setValueByPath(object: object, path: string, value: unknown) {
   for (let i = 0; i < pathArray.length - 1; i++) {
     const key = pathArray[i];
 
-    // 如果当前对象的属性不存在，则创建一个新对象或数组
     // eslint-disable-next-line eqeqeq
     if (current[key] == null) {
-      // 如果路径部分是数字，创建数组；否则，创建对象
-      current[key] = Number.isNaN(Number(pathArray[i + 1])) ? {} : [];
+      // 统一创建对象，不因数字键创建数组。
+      // 表单 schema 的 field 可能是纯数字字符串（如 "1"、"2"），
+      // 它们应作为对象键而非数组索引。
+      current[key] = {};
     }
 
     current = current[key];

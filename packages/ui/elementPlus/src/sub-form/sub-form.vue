@@ -1,12 +1,12 @@
-<script lang="ts" setup>
-import type { ComponentSchema } from '@ies/types';
+﻿<script lang="ts" setup>
+import type { ComponentSchema } from '@ies/designer';
 
 import { computed, ref } from 'vue';
 
 import {
   provideFieldPathPrefix,
   useFieldPathPrefix,
-} from '@ies/hooks';
+} from '@ies/designer';
 
 defineOptions({
   name: 'EpSubForm',

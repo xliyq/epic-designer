@@ -1,6 +1,6 @@
 {
   "name": "@ies/designer",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "基于vue3的低代码拖拽表单设计器",
   "private": false,
   "keywords": [
@@ -26,9 +26,9 @@
     "preview": "vite preview",
     "test": "vitest"
   },
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "typings": "dist/@ies/designer/index.d.ts",
+  "main": "index.ts",
+  "module": "index.ts",
+  "typings": "index.ts",
   "publishConfig": {
     "registry": "https://npm.ies.work/"
   },
@@ -42,9 +42,9 @@
     "vue-draggable-plus": "^0.6.1"
   },
   "optionalDependencies": {
-    "@ies/antd": ">=1.1.2",
-    "@ies/element-plus": ">=1.1.2",
-    "@ies/naive-ui": ">=1.1.2"
+    "@ies/antd": ">=0.0.2",
+    "@ies/element-plus": ">=0.0.2",
+    "@ies/naive-ui": ">=0.0.2"
   },
   "devDependencies": {
     "@types/node": "^22.10.6",

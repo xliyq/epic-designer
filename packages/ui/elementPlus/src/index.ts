@@ -1,10 +1,10 @@
-import type { PluginManager } from '@ies/manager';
-import type { SetupConfig } from '@ies/types';
+﻿import type { PluginManager } from '@ies/designer';
+import type { SetupConfig } from '@ies/designer';
 
 import { watchEffect } from 'vue';
 
 // 注册element-plus ui
-import { pluginManager as pManager } from '@ies/manager';
+import { pluginManager as pManager } from '@ies/designer';
 import {
   ElCollapse,
   ElCollapseItem,

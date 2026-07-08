@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import type { ComponentSchema, FormDataModel } from '@ies/types';
+import type { ComponentSchema, FormDataModel } from '@ies/designer';
 
 import { computed, onMounted, ref } from 'vue';
 
-import { provideBuilderDisabled, useForm } from '@ies/hooks';
-import { deepCompareAndModify } from '@ies/utils';
+import { provideBuilderDisabled, useForm, usePageManager } from '@ies/designer';
+import { deepCompareAndModify } from '@ies/designer';
 import { ElForm } from 'element-plus';
 
 interface FormInstance extends InstanceType<typeof ElForm> {

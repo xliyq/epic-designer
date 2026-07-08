@@ -1,13 +1,13 @@
 {
   "name": "epic-designer-project",
-  "version": "1.1.13",
+  "version": "0.0.2",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "pnpm i && turbo run build -F epic-examples && turbo run build",
     "dev": "turbo run dev",
     "lib": "vitest run && turbo run build -F epic-designer",
-    "pack": "pnpm --filter @ies/designer build && pnpm --filter @ies/element-plus build && cd packages/epic-designer && npm pack --pack-destination ../.. && cd ../ui/elementPlus && npm pack --pack-destination ../../.. && cd ../..",
+    "pack": "epic version:check && pnpm --filter @ies/designer build && pnpm --filter @ies/element-plus build && cd packages/epic-designer && npm pack --pack-destination ../.. && cd ../ui/elementPlus && npm pack --pack-destination ../../.. && cd ../..",
     "test": "vitest",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
@@ -15,6 +15,9 @@
     "examples:build": "pnpm run build -F epic-examples",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "lint": "eslint packages/ --fix",
+    "version:sync": "epic version",
+    "version:set": "epic version",
+    "version:check": "epic version:check",
     "postinstall": "pnpm -r run stub --if-present"
   },
   "dependencies": {
