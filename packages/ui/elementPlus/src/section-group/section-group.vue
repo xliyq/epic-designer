@@ -50,8 +50,9 @@ function initFromModelValue(arr: any[]) {
     return;
   }
   internalData.value = children.value.map((tpl) => {
+    const optKey = tpl.optionKey ?? tpl.props?.optionKey ?? '';
     const match = arr.find(
-      (d: any) => String(d[keyField.value]) === String(tpl.optionKey),
+      (d: any) => String(d[keyField.value]) === String(optKey),
     );
     return match ? { ...match } : null;
   });
@@ -71,7 +72,8 @@ watch(
   (selected: any) => {
     if (!selectionField.value || !Array.isArray(selected)) return;
     children.value.forEach((tpl, i) => {
-      const isSelected = selected.includes(tpl.optionKey);
+      const optKey = tpl.optionKey ?? tpl.props?.optionKey ?? '';
+      const isSelected = selected.includes(optKey);
       if (isSelected && !internalData.value[i]) {
         internalData.value[i] = {};
       } else if (!isSelected && internalData.value[i]) {
@@ -108,7 +110,7 @@ if (isDesignMode.value) {
 
 // 区块标题
 function getSectionLabel(tpl: ComponentSchema): string {
-  return tpl.label ?? tpl.optionKey ?? '';
+  return tpl.label ?? tpl.props?.optionKey ?? tpl.optionKey ?? '';
 }
 
 // 运行时：解析子组件

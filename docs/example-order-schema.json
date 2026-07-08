@@ -289,8 +289,10 @@
                   },
                   "children": [
                     {
-                      "optionKey": "2",
+                      "id": "tpl_contact_2",
+                      "type": "section-template",
                       "label": "业务联系人",
+                      "props": { "optionKey": "2" },
                       "children": [
                         {
                           "id": "contact_2_name",
@@ -311,8 +313,10 @@
                       ]
                     },
                     {
-                      "optionKey": "5",
+                      "id": "tpl_contact_5",
+                      "type": "section-template",
                       "label": "创建人",
+                      "props": { "optionKey": "5" },
                       "children": [
                         {
                           "id": "contact_5_name",
@@ -333,8 +337,10 @@
                       ]
                     },
                     {
-                      "optionKey": "4",
+                      "id": "tpl_contact_4",
+                      "type": "section-template",
                       "label": "管理员",
+                      "props": { "optionKey": "4" },
                       "children": [
                         {
                           "id": "contact_4_name",
@@ -372,8 +378,10 @@
                   },
                   "children": [
                     {
-                      "optionKey": "2025999480006336",
+                      "id": "tpl_sku_36",
+                      "type": "section-template",
                       "label": "企业学培-尊享包",
+                      "props": { "optionKey": "2025999480006336" },
                       "children": [
                         {
                           "id": "sku_36_name",
@@ -471,8 +479,10 @@
                       ]
                     },
                     {
-                      "optionKey": "2025999480006337",
+                      "id": "tpl_sku_37",
+                      "type": "section-template",
                       "label": "企业学培-基础包",
+                      "props": { "optionKey": "2025999480006337" },
                       "children": [
                         {
                           "id": "sku_37_name",

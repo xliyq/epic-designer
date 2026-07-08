@@ -86,11 +86,16 @@ export function isInAttributeGroup(matched: any[]): boolean {
 
 /**
  * 判断选中节点是否在 section-group 内且为区块模板。
- * section-group 的直接子节点（带 optionKey）即为区块模板。
+ * section-group 的直接子节点（type=section-template 或带 optionKey）即为区块模板。
  */
 export function isSectionGroupTemplate(matched: any[]): boolean {
   if (!matched || matched.length < 2) return false;
   const parent = matched[matched.length - 2];
   const selected = matched[matched.length - 1];
-  return parent?.type === 'section-group' && selected?.optionKey !== undefined;
+  return (
+    parent?.type === 'section-group' &&
+    (selected?.type === 'section-template' ||
+      selected?.optionKey !== undefined ||
+      selected?.props?.optionKey !== undefined)
+  );
 }
