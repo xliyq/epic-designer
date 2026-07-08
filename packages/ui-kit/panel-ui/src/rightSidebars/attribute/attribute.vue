@@ -6,6 +6,13 @@ import { useDesignerContext, useTableMeta } from '@ies/hooks';
 import { pluginManager } from '@ies/manager';
 import { useClipboard } from '@vueuse/core';
 
+import {
+  getAttributeGroupChildAttributes,
+  getSectionGroupTemplateAttributes,
+  isInAttributeGroup,
+  isSectionGroupTemplate,
+} from './groupChildAttributes';
+
 import EAttributeItem from './modules/attributeItem.vue';
 
 const designer = useDesignerContext();
@@ -25,10 +32,33 @@ const selectedNode = computed(() => {
 
 const tableMeta = useTableMeta(pluginManager);
 
+// 检测选中节点的上下文
+const contextAttributes = computed(() => {
+  const matched = designer.state.matched;
+  if (!matched || !selectedNode.value) return null;
+
+  // 在 attribute-group 内 -> 显示属性组子配置面板
+  if (isInAttributeGroup(matched)) {
+    return getAttributeGroupChildAttributes();
+  }
+
+  // section-group 区块模板 -> 显示区块模板配置面板
+  if (isSectionGroupTemplate(matched)) {
+    return getSectionGroupTemplateAttributes();
+  }
+
+  return null;
+});
+
 // 获取组件属性配置
 const componentAttributes = computed(() => {
   if (!selectedNode.value || !selectedNode.value.type) {
     return [];
+  }
+
+  // 上下文面板优先：如果检测到特殊上下文，替换标准属性
+  if (contextAttributes.value) {
+    return contextAttributes.value;
   }
 
   const baseAttributes =
