@@ -42,9 +42,13 @@ const contextAttributes = computed(() => {
 
   // 在 attribute-group 内 -> 显示属性组子配置面板
   if (isInAttributeGroup(matched)) {
+    const parent = matched.length >= 2 ? matched[matched.length - 2] : undefined;
+    const parentGridEnabled = parent?.props?.gridEnable === true;
+    const gridCols = parent?.props?.gridCols ?? 4;
     return getAttributeGroupChildAttributes(
       pluginManager,
       selectedNode.value.type,
+      { gridEnabled: parentGridEnabled, gridCols },
     );
   }
 
@@ -180,7 +184,7 @@ const componentAttributes = computed(() => {
       class="ep-attr-item mb-2 mt-2 flex h-8 cursor-pointer items-center px-4"
     >
       <div
-        class="bg-$ep-secondary rounded-1 h-full flex-1 px-2 leading-8"
+        class="bg-$ep-secondary rounded-1 h-full flex-1 truncate px-2 leading-8"
         @click="copy(designer.state.selectedNode?.id ?? '')"
       >
         <EpicIcon

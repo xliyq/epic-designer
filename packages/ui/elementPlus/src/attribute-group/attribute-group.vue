@@ -11,7 +11,7 @@ import {
   usePageManager,
 } from '@ies/designer';
 import { pluginManager } from '@ies/manager';
-import { deepEqual } from '@ies/utils';
+import { deepEqual, findSchemas } from '@ies/utils';
 
 defineOptions({
   name: 'EpAttributeGroup',
@@ -40,6 +40,18 @@ const allMeta = inject(ATTRIBUTE_META_KEY, computed(() => ({})));
 const attrDefs = computed(() => allMeta.value[field.value] ?? []);
 
 const children = computed(() => props.componentSchema?.children ?? []);
+
+// 查找页面中的表单 schema，用于继承 labelWidth、labelSuffix 等
+const parentForm = computed(() => {
+  const forms = findSchemas(
+    pageManager.pageSchema.schemas,
+    (s: ComponentSchema) => s.type === 'form',
+  ) as ComponentSchema[];
+  return forms[0] ?? null;
+});
+
+// 从页面表单中读取 labelSuffix
+const labelSuffix = computed(() => parentForm.value?.props?.labelSuffix ?? '');
 
 const groupMeta = computed<Record<string, any>>(() => {
   const raw = props.componentSchema?.props?.groupMeta;
@@ -459,6 +471,13 @@ const title = computed(
     props.componentSchema?.label ??
     '',
 );
+// hideLabel：隐藏自身标题（预览模式下生效，设计模式保留以便选中/识别）
+// const hideLabel = computed(() => !!props.componentSchema?.hideLabel);
+const showTitle = computed(() => {
+  if (!title.value) return false;
+  // if (!isDesignMode.value && hideLabel.value) return false;
+  return true;
+});
 const bordered = computed(
   () => props.componentSchema?.props?.bordered !== false,
 );
@@ -477,9 +496,17 @@ const labelPosition = computed<'' | 'left' | 'right' | 'top'>(
   () => props.componentSchema?.props?.labelPosition ?? '',
 );
 const labelWidth = computed<string>(() => {
+  // 优先使用自身的 labelWidth
   const w = props.componentSchema?.props?.labelWidth;
-  if (w === undefined || w === null || w === '') return '';
-  return typeof w === 'number' ? `${w}px` : String(w);
+  if (w !== undefined && w !== null && w !== '') {
+    return typeof w === 'number' ? `${w}px` : String(w);
+  }
+  // 未设置时从父表单继承
+  const formLabelWidth = parentForm.value?.props?.labelWidth;
+  if (formLabelWidth !== undefined && formLabelWidth !== null && formLabelWidth !== '') {
+    return typeof formLabelWidth === 'number' ? `${formLabelWidth}px` : String(formLabelWidth);
+  }
+  return '';
 });
 const rootStyle = computed(() => {
   const style: Record<string, string> = {};
@@ -516,10 +543,18 @@ function injectDesignGroupTitles() {
   let lastGroupLabel = '__inserted__';
   for (const el of childElements) {
     const epicId = el.getAttribute('data-epic-id') || '';
-    // 通过 data-epic-id 匹配 children 中的 schema，查找 groupLabel
+    // 通过 data-epic-id 匹配 children 中的 schema
     const childSchema = children.value.find((c) => c.id === epicId);
     // 隐藏状态由 EpicNode 统一处理（ep-hidden class + ::after 蒙层），这里不重复处理
     const groupLabel = childSchema?.props?.groupLabel || '';
+
+    // 设置 span：将子组件的 props.span 映射到 grid column
+    const span = childSchema?.props?.span;
+    if (span) {
+      (el as HTMLElement).style.gridColumn = `span ${span}`;
+    } else {
+      (el as HTMLElement).style.gridColumn = '';
+    }
 
     if (groupLabel && groupLabel !== lastGroupLabel) {
       const titleEl = document.createElement('div');
@@ -569,7 +604,7 @@ const gridStyle = computed(() => {
     :style="rootStyle"
   >
     <div
-      v-if="title"
+      v-if="showTitle"
       class="ep-attr-group__header"
       :class="{ 'ep-attr-group__header--clickable': collapsible }"
       @click="toggleCollapsed"
@@ -613,9 +648,10 @@ const gridStyle = computed(() => {
           :key="ctx.schema.id"
           class="ep-attr-group__field"
           :class="{ 'ep-hidden': isChildHidden(ctx.child) }"
+          :style="ctx.child.props?.span ? { gridColumn: `span ${ctx.child.props.span}` } : undefined"
         >
-          <label v-if="ctx.schema.label" class="ep-attr-group__field-label">
-            {{ ctx.schema.label }}
+          <label v-if="ctx.schema.label && !ctx.schema.hideLabel" class="ep-attr-group__field-label">
+            {{ ctx.schema.label }}{{ labelSuffix }}
           </label>
           <div class="ep-attr-group__field-control">
             <EpicNode
@@ -734,6 +770,32 @@ const gridStyle = computed(() => {
     }
   }
 
+/* 设计模式下标签位置控制 */
+  &[data-label-position='top'] {
+    &:deep(.ep-draggable-range .ep-node-item) {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    &:deep(.ep-draggable-range .ep-node-item .el-form-item__label) {
+      text-align: left;
+      padding-right: 0;
+      margin-bottom: 4px;
+      line-height: 1.4;
+      width: auto !important;
+    }
+  }
+
+  &[data-label-position='right'] {
+    &:deep(.ep-draggable-range .ep-node-item) {
+      flex-direction: row-reverse;
+    }
+    &:deep(.ep-draggable-range .ep-node-item .el-form-item__label) {
+      text-align: left;
+      padding-left: 12px;
+      padding-right: 0;
+    }
+  }
+
   &__field {
     display: flex;
     align-items: center;
@@ -748,6 +810,9 @@ const gridStyle = computed(() => {
     line-height: 32px;
     font-size: 14px;
     color: var(--el-text-color-regular, #606266);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &[data-has-label-width] &__field-label {
@@ -795,6 +860,16 @@ const gridStyle = computed(() => {
     padding-right: 0;
     margin-bottom: 4px;
     line-height: 1.4;
+  }
+
+  &[data-label-position='right'] &__field {
+    flex-direction: row-reverse;
+  }
+
+  &[data-label-position='right'] &__field-label {
+    text-align: left;
+    padding-left: 12px;
+    padding-right: 0;
   }
 }
 </style>

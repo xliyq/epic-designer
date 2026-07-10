@@ -248,7 +248,7 @@ const visibleCount = computed(
           <div class="ep-section-group__card-body">
             <template v-for="entry in rowSchemas[i]" :key="entry.schema.id">
               <div class="ep-section-group__field">
-                <label v-if="entry.schema.label" class="ep-section-group__field-label">
+                <label v-if="entry.schema.label && !entry.schema.hideLabel" class="ep-section-group__field-label">
                   {{ entry.schema.label }}
                 </label>
                 <div class="ep-section-group__field-control">

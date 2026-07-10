@@ -7,6 +7,7 @@ import type { PluginManager } from '@ies/manager';
 export function getAttributeGroupChildAttributes(
   pluginManager: PluginManager,
   selectedNodeType?: string,
+  gridInfo?: { gridEnabled: boolean; gridCols: number },
 ) {
   // 获取该组件类型的字段映射声明
   const syncEntries = getSyncEntriesForType(pluginManager, selectedNodeType ?? '');
@@ -46,7 +47,22 @@ export function getAttributeGroupChildAttributes(
     },
   ];
 
-  return [...baseAttributes, ...groupAttributes];
+  const result = [...baseAttributes, ...groupAttributes];
+
+  // 父组件开启了网格布局时，追加栅格占列设置
+  if (gridInfo?.gridEnabled) {
+    result.push({
+      field: 'props.span',
+      label: '栅格占列',
+      props: {
+        min: 1,
+        max: gridInfo.gridCols,
+      },
+      type: 'number',
+    });
+  }
+
+  return result;
 }
 
 /**

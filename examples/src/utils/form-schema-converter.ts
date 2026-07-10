@@ -9,7 +9,7 @@
  * 使用 epic-designer 原生组件组合:
  *   section-group + section-template + attribute-group + card
  */
-
+import { pick } from 'lodash-es';
 /**
  * 生成短 UUID
  */
@@ -82,7 +82,7 @@ export interface SkuCharSpec extends FieldSpec {
 }
 
 /**
- * ICB 参数定义（资费模板参数）
+ * ICB 参数定义（产品资费参数）
  */
 export interface IcbSpec {
     parameterNum: string;
@@ -105,7 +105,7 @@ export interface IcbSpec {
 }
 
 /**
- * 资费模板定义
+ * 产品资费定义
  */
 export interface RateTemplateSpec {
     templateNum: string;
@@ -341,6 +341,13 @@ export function generateProps(field: FieldSpec, componentType: string): Record<s
         props.readonly = true;
     }
 
+    // metaOverrides
+    
+    const metaOverrides:Record<string,any>= pick(field,['alias','bizCharEnumSpecLst','charType','charName','displayType','groupNum','optionalFlag','showLine']);
+    if(metaOverrides){
+        props.metaOverrides =JSON.stringify(metaOverrides);
+    }
+
     return props;
 }
 
@@ -535,8 +542,8 @@ function convertIcbToAttrGroupChild(icb: IcbSpec, templateNum: string): Record<s
  *
  * 每个 SKU 的 section-template 内部包含:
  *   1. attribute-group (field="prodordCharacters") - SKU 属性
- *   2. checkbox (field="selectedTemplateNums") - 资费模板选择
- *   3. attribute-group (field="prodordTemplate") - 资费模板 ICB 参数（平铺，不做显隐联动）
+ *   2. checkbox (field="selectedTemplateNums") - 产品资费选择
+ *   3. attribute-group (field="prodordTemplate") - 产品资费 ICB 参数（平铺，不做显隐联动）
  *
  * @param sku - SKU 规格
  * @returns 子组件 schema 数组
@@ -550,12 +557,12 @@ function buildSkuTemplateChildren(sku: SkuSpec): any[] {
         children.push({
             type: 'attribute-group',
             field: 'prodordCharacters',
-            label: '商品属性',
+            label: '产品属性',
             hideLabel: true,
             input: true,
             id: `attrgroup_sku_prodordCharacters_${sku.skuNum}`,
             props: {
-                title: '商品属性',
+                title: '产品属性',
                 bordered: true,
                 collapsible: false,
                 gridEnable: true,
@@ -565,31 +572,31 @@ function buildSkuTemplateChildren(sku: SkuSpec): any[] {
         });
     }
 
-    // 2. 资费模板选择 + ICB 参数
+    // 2. 产品资费选择 + ICB 参数
     const rateTemplates = sku.bizRateTempSpecLst || [];
     if (rateTemplates.length > 0) {
-        // 资费模板选择 checkbox
+        // 产品资费选择 checkbox
         children.push({
             type: 'checkbox',
             field: 'selectedTemplateNums',
-            label: '资费模板',
+            label: '产品资费',
             input: true,
             id: `checkbox_tpl_${sku.skuNum}_${generateShortId()}`,
             props: {
                 options: rateTemplates.map(t => ({
-                    label: t.templateName,
+                    label: t.description,
                     value: t.templateNum
                 }))
             },
             rules: [{
                 required: true,
-                message: '请至少选择一个资费模板',
+                message: '请至少选择一个产品资费',
                 trigger: ['change'],
                 type: 'array'
             }]
         });
 
-        // 所有资费模板的 ICB 参数平铺到一个 attribute-group
+        // 所有产品资费的 ICB 参数平铺到一个 attribute-group
         const allIcbs: Array<{ icb: IcbSpec; templateNum: string }> = [];
         for (const tmpl of rateTemplates) {
             const icbList = tmpl.bizIcbSpecLst || [];
@@ -630,13 +637,13 @@ function buildSkuTemplateChildren(sku: SkuSpec): any[] {
  *   └── section-group (field="prodordSkus")
  *       └── section-template × N (每个 SKU 一个，optionKey=skuNum)
  *           ├── attribute-group (field="prodordCharacters") - SKU 属性
- *           ├── checkbox (field="selectedTemplateNums") - 资费模板选择
+ *           ├── checkbox (field="selectedTemplateNums") - 产品资费选择
  *           └── attribute-group (field="prodordTemplate") - ICB 参数
  *
  * @param skuList - SKU 列表
  * @returns card 节点
  */
-export function buildSkuSection(skuList: SkuSpec[]): Record<string, any> {
+export function buildSkuSection(skuList: SkuSpec[]): any[] {
     // 根据第一个 SKU 的 limitCount 判断单选/多选
     const limitCount = skuList[0]?.limitCount || 'n';
     const selectType = limitCount === '1' ? 'radio' : 'checkbox';
@@ -820,6 +827,38 @@ export function commonCustomerSchema(): Record<string, any> {
 }
 
 /**
+ * 构建订购信息卡片（只读展示）
+ * field 加 "package." 前缀，使 formData 产出 { package: { ... } } 嵌套结构，对齐 JSON-B 的 packages[0]
+ */
+function buildOrderInfoCard(data: any): Record<string, any> {
+    const textViewFields = [
+        { field: 'package.packageName', label: '套餐名称', id: 'packageName', key: 'packageName' },
+        { field: 'package.packageNum',  label: '套餐编码', id: 'packageNum',  key: 'packageNum' },
+        { field: 'package.offerName',   label: '商品名称', id: 'offerName',   key: 'offerName' },
+        { field: 'package.offerNum',    label: '商品编码', id: 'offerNum',    key: 'offerNum' },
+        { field: 'package.description', label: '套餐描述', id: 'description', key: 'description', span: 4 },
+        { field: 'package.packageBusinessName', label: '业务名称', id: 'packageBusinessName', key: 'packageBusinessName' },
+        { field: 'package.packageBusinessNum', label: '业务编码', id: 'packageBusinessNum', key: 'packageBusinessNum' },
+        { field: 'package.offerType', label: '类型', id: 'offerType', key: 'offerType' },
+        { field: 'package.alias', label: '别名', id: 'alias', key: 'alias' },
+    ];
+
+    return createCard('订购信息', textViewFields.map(f => ({
+        type: 'text-view',
+        field: f.field,
+        label: f.label,
+        input: true,
+        id: f.id,
+        props: {
+            defaultValue: data[f.key] || '',
+            readonly: true,
+            placeholder: '',
+            ...(f.span ? { span: f.span } : {}),
+        },
+    })), { gridEnable: true, gridCols: 4 });
+}
+
+/**
  * 从接口数据生成表单 schema
  *
  * 转换流程:
@@ -855,33 +894,7 @@ export function generateFormSchema(response: any): any[] {
         children: []
     };
     // 0.1. 订购信息（只读展示）
-    //    field 加 "package." 前缀，使 formData 产出 { package: { ... } } 嵌套结构，对齐 JSON-B 的 packages[0]
-    formSchema.children.push(createCard('订购信息', [
-        {
-            type: 'text-view',
-            field: 'package.packageName',
-            label: '套餐名称',
-            input: true,
-            id: 'packageName',
-            props: {
-                defaultValue: data.packageName || '',
-                readonly: true,
-                placeholder: ''
-            }
-        },
-        {
-            type: 'text-view',
-            field: 'package.offerName',
-            label: '商品名称',
-            input: true,
-            id: 'offerName',
-            props: {
-                defaultValue: data.offerName || '',
-                readonly: true,
-                placeholder: ''
-            }
-        }
-    ], { gridEnable: true, gridCols: 4 }));
+    formSchema.children.push(buildOrderInfoCard(data));
     // 0. 客户信息（固定 schema）
     formSchema.children.push(commonCustomerSchema());
 

@@ -276,7 +276,7 @@ export default {
     charValue: {
       write: (rawValue) => rawValue,
       read: (fieldValue) => fieldValue,
-      source: '选中值 (code)',
+      source: '选中值 (value)',
     },
     charDisplay: {
       write: (rawValue, extra) => extra?.option?.label ?? null,
