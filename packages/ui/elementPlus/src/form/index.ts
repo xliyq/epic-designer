@@ -120,13 +120,16 @@ export default {
           switch(value){
             case 'grid':
               props.gridCols = 2;
+              props.gridEnable = true;
               delete props.inline
               break;
             case 'inline':
               props.inline = true
+              delete props.gridEnable
               delete props.gridCols
               break;  
             case 'normal':
+              delete props.gridEnable
               delete props.gridCols
               delete props.inline
               break;

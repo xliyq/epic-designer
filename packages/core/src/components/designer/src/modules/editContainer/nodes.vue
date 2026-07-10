@@ -127,6 +127,7 @@ function isInline(schema: ComponentSchema) {
     <div
       class="ep-node-item"
       :class="{ 'ep-inline': isInline(element) }"
+      :style="element.props?.span ? { gridColumn: `span ${element.props.span}` } : undefined"
       v-for="element in modelSchemas"
       :key="element.id"
       :data-epic-id="element.id"

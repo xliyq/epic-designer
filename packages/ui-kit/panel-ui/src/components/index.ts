@@ -49,6 +49,14 @@ export function setupComponent(pluginManager: PluginManager): void {
     'EOptionsEditor',
     async () => await import('./EOptionsEditor/index.vue'),
   );
+  pluginManager.component.add(
+    'ESyncFieldsEditor',
+    async () => await import('./ESyncFieldsEditor/index.vue'),
+  );
+  pluginManager.component.add(
+    'EJsonEditor',
+    async () => await import('./EJsonEditor/index.vue'),
+  );
 
   pluginManager.component.add('EpicNode', EpicNode);
 

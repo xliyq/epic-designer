@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { ComponentSchema } from '@ies/designer';
 
-import { computed, inject, onMounted, provide, ref, watch } from 'vue';
+import { computed, inject, nextTick, onMounted, provide, ref, watch } from 'vue';
 
 import { EpicNode } from '@ies/base-ui';
 import {
@@ -55,11 +55,15 @@ const groupMeta = computed<Record<string, any>>(() => {
 });
 
 const internalArray = ref<any[]>([]);
+// 标记是否已初始化，避免空数组 echo 导致跳过首次初始化
+let initialized = false;
 let lastEmitted: any[] = [];
 
 function buildOutput(): any[] {
   return internalArray.value.map((item) => {
     const merged = { ...item };
+    // 清理内部辅助字段，不输出到 formData
+    delete merged._childId;
     for (const [k, v] of Object.entries(groupMeta.value)) {
       if (!(k in merged)) merged[k] = v;
     }
@@ -74,29 +78,71 @@ function emitOutput() {
   emit('update:modelValue', output);
 }
 
+/**
+ * 解析子组件的 metaOverrides，返回可合并的对象
+ */
+function parseMetaOverrides(child: ComponentSchema): Record<string, any> | null {
+  const overrides = child.props?.metaOverrides;
+  if (!overrides) return null;
+  if (typeof overrides === 'string') {
+    try {
+      const parsed = JSON.parse(overrides);
+      if (parsed && typeof parsed === 'object') return parsed;
+    } catch {
+      // JSON 格式错误时忽略
+    }
+  } else if (typeof overrides === 'object') {
+    return overrides;
+  }
+  return null;
+}
+
+/**
+ * 将子组件的 metaOverrides 合并到 internalArray 中对应的数组项
+ */
+function applyMetaOverrides() {
+  children.value.forEach((child) => {
+    const overrides = parseMetaOverrides(child);
+    if (!overrides) return;
+    const charNum = child.props?.charNum;
+    const item = charNum
+      ? findAttrItem(charNum)
+      : findItemByChildId(child.id!);
+    if (item) {
+      Object.assign(item, overrides);
+    }
+  });
+}
+
 function initFromModelValue(arr: any[]) {
   if (!Array.isArray(arr) || arr.length === 0) {
-    // 没有外部数据时，根据子组件的 charNum 初始化空项
-    internalArray.value = children.value
-      .filter((c) => c.props?.charNum)
-      .map((c) => ({
-        charNum: c.props.charNum,
-        charValue: null,
-        charDisplay: null,
-        prodordAttachFiles: [],
-      }));
-    lastEmitted = buildOutput();
-    return;
+    // 没有外部数据时，根据子组件初始化空项
+    internalArray.value = children.value.map((c) => {
+      const charNum = c.props?.charNum;
+      if (charNum) {
+        return { charNum, charValue: null, charDisplay: null, prodordAttachFiles: [] };
+      }
+      return { _childId: c.id, charValue: null };
+    });
+  } else {
+    internalArray.value = arr.map((item) => ({ ...item }));
   }
-  internalArray.value = arr.map((item) => ({ ...item }));
-  lastEmitted = buildOutput();
+  // 将子组件的 metaOverrides 合并到数组项
+  applyMetaOverrides();
+
+  // 初始化时主动 emit，确保 formData 中有数据
+  const output = buildOutput();
+  lastEmitted = output;
+  emit('update:modelValue', output);
 }
 
 // 外部 modelValue 变化 -> 初始化（跳过 echo）
 watch(
   () => props.modelValue,
   (arr) => {
-    if (deepEqual(arr, lastEmitted)) return;
+    // 首次初始化必须执行，后续用 deepEqual 跳过 echo
+    if (initialized && deepEqual(arr, lastEmitted)) return;
+    initialized = true;
     initFromModelValue(arr ?? []);
   },
   { immediate: true, deep: true },
@@ -123,27 +169,66 @@ function findAttrDef(charNum: string) {
   return attrDefs.value.find((d: any) => String(d.charNum) === String(charNum));
 }
 
-function findAttrItem(charNum: string) {
+function findAttrItem(key: string): Record<string, any> | undefined {
   return internalArray.value.find(
-    (d: any) => String(d.charNum) === String(charNum),
+    (d: any) => String(d.charNum) === String(key),
   );
+}
+
+/**
+ * 通过子组件 id 查找 internalArray 中的项（用于没有 charNum 的子组件）
+ */
+function findItemByChildId(childId: string): Record<string, any> | undefined {
+  return internalArray.value.find(
+    (d: any) => d._childId === childId,
+  );
+}
+
+/**
+ * 解析 syncFields 配置，返回启用的字段名列表。
+ * 兼容两种格式：
+ * - 旧格式: ["charValue", "charDisplay"]
+ * - 新格式: [{ field: "charValue", enabled: true }, { field: "charDisplay", enabled: false }]
+ * 无配置时返回 attributeSync 的全部 key
+ */
+function getSyncKeys(child: ComponentSchema): string[] {
+  const componentConfig = pluginManager.component.getConfigByType(child.type);
+  const sync = componentConfig?.attributeSync;
+  const raw = child.props?.syncFields;
+
+  if (!sync) return [];
+
+  // 无配置，返回全部 key
+  if (!raw || (Array.isArray(raw) && raw.length === 0)) {
+    return Object.keys(sync);
+  }
+
+  // 新格式：对象数组
+  if (Array.isArray(raw) && typeof raw[0] === 'object') {
+    return (raw as { field: string; enabled: boolean }[])
+      .filter((e) => e.enabled)
+      .map((e) => e.field)
+      .filter((f) => sync[f]); // 只保留 sync 中声明的
+  }
+
+  // 旧格式：字符串数组
+  if (Array.isArray(raw) && typeof raw[0] === 'string') {
+    return (raw as string[]).filter((f) => sync[f]);
+  }
+
+  return Object.keys(sync);
 }
 
 function getFieldValue(child: ComponentSchema): any {
   const charNum = child.props?.charNum;
-  if (!charNum) return undefined;
-  const item = findAttrItem(charNum);
+  const item = charNum ? findAttrItem(charNum) : findItemByChildId(child.id!);
   if (!item) return null;
 
   const componentConfig = pluginManager.component.getConfigByType(child.type);
   const sync = componentConfig?.attributeSync;
 
-  const syncFields = child.props?.syncFields as string[] | undefined;
-
   if (sync) {
-    const keys = syncFields && syncFields.length > 0
-      ? syncFields
-      : Object.keys(sync);
+    const keys = getSyncKeys(child);
     for (const fieldKey of keys) {
       const entry = sync[fieldKey];
       if (entry?.read) {
@@ -158,19 +243,29 @@ function getFieldValue(child: ComponentSchema): any {
 
 function setFieldValue(child: ComponentSchema, rawValue: any): void {
   const charNum = child.props?.charNum;
-  if (!charNum) return;
-  const item = findAttrItem(charNum);
-  if (!item) return;
+
+  // 查找或创建对应的 internalArray 项
+  let target: Record<string, any> | undefined;
+  if (charNum) {
+    target = findAttrItem(charNum);
+    if (!target) {
+      target = { charNum, charValue: null, charDisplay: null, prodordAttachFiles: [] };
+      internalArray.value.push(target);
+    }
+  } else {
+    // 没有 charNum 的子组件，用 _childId 关联
+    target = findItemByChildId(child.id!);
+    if (!target) {
+      target = { _childId: child.id, charValue: null };
+      internalArray.value.push(target);
+    }
+  }
 
   const componentConfig = pluginManager.component.getConfigByType(child.type);
   const sync = componentConfig?.attributeSync;
 
-  const syncFields = child.props?.syncFields as string[] | undefined;
-
   if (sync) {
-    const keys = syncFields && syncFields.length > 0
-      ? syncFields
-      : Object.keys(sync);
+    const keys = getSyncKeys(child);
 
     // 查找标签（用于 charDisplay 同步）
     let matchedLabel: string | null = null;
@@ -193,28 +288,26 @@ function setFieldValue(child: ComponentSchema, rawValue: any): void {
     for (const fieldKey of keys) {
       const entry = sync[fieldKey];
       if (entry) {
-        item[fieldKey] = entry.write(rawValue, {
+        target[fieldKey] = entry.write(rawValue, {
           option: matchedLabel ? { label: matchedLabel } : null,
         });
       }
     }
   } else {
-    item.charValue = rawValue;
+    target.charValue = rawValue;
   }
 
   if (rawValue == null || rawValue === '') {
     if (sync) {
-      const keys = syncFields && syncFields.length > 0
-        ? syncFields
-        : Object.keys(sync);
+      const keys = getSyncKeys(child);
       for (const fieldKey of keys) {
         if (fieldKey !== 'charValue') {
-          item[fieldKey] = fieldKey === 'prodordAttachFiles' ? [] : null;
+          target[fieldKey] = fieldKey === 'prodordAttachFiles' ? [] : null;
         }
       }
     } else {
-      item.charDisplay = null;
-      item.prodordAttachFiles = [];
+      target.charDisplay = null;
+      target.prodordAttachFiles = [];
     }
   }
 
@@ -238,37 +331,70 @@ function getEnhancedSchema(child: ComponentSchema): ComponentSchema {
 const childContext = ref<{ schema: ComponentSchema; child: ComponentSchema }[]>([]);
 
 function rebuildChildContext() {
-  childContext.value = children.value
-    .filter((c) => c.props?.charNum)
-    .map((c) => ({
-      schema: getEnhancedSchema(c),
-      child: c,
-    }));
+  childContext.value = children.value.map((c) => ({
+    schema: getEnhancedSchema(c),
+    child: c,
+  }));
 }
 
 watch(children, rebuildChildContext, { immediate: true });
 
-// 改用 computed 映射，确保每个子组件的值响应式更新
+/**
+ * 运行时按子组件的 props.groupLabel 分组渲染。
+ * - 子组件未设 groupLabel -> 归入 '' 组，不渲染分组标题
+ * - 子组件设了 groupLabel -> 按值分组，渲染分组标题分隔线
+ * - 数据层完全不变，仅影响视觉呈现
+ */
+/**
+ * 判断子组件是否隐藏
+ * 属性组内子组件 field 被清空，fieldState 无法匹配，仅判断 props.hidden
+ */
+function isChildHidden(child: ComponentSchema): boolean {
+  return !!child.props?.hidden;
+}
+
+/**
+ * 运行时按子组件的 props.groupLabel 分组渲染。
+ * - 运行模式：过滤隐藏子组件，分组全隐藏时标题也不显示
+ * - 数据层完全不变，仅影响视觉呈现
+ */
+const groupedChildContext = computed(() => {
+  const groups: { groupLabel: string; items: { schema: ComponentSchema; child: ComponentSchema }[] }[] = [];
+  const groupIndexMap: Record<string, number> = {};
+
+  for (const entry of childContext.value) {
+    // 运行模式下跳过隐藏的子组件
+    if (!isDesignMode.value && isChildHidden(entry.child)) continue;
+
+    const gl = entry.child.props?.groupLabel || '';
+    if (!(gl in groupIndexMap)) {
+      groupIndexMap[gl] = groups.length;
+      groups.push({ groupLabel: gl, items: [] });
+    }
+    groups[groupIndexMap[gl]].items.push(entry);
+  }
+  return groups;
+});
+
+// 改用 computed 映射，确保每个子组件的值响应式更新（用普通对象，模板中方括号可访问）
 const childBindings = computed(() => {
-  const map = new Map<string, any>();
+  const map: Record<string, any> = {};
   for (const entry of childContext.value) {
     const charNum = entry.child.props?.charNum;
-    if (!charNum) continue;
-    const item = findAttrItem(charNum);
+    const item = charNum
+      ? findAttrItem(charNum)
+      : findItemByChildId(entry.schema.id!);
     if (!item) {
-      map.set(entry.schema.id!, null);
+      map[entry.schema.id!] = null;
       continue;
     }
 
     const componentConfig = pluginManager.component.getConfigByType(entry.child.type);
     const sync = componentConfig?.attributeSync;
-    const syncFields = entry.child.props?.syncFields as string[] | undefined;
 
     let value = null;
     if (sync) {
-      const keys = syncFields && syncFields.length > 0
-        ? syncFields
-        : Object.keys(sync);
+      const keys = getSyncKeys(entry.child);
       for (const fieldKey of keys) {
         const syncEntry = sync[fieldKey];
         if (syncEntry?.read) {
@@ -282,7 +408,7 @@ const childBindings = computed(() => {
     } else {
       value = item.charValue ?? null;
     }
-    map.set(entry.schema.id!, value);
+    map[entry.schema.id!] = value;
   }
   return map;
 });
@@ -306,8 +432,20 @@ function getMergedProps(child: ComponentSchema): Record<string, any> {
   }
 
   const overrides = child.props?.metaOverrides;
-  if (overrides && typeof overrides === 'object') {
-    Object.assign(merged, overrides);
+  if (overrides) {
+    let parsed: any = null;
+    if (typeof overrides === 'string') {
+      try {
+        parsed = JSON.parse(overrides);
+      } catch {
+        // JSON 格式错误时忽略
+      }
+    } else if (typeof overrides === 'object') {
+      parsed = overrides;
+    }
+    if (parsed && typeof parsed === 'object') {
+      Object.assign(merged, parsed);
+    }
   }
 
   const { charNum: _, syncFields, metaOverrides, ...rest } = designProps;
@@ -353,6 +491,58 @@ function toggleCollapsed() {
   if (collapsible.value) collapsed.value = !collapsed.value;
 }
 
+/**
+ * 设计模式下的分组标题注入。
+ * edit-node slot 被 EDesigner 的 EpicNodes 拖拽容器填充，无法在 slot 内部插入标题。
+ * 通过 DOM 操作在子组件分组边界处插入标题元素。
+ */
+const designBodyRef = ref<HTMLElement | null>(null);
+
+function injectDesignGroupTitles() {
+  if (!isDesignMode.value || !designBodyRef.value) return;
+
+  // 先清除旧标题
+  designBodyRef.value.querySelectorAll('.ep-attr-group__subgroup-title').forEach((el) => el.remove());
+
+  // EDesigner 渲染结构：designBodyRef > .ep-draggable-range > .ep-node-item[data-epic-id]
+  const draggableRange = designBodyRef.value.querySelector('.ep-draggable-range');
+  if (!draggableRange) return;
+
+  // 只处理可见的子组件（设计模式下 showHiddenItems=true 时 ep-hidden 也可见，不跳过）
+  const childElements = Array.from(draggableRange.children).filter(
+    (el) => !el.classList.contains('ep-attr-group__subgroup-title'),
+  );
+
+  let lastGroupLabel = '__inserted__';
+  for (const el of childElements) {
+    const epicId = el.getAttribute('data-epic-id') || '';
+    // 通过 data-epic-id 匹配 children 中的 schema，查找 groupLabel
+    const childSchema = children.value.find((c) => c.id === epicId);
+    // 隐藏状态由 EpicNode 统一处理（ep-hidden class + ::after 蒙层），这里不重复处理
+    const groupLabel = childSchema?.props?.groupLabel || '';
+
+    if (groupLabel && groupLabel !== lastGroupLabel) {
+      const titleEl = document.createElement('div');
+      titleEl.className = 'ep-attr-group__subgroup-title';
+      titleEl.textContent = groupLabel;
+      draggableRange.insertBefore(titleEl, el);
+      lastGroupLabel = groupLabel;
+    } else if (!groupLabel) {
+      lastGroupLabel = '__inserted__';
+    }
+  }
+}
+
+watch(
+  [children, isDesignMode],
+  () => {
+    if (isDesignMode.value) {
+      nextTick(() => injectDesignGroupTitles());
+    }
+  },
+  { immediate: true, deep: true },
+);
+
 const gridStyle = computed(() => {
   const p = props.componentSchema?.props;
   if (p?.gridEnable) {
@@ -379,7 +569,7 @@ const gridStyle = computed(() => {
     :style="rootStyle"
   >
     <div
-      v-if="title || collapsible"
+      v-if="title"
       class="ep-attr-group__header"
       :class="{ 'ep-attr-group__header--clickable': collapsible }"
       @click="toggleCollapsed"
@@ -395,8 +585,14 @@ const gridStyle = computed(() => {
       >{{ collapsed ? '▶' : '▼' }}</span>
     </div>
 
-    <!-- 设计模式：标准 EpNode 拖拽渲染 -->
-    <div v-if="isDesignMode" v-show="!collapsed" class="ep-attr-group__body" :style="gridStyle">
+    <!-- 设计模式：保持原有拖拽能力，通过 DOM 操作插入分组标题 -->
+    <div
+      v-if="isDesignMode"
+      ref="designBodyRef"
+      v-show="!collapsed"
+      class="ep-attr-group__body"
+      :style="gridStyle"
+    >
       <slot name="edit-node">
         <slot
           v-for="item in children"
@@ -406,20 +602,30 @@ const gridStyle = computed(() => {
       </slot>
     </div>
 
-    <!-- 运行模式 -->
+    <!-- 运行模式：按 groupLabel 分组渲染，隐藏字段不显示 -->
     <div v-else v-show="!collapsed" class="ep-attr-group__body" :style="gridStyle">
-      <div v-for="ctx in childContext" :key="ctx.schema.id" class="ep-attr-group__field">
-        <label v-if="ctx.schema.label" class="ep-attr-group__field-label">
-          {{ ctx.schema.label }}
-        </label>
-        <div class="ep-attr-group__field-control">
-          <EpicNode
-            :component-schema="ctx.schema"
-            :model-value="childBindings[ctx.schema.id!]"
-            @update:model-value="(val: any) => setFieldValue(ctx.child, val)"
-          />
+      <template v-for="group in groupedChildContext" :key="group.groupLabel || '__default__'">
+        <div v-if="group.groupLabel" class="ep-attr-group__subgroup-title">
+          {{ group.groupLabel }}
         </div>
-      </div>
+        <div
+          v-for="ctx in group.items"
+          :key="ctx.schema.id"
+          class="ep-attr-group__field"
+          :class="{ 'ep-hidden': isChildHidden(ctx.child) }"
+        >
+          <label v-if="ctx.schema.label" class="ep-attr-group__field-label">
+            {{ ctx.schema.label }}
+          </label>
+          <div class="ep-attr-group__field-control">
+            <EpicNode
+              :component-schema="ctx.schema"
+              :model-value="childBindings[ctx.schema.id!]"
+              @update:model-value="(val: any) => setFieldValue(ctx.child, val)"
+            />
+          </div>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -471,18 +677,68 @@ const gridStyle = computed(() => {
   }
 
   &__body {
-    padding: 12px;
     min-height: 40px;
+    padding: 12px;
+  }
+
+  &__subgroup-title {
+    grid-column: 1 / -1;
+    padding: 10px 12px 6px;
+    margin-bottom: 8px;
+    margin-top: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--el-text-color-primary, #303133);
+    background: var(--el-fill-color-lighter, #fafafa);
+    border-radius: 3px;
+    border-left: 3px solid var(--el-color-primary, #409eff);
+
+    &:first-child {
+      margin-top: 0;
+    }
   }
 
   &:deep(.ep-attr-group__body > .ep-draggable-range) {
     display: contents !important;
   }
 
+  /* 设计模式下分组标题在 draggable-range 内，确保 grid 布局生效 */
+  &:deep(.ep-draggable-range .ep-attr-group__subgroup-title) {
+    grid-column: 1 / -1;
+  }
+
+  /* 设计模式下 ep-node-item 在 grid 中正确布局，子组件宽度 100% */
+  &:deep(.ep-draggable-range .ep-node-item) {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    min-height: 32px;
+
+    .el-form-item {
+      width: 100%;
+      margin-bottom: 0;
+    }
+
+    .el-form-item__content {
+      width: 100%;
+      line-height: 32px;
+
+      .el-input,
+      .el-select,
+      .el-date-editor,
+      .el-cascader,
+      .el-input-number,
+      .el-textarea {
+        width: 100%;
+      }
+    }
+  }
+
   &__field {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: 12px;
+    min-height: 32px;
   }
 
   &__field-label {
@@ -501,6 +757,32 @@ const gridStyle = computed(() => {
   &__field-control {
     flex: 1;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    min-height: 32px;
+    line-height: 32px;
+
+    /* 子组件默认宽度 100%，高度统一 32px */
+    :deep(.el-input),
+    :deep(.el-select),
+    :deep(.el-date-editor),
+    :deep(.el-cascader),
+    :deep(.el-input-number),
+    :deep(.el-textarea) {
+      width: 100%;
+    }
+
+    :deep(.el-form-item__content) {
+      min-height: 32px;
+      line-height: 32px;
+    }
+
+    /* 文本展示类组件对齐 */
+    :deep(.ep-text-view) {
+      width: 100%;
+      display: flex;
+      align-items: center;
+    }
   }
 
   &[data-label-position='top'] &__field {

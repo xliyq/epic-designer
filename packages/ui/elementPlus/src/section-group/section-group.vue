@@ -10,7 +10,7 @@ import {
   usePageManager,
 } from '@ies/designer';
 import { pluginManager } from '@ies/manager';
-import { deepEqual } from '@ies/utils';
+import { deepEqual, getValueByPath } from '@ies/utils';
 
 defineOptions({
   name: 'EpSectionGroup',
@@ -49,10 +49,35 @@ const internalData = ref<(Record<string, any> | null)[]>([]);
 // 上次 emit 的快照，用于跳过 EpNode 回写引发的 echo
 let lastEmitted: any[] = [];
 
+/**
+ * 解析 groupMeta 配置（支持对象或 JSON 字符串），注入到每个输出项中。
+ * 用于自动补充 skuNum / productType 等固定元数据，避免子组件手动维护。
+ */
+function parseGroupMeta(): Record<string, any> {
+  const raw = props.componentSchema?.props?.groupMeta;
+  if (!raw) return {};
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return typeof raw === 'object' ? raw : {};
+}
+
 function buildOutput(): any[] {
-  return internalData.value.filter(
-    (item): item is Record<string, any> => item !== null,
-  );
+  const groupMeta = parseGroupMeta();
+  const kField = keyField.value;
+  return internalData.value
+    .map((item, i) => {
+      if (item === null) return null;
+      // 注入 optionKey 作为 keyField 值（如 skuNum），再合并 groupMeta，最后是用户数据
+      const optKey = children.value[i]?.optionKey ?? children.value[i]?.props?.optionKey ?? '';
+      return { ...(kField ? { [kField]: optKey } : {}), ...groupMeta, ...item };
+    })
+    .filter((item): item is Record<string, any> => item !== null);
 }
 
 function emitOutput() {
@@ -91,13 +116,24 @@ watch(
 );
 
 // 监听选择字段变化 -> 控制显隐
+// selectionField 支持点号嵌套路径（如 "prodordSkus.0.selectedTemplateNums"），
+// 也兼容原来的顶层一级路径（如 "selectedOffers"），getValueByPath 对单段路径等价于直接读取。
 watch(
-  () => (formData as any)[selectionField.value],
+  () => {
+    if (!selectionField.value) return undefined;
+    return getValueByPath(formData, selectionField.value);
+  },
   (selected: any) => {
-    if (!selectionField.value || !Array.isArray(selected)) return;
+    if (!selectionField.value) return;
+    // 兼容 checkbox（数组）和 radio（单值）两种选择方式
+    const selectedArray: string[] = Array.isArray(selected)
+      ? selected
+      : selected != null && selected !== ''
+        ? [String(selected)]
+        : [];
     children.value.forEach((tpl, i) => {
       const optKey = tpl.optionKey ?? tpl.props?.optionKey ?? '';
-      const isSelected = selected.includes(optKey);
+      const isSelected = selectedArray.includes(String(optKey));
       if (isSelected && !internalData.value[i]) {
         internalData.value[i] = {};
       } else if (!isSelected && internalData.value[i]) {
@@ -177,7 +213,7 @@ const visibleCount = computed(
     :class="{ 'ep-section-group--bordered': bordered }"
   >
     <div
-      v-if="title || collapsible"
+      v-if="title"
       class="ep-section-group__header"
       :class="{ 'ep-section-group__header--clickable': collapsible }"
       @click="toggleCollapsed"
@@ -279,7 +315,6 @@ const visibleCount = computed(
   }
 
   &__body {
-    padding: 12px;
     min-height: 40px;
   }
 

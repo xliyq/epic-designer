@@ -4,7 +4,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { EDesigner } from '@ies/core';
 import { Button } from 'ant-design-vue';
-import response from '@/temp/1.json'
+import response from '@/temp/3.json'
 import {generateFormSchema} from '@/utils/form-schema-converter'
 import { formTableData } from '@/mock';
 import { parse } from 'jsonc-parser';

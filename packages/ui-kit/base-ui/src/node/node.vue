@@ -271,18 +271,26 @@ const getFormItemProps = computed<ComponentSchema>(() => {
   }
 
   const style = innerSchema.props?.style ?? {};
+  const span = innerSchema.props?.span;
   const formItemProps = {
     ...innerSchema,
     ...attrs,
     field: model,
     rule: rules,
     rules,
-    span: innerSchema.props?.span,
+    span,
     style: {
       ...style,
       width: undefined,
+      ...(span && innerSchema.type !== 'col' ? { gridColumn: `span ${span}` } : {}),
     },
   } as ComponentSchema;
+
+  // hideLabel：隐藏标签并清除标签占位空间，保留表单校验
+  if (innerSchema.hideLabel) {
+    formItemProps.label = '';
+    formItemProps.labelWidth = '0';
+  }
 
   // 移除元素只读属性 children
   if (formItemProps.children) {

@@ -127,6 +127,7 @@ export default {
     label: '属性组',
     field: 'attributeGroup',
     input: true,
+    hideLabel: true,
     props: {
       title: '属性组',
       bordered: true,

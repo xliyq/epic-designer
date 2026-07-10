@@ -56,14 +56,19 @@ const label = computed(
   }
 
   &__body {
-    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     border: 1px solid var(--el-border-color-light, #e4e7ed);
     border-radius: 0 0 4px 4px;
     min-height: 40px;
   }
 
   &:deep(.ep-section-template__body > .ep-draggable-range) {
-    display: contents !important;
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
   }
 }
 </style>

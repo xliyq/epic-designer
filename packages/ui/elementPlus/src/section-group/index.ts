@@ -39,9 +39,18 @@ export default {
         field: 'props.selectionField',
         label: '选择字段',
         type: 'input',
-        description: '监听哪个 formData 字段的选中值来控制区块显隐',
+        description: '监听哪个 formData 字段的选中值来控制区块显隐，支持点号嵌套路径（如 prodordSkus.0.selectedTpl）',
         props: {
           placeholder: 'selectedOffers',
+        },
+      },
+      {
+        field: 'props.groupMeta',
+        label: '组元数据',
+        type: 'input',
+        description: '注入到每个输出项中的固定字段，JSON 格式（如 {"productType":"2","operationSubType":"1"}）',
+        props: {
+          placeholder: '{"productType":"2"}',
         },
       },
       {
@@ -65,6 +74,7 @@ export default {
     label: '区块组',
     field: 'sectionGroup',
     input: true,
+    hideLabel: true,
     props: {
       title: '区块组',
       bordered: true,

@@ -164,7 +164,7 @@ const routes = [
     component: Layout,
     name: 'uiFrameworks',
     path: '/',
-    redirect: '/ant-designe-vue/designer/basic',
+    redirect: '/element-plus/designer/basic',
     children: frameworkRoutes,
   },
   // Resolve refresh page, route warnings

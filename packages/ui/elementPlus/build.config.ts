@@ -6,7 +6,7 @@ export default defineBuildConfig({
   clean: true,
   declaration: true,
   entries: ['./src/index'],
-  externals: ['vue', 'element-plus', '@ies/designer'],
+  externals: ['vue', 'element-plus', '@ies/designer', '@ies/base-ui'],
   failOnWarn: false,
   hooks: {
     'rollup:options': function (ctx, options) {

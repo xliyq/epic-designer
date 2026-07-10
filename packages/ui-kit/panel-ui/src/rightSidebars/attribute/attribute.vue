@@ -1,9 +1,12 @@
 <script lang="ts" setup>
+import type { ComponentSchema } from '@ies/types';
+
 import { computed, watchEffect } from 'vue';
 
 import { EpicIcon } from '@ies/base-ui';
 import { useDesignerContext, useTableMeta } from '@ies/hooks';
 import { pluginManager } from '@ies/manager';
+import { deepClone } from '@ies/utils';
 import { useClipboard } from '@vueuse/core';
 
 import {
@@ -53,6 +56,66 @@ const contextAttributes = computed(() => {
   return null;
 });
 
+// 组件类型切换：扁平列表，展示所有已注册组件
+const componentTypeOptions = computed(() => {
+  return Object.values(componentConfigs)
+    .filter((config) => config.groupName && config.defaultSchema?.type)
+    .map((config) => ({
+      label: config.defaultSchema.label ?? config.defaultSchema.type!,
+      value: config.defaultSchema.type!,
+    }));
+});
+
+// 是否显示组件类型切换器：上下文面板时不显示
+const showComponentTypeSwitcher = computed(() => {
+  return !contextAttributes.value && !!selectedNode.value?.type;
+});
+
+// 组件类型切换 schema 配置项
+const componentTypeSchema = computed<ComponentSchema>(() => ({
+  field: 'type',
+  label: '组件类型',
+  type: 'select',
+  props: {
+    options: componentTypeOptions.value,
+    placeholder: '请选择组件类型',
+  },
+  changeSync: true,
+  onChange: ({ value }) => {
+    handleComponentTypeChange(value as string);
+  },
+}));
+
+/**
+ * 切换当前选中节点的组件类型
+ * 以新组件 defaultSchema.props 为基础，旧 props 中同名的 key 保留旧值（用户已配置的数据）
+ * 保留通用属性（id、field、label、rules、children、on、hideLabel）
+ */
+function handleComponentTypeChange(newType: string) {
+  const node = selectedNode.value;
+  if (!node || !newType || newType === node.type) return;
+
+  const newConfig = componentConfigs[newType];
+  if (!newConfig?.defaultSchema) return;
+
+  // 深拷贝新组件的默认 props，避免污染注册中心的配置
+  const newProps = deepClone(newConfig.defaultSchema.props ?? {});
+
+  // 以新 props 为基础，旧 props 中同名的 key 保留旧值（如 options、placeholder 等）
+  const oldProps = node.props ?? {};
+  for (const key of Object.keys(newProps)) {
+    if (key in oldProps) {
+      newProps[key] = deepClone(oldProps[key]);
+    }
+  }
+
+  node.type = newType;
+  node.props = newProps;
+
+  // 将修改推入撤销栈
+  designer.revoke.push('切换组件类型', true);
+}
+
 // 获取组件属性配置
 const componentAttributes = computed(() => {
   if (!selectedNode.value || !selectedNode.value.type) {
@@ -72,6 +135,13 @@ const componentAttributes = computed(() => {
   const matched = designer.state.matched
   const parent = matched.length >= 2 ? matched[matched.length - 2] : undefined
   const gridCols = parent?.props?.gridCols ?? 4
+  const parentGridEnabled = parent?.props?.gridEnable === true
+  allAttributes.push({
+    field: 'hideLabel',
+    label: '隐藏标签',
+    type: 'switch',
+    description: '隐藏表单项标签并清除标签占位空间',
+  });
   allAttributes.push({
     field: 'props.span',
     label: '栅格占列',
@@ -79,7 +149,7 @@ const componentAttributes = computed(() => {
       min: 1,
       max: gridCols,
     },
-    show: ({ parent }) => parent?.props?.formMode === 'grid',
+    show: parentGridEnabled,
     type: 'number',
   });
 
@@ -134,8 +204,14 @@ const componentAttributes = computed(() => {
       </div>
     </div>
     <!-- 数据表 end -->
+    <!-- 组件类型切换 start -->
+    <EAttributeItem
+      v-if="showComponentTypeSwitcher"
+      :schema="componentTypeSchema"
+    />
+    <!-- 组件类型切换 end -->
     <div v-for="item in componentAttributes" :key="item.field">
-      <EAttributeItem :schema="item" />
+      <EAttributeItem :schema="item" :parent="parent" />
     </div>
   </div>
 </template>

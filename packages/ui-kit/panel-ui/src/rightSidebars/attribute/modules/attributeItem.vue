@@ -10,6 +10,7 @@ import { getValueByPath, setValueByPath } from '@ies/utils';
 
 const props = defineProps<{
   schema: ComponentSchema;
+  parent?: any;
 }>();
 const designer = useDesignerContext();
 const pageSchema = designer.pageSchema;
@@ -30,6 +31,7 @@ function isShow(item: ComponentSchema) {
   if (typeof item.show === 'function') {
     return item.show?.({
       tableMeta: tableMeta.value,
+      parent: props.parent,
       values: selectedNode.value!,
     });
   }
