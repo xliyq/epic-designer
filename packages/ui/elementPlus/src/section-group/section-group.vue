@@ -3,6 +3,7 @@ import type { ComponentSchema } from '@ies/designer';
 
 import { computed, inject, provide, ref, watch } from 'vue';
 
+import { ElFormItem } from 'element-plus';
 import { EpicNode } from '@ies/base-ui';
 import {
   SECTION_GROUP_CTX_KEY,
@@ -11,6 +12,8 @@ import {
 } from '@ies/designer';
 import { pluginManager } from '@ies/manager';
 import { deepEqual, getValueByPath } from '@ies/utils';
+
+import { useContainerValidate } from '../common/useContainerValidate';
 
 defineOptions({
   name: 'EpSectionGroup',
@@ -42,6 +45,104 @@ const selectionField = computed(
 );
 
 const children = computed(() => props.componentSchema?.children ?? []);
+
+// ========== 容器校验 ==========
+const { childErrors, validateField, validateAll, clearValidate } = useContainerValidate({
+  getValidator: (name: string) => pageManager.funcs.value[name],
+});
+
+/**
+ * 判断子组件是否为容器组件（不需要 ElFormItem 包裹）
+ */
+function isContainerChild(child: ComponentSchema): boolean {
+  return child.type === 'attribute-group'
+    || child.type === 'section-group'
+    || child.type === 'card'
+    || child.type === 'sub-form';
+}
+
+/**
+ * 判断子组件是否必填（用于 ElFormItem 的 required 星号显示）
+ */
+function isChildRequired(child: ComponentSchema): boolean {
+  if (child.props?.required) return true;
+  if (!child.rules) return false;
+  return (child.rules as any[]).some((r) => r.required === true);
+}
+
+/**
+ * 获取指定区块内子组件的值
+ * @param tplChild section-template 的子组件
+ * @param item 区块数据对象
+ */
+function getChildValue(tplChild: ComponentSchema, item: Record<string, any> | null): any {
+  if (!item) return null;
+  return item[tplChild.field ?? ''] ?? null;
+}
+
+/**
+ * 字段值变化处理：更新值后触发 change 校验
+ */
+function handleFieldChange(tplChild: ComponentSchema, item: Record<string, any>, fieldKey: string, val: any) {
+  item[fieldKey] = val;
+  emitOutput();
+  // 仅对非容器、有 rules 的子组件在运行模式下触发校验
+  if (!isDesignMode.value && !isContainerChild(tplChild) && tplChild.rules?.length) {
+    validateField(tplChild, val, 'change');
+  }
+}
+
+/**
+ * 字段失焦处理：触发 blur 校验
+ */
+function handleFieldBlur(tplChild: ComponentSchema, item: Record<string, any>) {
+  if (!isDesignMode.value && !isContainerChild(tplChild) && tplChild.rules?.length) {
+    validateField(tplChild, getChildValue(tplChild, item), 'blur');
+  }
+}
+
+/**
+ * 校验本区块组内所有可见字段（供 form.validate 调用）
+ */
+async function validate(): Promise<void> {
+  if (isDesignMode.value) return;
+  // 先清除所有校验状态
+  clearValidate();
+  // 收集所有可见的非容器子组件进行校验
+  const allFields: { child: ComponentSchema; getValue: () => any }[] = [];
+  internalData.value.forEach((item, i) => {
+    if (!item) return;
+    const tpl = children.value[i];
+    if (!tpl) return;
+    (tpl.children ?? []).forEach((tplChild) => {
+      if (isContainerChild(tplChild)) return;
+      allFields.push({
+        child: tplChild,
+        getValue: () => getChildValue(tplChild, item),
+      });
+    });
+  });
+
+  const errors: { id: string; message: string; label?: string }[] = [];
+  for (const { child, getValue } of allFields) {
+    if (!child.id || !child.rules?.length) continue;
+    const err = await validateField(child, getValue());
+    if (err) {
+      errors.push({ id: child.id!, message: err, label: child.label });
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(errors[0].message);
+  }
+}
+
+defineExpose({
+  validate,
+  clearValidate: () => clearValidate(),
+  __isContainerValidate: true,
+});
+// ========== /容器校验 ==========
 
 // 内部数据：固定长度 = children.length，null = 隐藏
 const internalData = ref<(Record<string, any> | null)[]>([]);
@@ -136,8 +237,20 @@ watch(
       const isSelected = selectedArray.includes(String(optKey));
       if (isSelected && !internalData.value[i]) {
         internalData.value[i] = {};
+        // 区块变为可见时，清除该区块内子组件的旧校验错误
+        (tpl.children ?? []).forEach((tplChild) => {
+          if (tplChild.id && !isContainerChild(tplChild)) {
+            delete childErrors.value[tplChild.id];
+          }
+        });
       } else if (!isSelected && internalData.value[i]) {
         internalData.value[i] = null;
+        // 区块隐藏时，清除该区块内子组件的校验错误
+        (tpl.children ?? []).forEach((tplChild) => {
+          if (tplChild.id && !isContainerChild(tplChild)) {
+            delete childErrors.value[tplChild.id];
+          }
+        });
       }
     });
     emitOutput();
@@ -179,6 +292,7 @@ const rowSchemas = computed(() => {
     return (tpl?.children ?? []).map((child) => ({
       schema: getRowChildSchema(child),
       fieldKey: child.field ?? '',
+      child, // 保留原始 child schema 用于校验判断
     }));
   });
 });
@@ -238,7 +352,7 @@ const visibleCount = computed(
       </slot>
     </div>
 
-    <!-- 运行模式：用 EpNode 渲染 -->
+    <!-- 运行模式：用 EpNode 渲染，非容器子组件使用 ElFormItem 展示校验错误 -->
     <div v-else v-show="!collapsed" class="ep-section-group__body">
       <template v-for="(item, i) in internalData" :key="i">
         <div v-if="item && rowSchemas[i]" class="ep-section-group__card">
@@ -247,18 +361,31 @@ const visibleCount = computed(
           </div>
           <div class="ep-section-group__card-body">
             <template v-for="entry in rowSchemas[i]" :key="entry.schema.id">
-              <div class="ep-section-group__field">
-                <label v-if="entry.schema.label && !entry.schema.hideLabel" class="ep-section-group__field-label">
-                  {{ entry.schema.label }}
-                </label>
-                <div class="ep-section-group__field-control">
-                  <EpicNode
-                    :component-schema="entry.schema"
-                    :model-value="item[entry.fieldKey]"
-                    @update:model-value="(val: any) => { item[entry.fieldKey] = val; emitOutput() }"
-                  />
-                </div>
-              </div>
+              <!-- 容器子组件（如 attribute-group）：直接渲染，由容器自身管理校验 -->
+              <template v-if="isContainerChild(entry.child)">
+                <EpicNode
+                  :component-schema="entry.schema"
+                  :model-value="item[entry.fieldKey]"
+                  @update:model-value="(val: any) => { item[entry.fieldKey] = val; emitOutput() }"
+                />
+              </template>
+              <!-- 非容器输入子组件：用 ElFormItem 包裹以展示校验错误 -->
+              <ElFormItem
+                v-else
+                class="ep-section-group__form-item"
+                :label="entry.schema.hideLabel ? '' : (entry.schema.label || '')"
+                label-width="auto"
+                :error="childErrors[entry.schema.id!]"
+                :validate-status="childErrors[entry.schema.id!] ? 'error' : ''"
+                :required="isChildRequired(entry.child)"
+              >
+                <EpicNode
+                  :component-schema="entry.schema"
+                  :model-value="item[entry.fieldKey]"
+                  @update:model-value="(val: any) => handleFieldChange(entry.child, item, entry.fieldKey, val)"
+                  @blur="() => handleFieldBlur(entry.child, item)"
+                />
+              </ElFormItem>
             </template>
           </div>
         </div>
@@ -346,25 +473,34 @@ const visibleCount = computed(
     padding: 12px;
   }
 
-  &__field {
-    display: flex;
-    align-items: flex-start;
+  /* 运行模式：非容器子组件的 ElFormItem 样式 */
+  &__form-item {
     margin-bottom: 12px;
-  }
 
-  &__field-label {
-    flex-shrink: 0;
-    text-align: right;
-    padding-right: 12px;
-    line-height: 32px;
-    font-size: 14px;
-    color: var(--el-text-color-regular, #606266);
-    min-width: 80px;
-  }
+    :deep(.el-form-item__label) {
+      flex-shrink: 0;
+      text-align: right;
+      padding-right: 12px;
+      line-height: 32px;
+      font-size: 14px;
+      color: var(--el-text-color-regular, #606266);
+      min-width: 80px;
+    }
 
-  &__field-control {
-    flex: 1;
-    min-width: 0;
+    :deep(.el-form-item__content) {
+      flex: 1;
+      min-width: 0;
+      line-height: 32px;
+
+      .el-input,
+      .el-select,
+      .el-date-editor,
+      .el-cascader,
+      .el-input-number,
+      .el-textarea {
+        width: 100%;
+      }
+    }
   }
 }
 </style>

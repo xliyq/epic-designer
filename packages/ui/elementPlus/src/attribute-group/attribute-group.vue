@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import type { ComponentSchema } from '@ies/designer';
 
-import { computed, inject, nextTick, onMounted, provide, ref, watch } from 'vue';
+import { computed, inject, nextTick, provide, ref, watch } from 'vue';
 
+import { ElFormItem } from 'element-plus';
 import { EpicNode } from '@ies/base-ui';
 import {
   ATTRIBUTE_GROUP_CTX_KEY,
@@ -12,6 +13,8 @@ import {
 } from '@ies/designer';
 import { pluginManager } from '@ies/manager';
 import { deepEqual, findSchemas } from '@ies/utils';
+
+import { useContainerValidate } from '../common/useContainerValidate';
 
 defineOptions({
   name: 'EpAttributeGroup',
@@ -35,6 +38,59 @@ const isDesignMode = computed(() => pageManager.isDesignMode.value);
 const { formData } = useFormItem();
 
 const field = computed(() => props.componentSchema?.field ?? '');
+
+// ========== 容器校验 ==========
+const { childErrors, validateField, validateAll, clearValidate } = useContainerValidate({
+  getValidator: (name: string) => pageManager.funcs.value[name],
+});
+
+/**
+ * 判断子组件是否必填（用于 ElFormItem 的 required 星号显示）
+ */
+function isChildRequired(child: ComponentSchema): boolean {
+  if (child.props?.required) return true;
+  if (!child.rules) return false;
+  return (child.rules as any[]).some((r) => r.required === true);
+}
+
+/**
+ * 字段值变化处理：更新值后触发 change 校验
+ */
+function handleFieldChange(child: ComponentSchema, rawValue: any) {
+  setFieldValue(child, rawValue);
+  // 仅在运行模式下触发校验
+  if (!isDesignMode.value && child.rules?.length) {
+    validateField(child, getFieldValue(child), 'change');
+  }
+}
+
+/**
+ * 字段失焦处理：触发 blur 校验
+ */
+function handleFieldBlur(child: ComponentSchema) {
+  if (!isDesignMode.value && child.rules?.length) {
+    validateField(child, getFieldValue(child), 'blur');
+  }
+}
+
+/**
+ * 校验本属性组内所有字段（供 form.validate 调用）
+ */
+async function validate(): Promise<void> {
+  if (isDesignMode.value) return;
+  // 先清除所有校验状态，再重新校验
+  clearValidate();
+  const errors = await validateAll(
+    children.value,
+    (child) => getFieldValue(child),
+    (child) => isChildHidden(child),
+  );
+  if (errors.length > 0) {
+    throw new Error(errors[0].message);
+  }
+}
+
+// ========== /容器校验 ==========
 
 const allMeta = inject(ATTRIBUTE_META_KEY, computed(() => ({})));
 const attrDefs = computed(() => allMeta.value[field.value] ?? []);
@@ -176,6 +232,14 @@ watch(
   },
   { immediate: true },
 );
+
+// 注册/注销组件实例，暴露 validate/clearValidate 供 form.validate 调用
+// 通过 defineExpose 暴露给父级 EpicNode，由 node.vue 的 handleAddComponentInstance 注册到 pageManager
+defineExpose({
+  validate,
+  clearValidate: () => clearValidate(),
+  __isContainerValidate: true,
+});
 
 function findAttrDef(charNum: string) {
   return attrDefs.value.find((d: any) => String(d.charNum) === String(charNum));
@@ -508,6 +572,19 @@ const labelWidth = computed<string>(() => {
   }
   return '';
 });
+
+/**
+ * 计算每个子组件 ElFormItem 的 label-width prop
+ * - 无标签 / hideLabel / top 布局：'0'（不占标签宽度）
+ * - 有显式 labelWidth：使用该值
+ * - 无显式 labelWidth：undefined（让 ElFormItem 继承父 ElForm 的 label-width）
+ */
+function getItemLabelWidth(child: ComponentSchema): string | undefined {
+  if (!child.label || child.hideLabel || labelPosition.value === 'top') {
+    return '0';
+  }
+  return labelWidth.value || undefined;
+}
 const rootStyle = computed(() => {
   const style: Record<string, string> = {};
   if (labelWidth.value) style['--attr-group-label-width'] = labelWidth.value;
@@ -637,30 +714,31 @@ const gridStyle = computed(() => {
       </slot>
     </div>
 
-    <!-- 运行模式：按 groupLabel 分组渲染，隐藏字段不显示 -->
+    <!-- 运行模式：按 groupLabel 分组渲染，隐藏字段不显示，使用 ElFormItem 展示校验错误 -->
     <div v-else v-show="!collapsed" class="ep-attr-group__body" :style="gridStyle">
       <template v-for="group in groupedChildContext" :key="group.groupLabel || '__default__'">
         <div v-if="group.groupLabel" class="ep-attr-group__subgroup-title">
           {{ group.groupLabel }}
         </div>
-        <div
+        <ElFormItem
           v-for="ctx in group.items"
           :key="ctx.schema.id"
-          class="ep-attr-group__field"
+          class="ep-attr-group__form-item"
           :class="{ 'ep-hidden': isChildHidden(ctx.child) }"
           :style="ctx.child.props?.span ? { gridColumn: `span ${ctx.child.props.span}` } : undefined"
+          :label="ctx.schema.hideLabel ? '' : (ctx.schema.label ? ctx.schema.label + labelSuffix : '')"
+          :label-width="getItemLabelWidth(ctx.child)"
+          :error="childErrors[ctx.schema.id!]"
+          :validate-status="childErrors[ctx.schema.id!] ? 'error' : ''"
+          :required="isChildRequired(ctx.child)"
         >
-          <label v-if="ctx.schema.label && !ctx.schema.hideLabel" class="ep-attr-group__field-label">
-            {{ ctx.schema.label }}{{ labelSuffix }}
-          </label>
-          <div class="ep-attr-group__field-control">
-            <EpicNode
-              :component-schema="ctx.schema"
-              :model-value="childBindings[ctx.schema.id!]"
-              @update:model-value="(val: any) => setFieldValue(ctx.child, val)"
-            />
-          </div>
-        </div>
+          <EpicNode
+            :component-schema="ctx.schema"
+            :model-value="childBindings[ctx.schema.id!]"
+            @update:model-value="(val: any) => handleFieldChange(ctx.child, val)"
+            @blur="() => handleFieldBlur(ctx.child)"
+          />
+        </ElFormItem>
       </template>
     </div>
   </div>
@@ -796,50 +874,29 @@ const gridStyle = computed(() => {
     }
   }
 
-  &__field {
-    display: flex;
-    align-items: center;
+  /* 运行模式：ElFormItem 样式适配 */
+  &__form-item {
     margin-bottom: 12px;
     min-height: 32px;
-  }
 
-  &__field-label {
-    flex-shrink: 0;
-    text-align: right;
-    padding-right: 12px;
-    line-height: 32px;
-    font-size: 14px;
-    color: var(--el-text-color-regular, #606266);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &[data-has-label-width] &__field-label {
-    width: var(--attr-group-label-width) !important;
-  }
-
-  &__field-control {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    min-height: 32px;
-    line-height: 32px;
-
-    /* 子组件默认宽度 100%，高度统一 32px */
-    :deep(.el-input),
-    :deep(.el-select),
-    :deep(.el-date-editor),
-    :deep(.el-cascader),
-    :deep(.el-input-number),
-    :deep(.el-textarea) {
-      width: 100%;
+    :deep(.el-form-item) {
+      margin-bottom: 0;
     }
 
     :deep(.el-form-item__content) {
       min-height: 32px;
       line-height: 32px;
+      flex: 1;
+      min-width: 0;
+
+      .el-input,
+      .el-select,
+      .el-date-editor,
+      .el-cascader,
+      .el-input-number,
+      .el-textarea {
+        width: 100%;
+      }
     }
 
     /* 文本展示类组件对齐 */
@@ -850,26 +907,40 @@ const gridStyle = computed(() => {
     }
   }
 
-  &[data-label-position='top'] &__field {
-    flex-direction: column;
-    align-items: stretch;
+  /* 运行模式下 labelPosition 覆盖 */
+  &[data-label-position='top'] &__form-item {
+    :deep(.el-form-item) {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    :deep(.el-form-item__label) {
+      text-align: left;
+      padding-right: 0;
+      padding-bottom: 4px;
+      line-height: 1.4;
+      width: auto !important;
+      flex: none;
+    }
+    :deep(.el-form-item__content) {
+      margin-left: 0 !important;
+    }
   }
 
-  &[data-label-position='top'] &__field-label {
-    text-align: left;
-    padding-right: 0;
-    margin-bottom: 4px;
-    line-height: 1.4;
+  &[data-label-position='right'] &__form-item {
+    :deep(.el-form-item) {
+      flex-direction: row-reverse;
+    }
+    :deep(.el-form-item__label) {
+      text-align: left;
+      padding-left: 12px;
+      padding-right: 0;
+    }
   }
 
-  &[data-label-position='right'] &__field {
-    flex-direction: row-reverse;
-  }
-
-  &[data-label-position='right'] &__field-label {
-    text-align: left;
-    padding-left: 12px;
-    padding-right: 0;
+  /* 隐藏字段 */
+  &__form-item.ep-hidden {
+    display: none;
   }
 }
 </style>
