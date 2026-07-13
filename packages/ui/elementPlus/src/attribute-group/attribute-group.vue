@@ -726,7 +726,7 @@ const gridStyle = computed(() => {
           class="ep-attr-group__form-item"
           :class="{ 'ep-hidden': isChildHidden(ctx.child) }"
           :style="ctx.child.props?.span ? { gridColumn: `span ${ctx.child.props.span}` } : undefined"
-          :label="ctx.schema.hideLabel ? '' : (ctx.schema.label ? ctx.schema.label + labelSuffix : '')"
+          :label="ctx.schema.hideLabel ? '' : (ctx.schema.label ?? '')"
           :label-width="getItemLabelWidth(ctx.child)"
           :error="childErrors[ctx.schema.id!]"
           :validate-status="childErrors[ctx.schema.id!] ? 'error' : ''"
