@@ -12,7 +12,7 @@ import {
   usePageManager,
 } from '@ies/designer';
 import { pluginManager } from '@ies/manager';
-import { deepEqual, findSchemas } from '@ies/utils';
+import { deepEqual, findSchemas, setValueByPath } from '@ies/utils';
 
 import { useContainerValidate } from '../common/useContainerValidate';
 
@@ -198,6 +198,31 @@ function initFromModelValue(arr: any[]) {
   // 将子组件的 metaOverrides 合并到数组项
   applyMetaOverrides();
 
+  // 初始化完成后，对有 valueJPath 配置的字段同步默认值/回填值到 formData
+  children.value.forEach((child) => {
+    if (child.props?.valueJPath) {
+      const value = getFieldValue(child);
+      // 查找标签文本
+      let label: string | null = null;
+      const charNum = child.props?.charNum;
+      const options = child.props?.options ?? [];
+      if (Array.isArray(options) && value != null && value !== '') {
+        const matched = options.find((o: any) => String(o.value ?? o.code) === String(value));
+        if (matched) label = matched.label ?? matched.name ?? null;
+      }
+      if (!label && charNum) {
+        const def = findAttrDef(charNum);
+        if (def?.bizCharEnumSpecLst) {
+          const matched = def.bizCharEnumSpecLst.find(
+            (e: any) => String(e.code ?? e.value) === String(value),
+          );
+          if (matched) label = matched.value ?? matched.label ?? null;
+        }
+      }
+      syncValueJPath(child, value, label);
+    }
+  });
+
   // 初始化时主动 emit，确保 formData 中有数据
   const output = buildOutput();
   lastEmitted = output;
@@ -317,6 +342,50 @@ function getFieldValue(child: ComponentSchema): any {
   return item.charValue ?? null;
 }
 
+/**
+ * 解析 valueJPath，返回 { namePath, valuePath }（点号路径，可直接用于 setValueByPath）
+ * 规则：
+ *   - 用 $$ 切割为 label 路径和 value 路径
+ *   - 开头的 / 表示从 formData 根节点开始
+ *   - 路径中的 / 转为 . 作为嵌套路径
+ * 例："/validateModeName$$/validateModeNum" → { namePath: "validateModeName", valuePath: "validateModeNum" }
+ *     "/a/b/c$$/d/e/f" → { namePath: "a.b.c", valuePath: "d.e.f" }
+ */
+function parseValueJPath(valueJPath: string): { namePath: string; valuePath: string } | null {
+  if (!valueJPath || typeof valueJPath !== 'string') return null;
+  const sepIndex = valueJPath.indexOf('$$');
+  if (sepIndex === -1) return null;
+  const nameRaw = valueJPath.substring(0, sepIndex);
+  const valueRaw = valueJPath.substring(sepIndex + 2);
+  // 去除开头 / 并将 / 转为 .
+  const toPath = (raw: string) => raw.replace(/^\//, '').replace(/\//g, '.');
+  return { namePath: toPath(nameRaw), valuePath: toPath(valueRaw) };
+}
+
+/**
+ * 根据子组件的 valueJPath 配置，将 label/value 同步写入 formData 指定路径
+ */
+function syncValueJPath(
+  child: ComponentSchema,
+  rawValue: any,
+  matchedLabel: string | null,
+): void {
+  const valueJPath = child.props?.valueJPath;
+  if (!valueJPath) return;
+  const parsed = parseValueJPath(valueJPath);
+  if (!parsed) return;
+  const { namePath, valuePath } = parsed;
+
+  if (rawValue == null || rawValue === '' || (Array.isArray(rawValue) && rawValue.length === 0)) {
+    // 空值时清空目标字段
+    if (namePath) setValueByPath(formData, namePath, null);
+    if (valuePath) setValueByPath(formData, valuePath, null);
+  } else {
+    if (namePath) setValueByPath(formData, namePath, matchedLabel ?? '');
+    if (valuePath) setValueByPath(formData, valuePath, rawValue);
+  }
+}
+
 function setFieldValue(child: ComponentSchema, rawValue: any): void {
   const charNum = child.props?.charNum;
 
@@ -340,27 +409,26 @@ function setFieldValue(child: ComponentSchema, rawValue: any): void {
   const componentConfig = pluginManager.component.getConfigByType(child.type);
   const sync = componentConfig?.attributeSync;
 
+  // 查找标签文本（用于 charDisplay 同步和 valueJPath name 字段写入）
+  let matchedLabel: string | null = null;
+  const options = child.props?.options ?? [];
+  if (Array.isArray(options)) {
+    const matched = options.find((o: any) => String(o.value ?? o.code) === String(rawValue));
+    if (matched) matchedLabel = matched.label ?? matched.name ?? null;
+  }
+  // 如果没有在设计时 options 中找到，尝试从 API 定义中查找
+  if (!matchedLabel) {
+    const def = charNum ? findAttrDef(charNum) : null;
+    if (def?.bizCharEnumSpecLst) {
+      const matched = def.bizCharEnumSpecLst.find(
+        (e: any) => String(e.code ?? e.value) === String(rawValue),
+      );
+      if (matched) matchedLabel = matched.value ?? matched.label ?? null;
+    }
+  }
+
   if (sync) {
     const keys = getSyncKeys(child);
-
-    // 查找标签（用于 charDisplay 同步）
-    let matchedLabel: string | null = null;
-    const options = child.props?.options ?? [];
-    if (Array.isArray(options)) {
-      const matched = options.find((o: any) => String(o.value ?? o.code) === String(rawValue));
-      if (matched) matchedLabel = matched.label ?? matched.name ?? null;
-    }
-    // 如果没有在设计时 options 中找到，尝试从 API 定义中查找
-    if (!matchedLabel) {
-      const def = charNum ? findAttrDef(charNum) : null;
-      if (def?.bizCharEnumSpecLst) {
-        const matched = def.bizCharEnumSpecLst.find(
-          (e: any) => String(e.code ?? e.value) === String(rawValue),
-        );
-        if (matched) matchedLabel = matched.value ?? matched.label ?? null;
-      }
-    }
-
     for (const fieldKey of keys) {
       const entry = sync[fieldKey];
       if (entry) {
@@ -386,6 +454,9 @@ function setFieldValue(child: ComponentSchema, rawValue: any): void {
       target.prodordAttachFiles = [];
     }
   }
+
+  // 同步 valueJPath 配置的目标字段
+  syncValueJPath(child, rawValue, matchedLabel);
 
   emitOutput();
 }
