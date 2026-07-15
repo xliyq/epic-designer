@@ -40,8 +40,9 @@ export default defineComponent({
     );
 
     return () => {
+      const { options: _attrsOptions, remoteConfig: _attrsRemoteConfig, ...restAttrs } = attrs;
       const selectProps: Record<string, any> = {
-        ...attrs,
+        ...restAttrs,
         key: String(attrs.multiple),
         'onUpdate:modelValue': handleUpdate,
         placeholder: attrs.placeholder ?? '请选择',

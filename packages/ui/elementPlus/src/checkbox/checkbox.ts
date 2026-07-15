@@ -30,8 +30,9 @@ export default defineComponent({
     );
 
     return () => {
+      const { options: _attrsOptions, remoteConfig: _attrsRemoteConfig, ...restAttrs } = attrs;
       const checkboxProps: Record<string, any> = {
-        ...attrs,
+        ...restAttrs,
         'onUpdate:modelValue': handleUpdate,
       };
       return h(ElCheckboxGroup, checkboxProps, {
