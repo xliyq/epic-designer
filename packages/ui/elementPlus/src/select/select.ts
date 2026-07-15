@@ -7,6 +7,7 @@ import 'element-plus/es/components/select/style/css';
 
 // 二次封装组件
 export default defineComponent({
+  inheritAttrs: false,
   props: {
     remoteConfig: {
       type: Object,
@@ -48,9 +49,10 @@ export default defineComponent({
         placeholder: attrs.placeholder ?? '请选择',
       };
 
-      // 远程模式时覆盖 loading
+      // 远程模式时不传静态 options 给 ElSelect，覆盖 loading
       if (isRemote.value) {
         selectProps.loading = loading.value;
+        selectProps.options = finalOptions.value;
       }
 
       return h(ElSelect, selectProps, {
