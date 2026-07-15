@@ -82,6 +82,7 @@ export default {
         label: '选项管理',
         layout: 'vertical',
         type: 'EOptionsEditor',
+        show: ({ values }) => !values.props?.remoteConfig?.enabled,
       },
       {
         description: '配置远程数据源，通过 HTTP 请求动态加载选项',
