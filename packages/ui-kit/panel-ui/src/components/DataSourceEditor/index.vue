@@ -32,14 +32,14 @@ const dataSource = computed({
 });
 
 // 数据源模式选项：静态模式始终内置，其他来自注册的 provider
-const modes = computed(() => {
-  const list: { id: string; label: string }[] = [
-    { id: 'static', label: '静态数据' },
+const modeOptions = computed(() => {
+  const list: { label: string; value: string }[] = [
+    { label: '静态数据', value: 'static' },
   ];
   const providers = pluginManager.dataSource.getAll();
   providers.forEach((p) => {
     if (p.id !== 'static') {
-      list.push({ id: p.id, label: p.label });
+      list.push({ label: p.label, value: p.id });
     }
   });
   return list;
@@ -60,7 +60,8 @@ const currentProvider = computed(() => {
 });
 
 // 切换数据源类型
-function switchType(type: string) {
+function handleTypeChange(type: string) {
+  if (type === dataSource.value.type) return;
   if (type === 'static') {
     dataSource.value = { type: 'static', config: { options: [] } };
     return;
@@ -80,39 +81,54 @@ const editorComponent = computed(() => {
   return pluginManager.component.get(provider.editor);
 });
 
-// 编辑器组件接收的 modelValue
-const editorModelValue = computed(() => dataSource.value.config);
+// 获取 select 组件（与属性面板其他下拉项一致）
+const SelectComponent = pluginManager.component.get('select');
+
+// 编辑器组件接收的 modelValue（按不同编辑器类型转换格式）
+const editorModelValue = computed(() => {
+  if (dataSource.value.type === 'static') {
+    // 静态数据编辑器期望 modelValue 是数组，不是 { options: [...] }
+    return dataSource.value.config.options ?? [];
+  }
+  // 自定义编辑器期望 modelValue 是配置对象
+  return dataSource.value.config;
+});
 const editorProps = computed(() => {
   // 静态数据编辑器可能需要 tree 等额外属性
   const extra: Record<string, any> = {};
   if (props.tree) extra.tree = true;
   return extra;
 });
-function handleEditorUpdate(newConfig: any) {
-  // 保留编辑器可能设置的额外字段
-  dataSource.value = { ...dataSource.value, config: newConfig };
+function handleEditorUpdate(newValue: any) {
+  if (dataSource.value.type === 'static') {
+    // 静态数据编辑器返回的是数组，映射回 { options: [...] }
+    dataSource.value = {
+      type: 'static',
+      config: { options: newValue },
+    };
+  } else {
+    dataSource.value = { ...dataSource.value, config: newValue };
+  }
 }
 </script>
 
 <template>
   <div class="ep-datasource-editor">
-    <!-- 数据源类型切换 -->
-    <div class="ep-datasource-editor__header">
-      <label class="ep-datasource-editor__label">数据来源</label>
-    </div>
-    <div class="ep-datasource-editor__modes">
-      <button
-        v-for="mode in modes"
-        :key="mode.id"
-        class="ep-datasource-editor__mode-btn"
-        :class="{ active: dataSource.type === mode.id }"
-        @click="switchType(mode.id)"
-      >
-        {{ mode.label }}
-      </button>
+    <!-- 第一行：label + 下拉选择器（左右结构，与属性面板风格一致） -->
+    <div class="ep-datasource-editor__row">
+      <label class="ep-datasource-editor__label">数据源</label>
+      <div class="ep-datasource-editor__field">
+        <component
+          :is="SelectComponent"
+          :model-value="dataSource.type"
+          :options="modeOptions"
+          placeholder="请选择数据来源"
+          @update:model-value="handleTypeChange"
+        />
+      </div>
     </div>
 
-    <!-- 编辑器 -->
+    <!-- 第二行：编辑器面板（占满宽度） -->
     <div class="ep-datasource-editor__editor">
       <component
         :is="editorComponent"
@@ -128,50 +144,27 @@ function handleEditorUpdate(newConfig: any) {
 .ep-datasource-editor {
   width: 100%;
 
-  &__header {
+  &__row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-  }
-
-  &__label {
-    font-size: 12px;
-    color: var(--ep-text-color, #606266);
-    font-weight: 500;
-  }
-
-  &__modes {
-    display: flex;
-    gap: 4px;
     margin-bottom: 10px;
-    border-radius: 6px;
-    background: var(--ep-fill-color, #f5f7fa);
-    padding: 3px;
   }
 
-  &__mode-btn {
+  // 与属性面板 ep-attr-label 对齐
+  &__label {
+    width: 80px;
+    min-width: 80px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: var(--ep-text-md, 13px);
+    line-height: 32px;
+  }
+
+  &__field {
     flex: 1;
     min-width: 0;
-    padding: 4px 8px;
-    border: none;
-    border-radius: 4px;
-    font-size: 12px;
-    line-height: 1.6;
-    cursor: pointer;
-    color: var(--ep-text-color-secondary, #909399);
-    background: transparent;
-    transition: all 0.2s ease;
-
-    &:hover {
-      color: var(--ep-text-color-primary, #303133);
-    }
-
-    &.active {
-      color: #fff;
-      background: var(--ep-color-primary, #409eff);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
-    }
   }
 
   &__editor {

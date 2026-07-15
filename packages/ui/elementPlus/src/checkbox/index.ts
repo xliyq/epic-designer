@@ -91,7 +91,6 @@ export default {
       {
         description: '配置数据来源：静态选项或远程 HTTP 请求',
         field: 'props.dataSource',
-        label: '数据源',
         layout: 'vertical',
         type: 'DataSourceEditor',
       },

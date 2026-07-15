@@ -13,9 +13,13 @@ export function useDataSourceManager() {
   const providers = ref<DataSourceProvider[]>([]);
   const providersMap = new Map<string, DataSourceProvider>();
 
+  /**
+   * 注册数据源提供者
+   * 如果 id 已存在则覆盖（第三方可用相同 id 覆盖内置 provider）
+   */
   function register(provider: DataSourceProvider): void {
     if (providersMap.has(provider.id)) {
-      console.warn(`[DataSource] 数据源提供者 "${provider.id}" 已存在，将被覆盖`);
+      console.warn(`[DataSource] 数据源提供者 "${provider.id}" 已存在，已被覆盖`);
     }
     providersMap.set(provider.id, provider);
     providers.value = Array.from(providersMap.values());
@@ -132,7 +136,7 @@ export function registerBuiltinProviders(manager: ReturnType<typeof useDataSourc
       }
 
       // 优先使用注入的 http 实例
-      const http = (context.global as any)?.$http;
+      const http = context.global?.$http;
       let response: any;
 
       if (http?.get && http?.post) {

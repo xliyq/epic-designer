@@ -13,11 +13,6 @@ export default defineComponent({
       type: Object,
       default: null,
     },
-    // 向后兼容旧 schema
-    remoteConfig: {
-      type: Object,
-      default: null,
-    },
     options: {
       type: Array,
       default: null,
@@ -31,12 +26,8 @@ export default defineComponent({
 
     const formData = useFormData();
 
-    // 向后兼容：将旧 schema 转换为新 dataSource 格式
     const dataSource = computed(() => {
       if (props.dataSource) return props.dataSource;
-      if (props.remoteConfig?.enabled) {
-        return { type: 'http', config: props.remoteConfig };
-      }
       return { type: 'static', config: { options: props.options ?? [] } };
     });
 
@@ -47,7 +38,7 @@ export default defineComponent({
     const finalOptions = computed(() => dsOptions.value ?? []);
 
     return () => {
-      const { options: _attrsOptions, remoteConfig: _attrsRemoteConfig, dataSource: _attrsDataSource, ...restAttrs } = attrs;
+      const { options: _attrsOptions, dataSource: _attrsDataSource, ...restAttrs } = attrs;
       const selectProps: Record<string, any> = {
         ...restAttrs,
         key: String(attrs.multiple),

@@ -11,6 +11,61 @@ export interface DataSourceOption {
 }
 
 /**
+ * 全局消息提示接口
+ */
+export interface MessageApi {
+  error: (text: string) => void;
+  info: (text: string) => void;
+  success: (text: string) => void;
+  warning: (text: string) => void;
+}
+
+/**
+ * HTTP 客户端接口
+ * 兼容 axios 实例或任何提供 get/post 方法的对象
+ */
+export interface HttpClient {
+  get: (url: string, config?: Record<string, any>) => Promise<any>;
+  post: (url: string, data?: any, config?: Record<string, any>) => Promise<any>;
+  [key: string]: any;
+}
+
+/**
+ * axios 配置（用于 fetch 降级时的 headers 等配置）
+ */
+export interface AxiosConfig {
+  /** 请求头，与 fetch 降级路径的默认 headers 合并 */
+  headers?: Record<string, string>;
+  [key: string]: any;
+}
+
+/**
+ * 全局上下文初始值（可扩展任意属性）
+ */
+export interface InitialGlobal {
+  [key: string]: any;
+}
+
+/**
+ * 全局上下文接口
+ * 第三方可通过 pluginManager.global.$http = myAxios 注入 HTTP 客户端
+ */
+export interface Global {
+  [key: string]: any;
+  /** 全局消息提示 */
+  $message: MessageApi;
+  /**
+   * HTTP 客户端实例（axios 或自定义）
+   * 注入后，http 数据源 provider 会优先使用它发起请求
+   */
+  $http?: HttpClient;
+  /**
+   * axios 配置，用于 fetch 降级路径的 headers 等合并
+   */
+  axiosConfig?: AxiosConfig;
+}
+
+/**
  * 数据源提供者上下文
  */
 export interface DataSourceContext {
@@ -18,8 +73,8 @@ export interface DataSourceContext {
   formData: Record<string, any>;
   /** 组件 schema 中的 field */
   field?: string;
-  /** 获取已注册的全局上下文 */
-  global?: any;
+  /** 全局上下文（含 $http、$message、axiosConfig 等） */
+  global?: Global;
 }
 
 /**

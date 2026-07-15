@@ -7,26 +7,20 @@ const props = withDefaults(
   defineProps<{
     placeholder?: string;
     options?: any[];
-    remoteConfig?: any;
     dataSource?: any;
   }>(),
   {
     placeholder: '请选择',
     options: () => [],
-    remoteConfig: undefined,
     dataSource: undefined,
   },
 );
 
 const emit = defineEmits(['update:modelValue']);
 
-// 向后兼容
 const formData = useFormData();
 const dataSource = computed(() => {
   if (props.dataSource) return props.dataSource;
-  if (props.remoteConfig?.enabled) {
-    return { type: 'http', config: props.remoteConfig };
-  }
   return { type: 'static', config: { options: props.options ?? [] } };
 });
 

@@ -13,6 +13,8 @@ import Page from './Page';
  * @returns {void}
  */
 export function setupPage(pluginManager: PluginManager): void {
+  // 注册内置数据源提供者（static + http），EBuilder 和 EDesigner 运行时都需要
+  registerBuiltinProviders(pluginManager.dataSource);
   pluginManager.component.register(Page);
 }
 
@@ -22,9 +24,6 @@ export function setupPage(pluginManager: PluginManager): void {
  * @returns {void}
  */
 export function setupComponent(pluginManager: PluginManager): void {
-  // 注册内置数据源提供者（http 远程数据）
-  registerBuiltinProviders(pluginManager.dataSource);
-
   pluginManager.component.add(
     'EInputSize',
     async () => await import('./EInputSize/index.vue'),

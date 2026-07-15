@@ -433,7 +433,12 @@ export function buildValueJPathField(field: FieldSpec): Record<string, any> {
     const options = generateOptions(field.bizCharEnumSpecLst);
     const props: Record<string, any> = {
         effect: 'light',
-        options,
+        dataSource:{
+            type:'static',
+            config:{
+                 options,
+            }
+        },
         placeholder: field.placeHolder || `请选择${field.charName}`,
         placement: 'bottom-start',
         size: 'default',
@@ -551,6 +556,38 @@ function convertIcbToAttrGroupChild(icb: IcbSpec, templateNum: string): Record<s
 function buildSkuTemplateChildren(sku: SkuSpec): any[] {
     const children: any[] = [];
 
+    // children.push({
+    //     type: 'attribute-group',
+    //     label: '产品基本信息',
+    //     hideLabel: true,
+    //     input: true,
+    //     id: `attrgroup_sku_prodordCharacters_${sku.skuNum}`,
+    //     props: {
+    //         style: {
+    //             margin: '10px'
+    //         }
+    //     },
+    // });
+    // children.push({
+    //     label: "产品信息",
+    //     "props": {},
+    //     "type": "card",
+    //     "children": [
+    //         {
+    //         "field": "action",
+    //         "input": true,
+    //         "label": "action",
+    //         "props": {
+    //             "placeholder": "-",
+    //             defaultValue:"action"
+    //         },
+    //         "type": "text-view",
+    //         "id": "text-view_7551"
+    //         }
+    //     ],
+    //     "id": "card_3591"
+    //     })
+
     // 1. SKU 属性（attribute-group）
     const skuFields = (sku.bizCharSpecLst || []).filter(f => (f as SkuCharSpec).readonly !== 2);
     if (skuFields.length > 0) {
@@ -583,10 +620,15 @@ function buildSkuTemplateChildren(sku: SkuSpec): any[] {
             input: true,
             id: `checkbox_tpl_${sku.skuNum}_${generateShortId()}`,
             props: {
-                options: rateTemplates.map(t => ({
-                    label: t.description,
-                    value: t.templateNum
-                }))
+                dataSource:{
+                    type:'static',
+                    config:{
+                        options: rateTemplates.map(t => ({
+                            label: t.description,
+                            value: t.templateNum
+                        }))
+                    }
+                }
             },
             rules: [{
                 required: true,
@@ -657,10 +699,15 @@ export function buildSkuSection(skuList: SkuSpec[]): any[] {
         input: true,
         id: 'selectedSkuNum',
         props: {
-            options: skuList.map(s => ({
-                label: s.skuName,
-                value: s.skuNum
-            }))
+            dataSource:{
+                type:'static',
+                config:{
+                    options: skuList.map(s => ({
+                        label: s.skuName,
+                        value: s.skuNum
+                    }))
+                }
+            }
         }
     };
 
@@ -725,10 +772,15 @@ export function commonCustomerSchema(): Record<string, any> {
             label: '客户名称',
             props: {
                 effect: 'light',
-                options: [
-                    { label: '客户1', value: 'kh001' },
-                    { label: '客户2', value: 'kh002' }
-                ],
+                dataSource:{
+                    type:'static',
+                    config:{
+                        options: [
+                            { label: '客户1', value: 'kh001' },
+                            { label: '客户2', value: 'kh002' }
+                        ]
+                    }
+                },
                 placeholder: '请选择',
                 placement: 'bottom-start',
                 size: 'default',
@@ -779,10 +831,15 @@ export function commonCustomerSchema(): Record<string, any> {
             label: '添加合同',
             props: {
                 effect: 'light',
-                options: [
-                    { label: '选项1', value: '选项1' },
-                    { label: '选项2', value: '选项2' }
-                ],
+                dataSource:{
+                    type:'static',
+                    config:{
+                        options: [
+                            { label: '选项1', value: '选项1' },
+                            { label: '选项2', value: '选项2' }
+                        ]
+                    }
+                },
                 placeholder: '请选择',
                 placement: 'bottom-start',
                 size: 'default'

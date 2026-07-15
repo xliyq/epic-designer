@@ -1,34 +1,20 @@
 <script lang="ts" setup>
-import type { RemoteConfig } from '@ies/types';
-
-import { computed, watch } from 'vue';
-
-import { createDefaultRemoteConfig } from '@ies/utils';
+import { computed } from 'vue';
 
 const props = defineProps<{
-  modelValue?: RemoteConfig;
+  modelValue?: Record<string, any>;
 }>();
 
 const emit = defineEmits(['update:modelValue']);
 
 // 内部响应式配置对象
 const config = computed({
-  get: () => {
-    if (!props.modelValue) {
-      const def = createDefaultRemoteConfig();
-      emit('update:modelValue', def);
-      return def;
-    }
-    return props.modelValue;
-  },
+  get: () => props.modelValue ?? {},
   set: (val) => emit('update:modelValue', val),
 });
 
 // 更新某个字段
-function updateField<K extends keyof RemoteConfig>(
-  key: K,
-  value: RemoteConfig[K],
-) {
+function updateField(key: string, value: any) {
   config.value = { ...config.value, [key]: value };
 }
 
@@ -56,166 +42,140 @@ const watchFieldsText = computed({
     updateField('watchFields', fields);
   },
 });
-
-// 切换 enabled 时自动调整 autoLoad
-watch(
-  () => config.value.enabled,
-  (enabled) => {
-    if (enabled && !config.value.url) {
-      // 启用时如果 url 为空，设置默认 autoLoad
-      updateField('autoLoad', true);
-    }
-  },
-);
 </script>
 
 <template>
   <div class="ep-remote-config">
-    <!-- 启用开关 -->
+    <!-- 请求地址 -->
     <div class="ep-remote-config__row">
-      <label class="ep-remote-config__label">启用远程数据</label>
-      <label class="ep-remote-config__switch">
-        <input
-          type="checkbox"
-          :checked="config.enabled"
-          @change="updateField('enabled', ($event.target as HTMLInputElement).checked)"
-        />
-        <span class="ep-remote-config__slider"></span>
-      </label>
+      <label class="ep-remote-config__label">请求地址</label>
+      <input
+        class="ep-remote-config__input"
+        type="text"
+        placeholder="/api/dict/options"
+        :value="config.url"
+        @input="updateField('url', ($event.target as HTMLInputElement).value)"
+      />
     </div>
 
-    <template v-if="config.enabled">
-      <!-- 请求地址 -->
-      <div class="ep-remote-config__row">
-        <label class="ep-remote-config__label">请求地址</label>
-        <input
-          class="ep-remote-config__input"
-          type="text"
-          placeholder="/api/dict/options"
-          :value="config.url"
-          @input="updateField('url', ($event.target as HTMLInputElement).value)"
-        />
-      </div>
-
-      <!-- 请求方法 -->
-      <div class="ep-remote-config__row">
-        <label class="ep-remote-config__label">请求方法</label>
-        <div class="ep-remote-config__radio-group">
-          <label class="ep-remote-config__radio">
-            <input
-              type="radio"
-              value="GET"
-              :checked="config.method === 'GET'"
-              @change="updateField('method', 'GET')"
-            />
-            <span>GET</span>
-          </label>
-          <label class="ep-remote-config__radio">
-            <input
-              type="radio"
-              value="POST"
-              :checked="config.method === 'POST'"
-              @change="updateField('method', 'POST')"
-            />
-            <span>POST</span>
-          </label>
-        </div>
-      </div>
-
-      <!-- 请求参数 -->
-      <div class="ep-remote-config__row ep-remote-config__row--column">
-        <label class="ep-remote-config__label">
-          请求参数
-          <span class="ep-remote-config__hint">
-            支持 ${'${formData.field}'} 引用表单值
-          </span>
-        </label>
-        <textarea
-          class="ep-remote-config__textarea"
-          :value="paramsText"
-          @blur="paramsText = ($event.target as HTMLTextAreaElement).value"
-          rows="4"
-          placeholder='{"type": "city"}'
-        />
-      </div>
-
-      <!-- 响应数据路径 -->
-      <div class="ep-remote-config__row">
-        <label class="ep-remote-config__label">数据路径</label>
-        <input
-          class="ep-remote-config__input"
-          type="text"
-          placeholder="data.list"
-          :value="config.dataPath"
-          @input="updateField('dataPath', ($event.target as HTMLInputElement).value)"
-        />
-      </div>
-
-      <!-- 字段映射 -->
-      <div class="ep-remote-config__row ep-remote-config__row--two">
-        <div class="ep-remote-config__col">
-          <label class="ep-remote-config__label">Label 字段</label>
+    <!-- 请求方法 -->
+    <div class="ep-remote-config__row">
+      <label class="ep-remote-config__label">请求方法</label>
+      <div class="ep-remote-config__radio-group">
+        <label class="ep-remote-config__radio">
           <input
-            class="ep-remote-config__input"
-            type="text"
-            placeholder="label"
-            :value="config.labelKey"
-            @input="updateField('labelKey', ($event.target as HTMLInputElement).value)"
+            type="radio"
+            value="GET"
+            :checked="config.method === 'GET'"
+            @change="updateField('method', 'GET')"
           />
-        </div>
-        <div class="ep-remote-config__col">
-          <label class="ep-remote-config__label">Value 字段</label>
-          <input
-            class="ep-remote-config__input"
-            type="text"
-            placeholder="value"
-            :value="config.valueKey"
-            @input="updateField('valueKey', ($event.target as HTMLInputElement).value)"
-          />
-        </div>
-      </div>
-
-      <!-- 联动字段 -->
-      <div class="ep-remote-config__row">
-        <label class="ep-remote-config__label">
-          联动字段
-          <span class="ep-remote-config__hint">逗号分隔，值变化时重新请求</span>
+          <span>GET</span>
         </label>
+        <label class="ep-remote-config__radio">
+          <input
+            type="radio"
+            value="POST"
+            :checked="config.method === 'POST'"
+            @change="updateField('method', 'POST')"
+          />
+          <span>POST</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- 请求参数 -->
+    <div class="ep-remote-config__row ep-remote-config__row--column">
+      <label class="ep-remote-config__label">
+        请求参数
+        <span class="ep-remote-config__hint">
+          支持 ${'${formData.field}'} 引用表单值
+        </span>
+      </label>
+      <textarea
+        class="ep-remote-config__textarea"
+        :value="paramsText"
+        @blur="paramsText = ($event.target as HTMLTextAreaElement).value"
+        rows="4"
+        placeholder='{"type": "city"}'
+      />
+    </div>
+
+    <!-- 响应数据路径 -->
+    <div class="ep-remote-config__row">
+      <label class="ep-remote-config__label">数据路径</label>
+      <input
+        class="ep-remote-config__input"
+        type="text"
+        placeholder="data.list"
+        :value="config.dataPath"
+        @input="updateField('dataPath', ($event.target as HTMLInputElement).value)"
+      />
+    </div>
+
+    <!-- 字段映射 -->
+    <div class="ep-remote-config__row ep-remote-config__row--two">
+      <div class="ep-remote-config__col">
+        <label class="ep-remote-config__label">Label 字段</label>
         <input
           class="ep-remote-config__input"
           type="text"
-          placeholder="provinceId, parentId"
-          :value="watchFieldsText"
-          @input="watchFieldsText = ($event.target as HTMLInputElement).value"
+          placeholder="label"
+          :value="config.labelKey"
+          @input="updateField('labelKey', ($event.target as HTMLInputElement).value)"
         />
       </div>
-
-      <!-- 高级选项 -->
-      <div class="ep-remote-config__row ep-remote-config__row--two">
-        <div class="ep-remote-config__col">
-          <label class="ep-remote-config__label">自动加载</label>
-          <label class="ep-remote-config__switch">
-            <input
-              type="checkbox"
-              :checked="config.autoLoad"
-              @change="updateField('autoLoad', ($event.target as HTMLInputElement).checked)"
-            />
-            <span class="ep-remote-config__slider"></span>
-          </label>
-        </div>
-        <div class="ep-remote-config__col">
-          <label class="ep-remote-config__label">缓存结果</label>
-          <label class="ep-remote-config__switch">
-            <input
-              type="checkbox"
-              :checked="config.cache"
-              @change="updateField('cache', ($event.target as HTMLInputElement).checked)"
-            />
-            <span class="ep-remote-config__slider"></span>
-          </label>
-        </div>
+      <div class="ep-remote-config__col">
+        <label class="ep-remote-config__label">Value 字段</label>
+        <input
+          class="ep-remote-config__input"
+          type="text"
+          placeholder="value"
+          :value="config.valueKey"
+          @input="updateField('valueKey', ($event.target as HTMLInputElement).value)"
+        />
       </div>
-    </template>
+    </div>
+
+    <!-- 联动字段 -->
+    <div class="ep-remote-config__row">
+      <label class="ep-remote-config__label">
+        联动字段
+        <span class="ep-remote-config__hint">逗号分隔，值变化时重新请求</span>
+      </label>
+      <input
+        class="ep-remote-config__input"
+        type="text"
+        placeholder="provinceId, parentId"
+        :value="watchFieldsText"
+        @input="watchFieldsText = ($event.target as HTMLInputElement).value"
+      />
+    </div>
+
+    <!-- 高级选项 -->
+    <div class="ep-remote-config__row ep-remote-config__row--two">
+      <div class="ep-remote-config__col">
+        <label class="ep-remote-config__label">自动加载</label>
+        <label class="ep-remote-config__switch">
+          <input
+            type="checkbox"
+            :checked="config.autoLoad"
+            @change="updateField('autoLoad', ($event.target as HTMLInputElement).checked)"
+          />
+          <span class="ep-remote-config__slider"></span>
+        </label>
+      </div>
+      <div class="ep-remote-config__col">
+        <label class="ep-remote-config__label">缓存结果</label>
+        <label class="ep-remote-config__switch">
+          <input
+            type="checkbox"
+            :checked="config.cache"
+            @change="updateField('cache', ($event.target as HTMLInputElement).checked)"
+          />
+          <span class="ep-remote-config__slider"></span>
+        </label>
+      </div>
+    </div>
   </div>
 </template>
 

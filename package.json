@@ -7,7 +7,7 @@
     "build": "pnpm i && turbo run build -F epic-examples && turbo run build",
     "dev": "turbo run dev",
     "lib": "vitest run && turbo run build -F epic-designer",
-    "pack": "epic version:check && pnpm --filter @ies/designer build && pnpm --filter @ies/element-plus build && cd packages/epic-designer && npm pack --pack-destination ../.. && cd ../ui/elementPlus && npm pack --pack-destination ../../.. && cd ../..",
+    "pack": "node scripts/pack-tarballs.mjs",
     "test": "vitest",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
