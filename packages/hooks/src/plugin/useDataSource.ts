@@ -10,21 +10,6 @@ import { ref, watch } from 'vue';
 
 import { pluginManager } from '@ies/manager';
 
-import {
-  useDataSourceManager,
-  registerBuiltinProviders,
-} from './useDataSourceManager';
-
-// 确保内置 provider 已注册（懒初始化）
-const manager = useDataSourceManager();
-let initDone = false;
-function ensureBuiltin() {
-  if (!initDone) {
-    registerBuiltinProviders(manager);
-    initDone = true;
-  }
-}
-
 /**
  * 通用数据源加载 composable
  *
@@ -39,12 +24,10 @@ export function useDataSource(
   dataSourceRef: ComputedRef<DataSourceSchema | undefined> | Ref<DataSourceSchema | undefined>,
   formData: Ref<Record<string, any>>,
 ) {
-  ensureBuiltin();
-
   const options = ref<DataSourceOption[]>([]);
   const loading = ref(false);
 
-  // 缓存 key = dataSource.type + JSON.stringify(config)
+  // 缓存 key
   const cacheKey = ref('');
 
   async function loadData(): Promise<void> {
@@ -54,7 +37,7 @@ export function useDataSource(
       return;
     }
 
-    const provider = manager.get(ds.type);
+    const provider = pluginManager.dataSource.get(ds.type);
     if (!provider) {
       console.warn(`[useDataSource] 未找到数据源提供者 "${ds.type}"`);
       options.value = [];
@@ -68,13 +51,10 @@ export function useDataSource(
       return;
     }
 
-    // 缓存检查
-    const newCacheKey = `${ds.type}_${JSON.stringify(ds.config)}`;
-    if (provider.id === 'http') {
-      // http 类型的缓存只检查 url + method + params
+    // http 类型的缓存按 url+method+params 计算
+    if (ds.type === 'http') {
       const { url, method, params } = ds.config;
-      const httpCacheKey = `${url}_${method}_${JSON.stringify(params)}`;
-      cacheKey.value = httpCacheKey;
+      cacheKey.value = `${url}_${method}_${JSON.stringify(params)}`;
     }
 
     loading.value = true;
@@ -99,7 +79,7 @@ export function useDataSource(
       const ds = dataSourceRef.value;
       if (!ds) return null;
 
-      const provider = manager.get(ds.type);
+      const provider = pluginManager.dataSource.get(ds.type);
       const watchFields = provider?.watchFields?.(ds.config) ?? [];
 
       // 返回当前配置 + 联动字段当前值
