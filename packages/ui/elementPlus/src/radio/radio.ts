@@ -7,6 +7,7 @@ import 'element-plus/es/components/select/style/css';
 
 // 二次封装组件
 export default defineComponent({
+  inheritAttrs: false,
   props: {
     remoteConfig: {
       type: Object,
