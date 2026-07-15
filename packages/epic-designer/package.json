@@ -25,6 +25,7 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./uno.config": "./uno.config.ts",
     "./dist/style.css": "./dist/style.css",
     "./style.css": "./dist/style.css"
   },
