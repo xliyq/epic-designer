@@ -223,10 +223,9 @@ function initFromModelValue(arr: any[]) {
     }
   });
 
-  // 初始化时主动 emit，确保 formData 中有数据
-  const output = buildOutput();
-  lastEmitted = output;
-  emit('update:modelValue', output);
+  // 外部 modelValue 只负责同步内部状态，不能在初始化阶段反向回写。
+  // 否则组件挂载时生成的空项会覆盖紧接着由 setData 注入的真实数据。
+  lastEmitted = buildOutput();
 }
 
 // 外部 modelValue 变化 -> 初始化（跳过 echo）

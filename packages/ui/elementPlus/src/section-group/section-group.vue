@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { ComponentSchema } from '@ies/designer';
 
-import { computed, inject, provide, ref, watch } from 'vue';
+import { computed, inject, nextTick, provide, ref, watch } from 'vue';
 
 import { ElFormItem } from 'element-plus';
 import { EpicNode } from '@ies/base-ui';
@@ -243,13 +243,26 @@ watch(
       : selected != null && selected !== ''
         ? [String(selected)]
         : [];
+
+    let didChange = false;
+
     children.value.forEach((tpl, i) => {
       const optKey = tpl.optionKey ?? tpl.props?.optionKey ?? '';
       const isSelected = selectedArray.includes(String(optKey));
-      if (isSelected && !internalData.value[i]) {
-        // 注入 optionData 作为初始值（额外字段如 action、baseSku 等）
-        const optionData = tpl.props?.optionData ?? {};
-        internalData.value[i] = { ...optionData };
+      const wasNull = internalData.value[i] === null;
+
+      if (isSelected && wasNull) {
+        // 优先从 props.modelValue 查找全量数据，避免时序竞争导致数据覆盖
+        const fullModel = props.modelValue ?? [];
+        const modelMatch = fullModel.length > 0
+          ? fullModel.find(
+              (d: any) => String(d[keyField.value]) === String(optKey),
+            )
+          : undefined;
+        internalData.value[i] = modelMatch
+          ? { ...modelMatch }
+          : { ...(tpl.props?.optionData ?? {}) };
+        didChange = true;
         // 区块变为可见时，清除该区块内子组件的旧校验错误
         (tpl.children ?? []).forEach((tplChild) => {
           if (tplChild.type === 'card') {
@@ -264,8 +277,9 @@ watch(
             delete childErrors.value[tplChild.id];
           }
         });
-      } else if (!isSelected && internalData.value[i]) {
+      } else if (!isSelected && !wasNull) {
         internalData.value[i] = null;
+        didChange = true;
         // 区块隐藏时，清除该区块内子组件的校验错误
         (tpl.children ?? []).forEach((tplChild) => {
           if (tplChild.type === 'card') {
@@ -282,7 +296,11 @@ watch(
         });
       }
     });
-    emitOutput();
+
+    // 仅在显隐状态实际变化时 emit，用 nextTick 让 modelValue watch 优先完成
+    if (didChange) {
+      nextTick(() => emitOutput());
+    }
   },
   { deep: true },
 );
