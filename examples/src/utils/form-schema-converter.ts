@@ -143,6 +143,8 @@ export interface SkuSpec {
     limitCount?: string;
     bizCharSpecLst?: SkuCharSpec[];
     bizRateTempSpecLst?: RateTemplateSpec[];
+    isBackTracking?: number;
+    prodistSkuNum?: string;
 }
 
 /**
@@ -546,6 +548,7 @@ function convertIcbToAttrGroupChild(icb: IcbSpec, templateNum: string): Record<s
  * 构建 SKU section-template 内部的子组件列表
  *
  * 每个 SKU 的 section-template 内部包含:
+ *   0. card "附加信息" - 隐藏字段（action、a、b），数据平铺到 sku item 根节点
  *   1. attribute-group (field="prodordCharacters") - SKU 属性
  *   2. checkbox (field="selectedTemplateNums") - 产品资费选择
  *   3. attribute-group (field="prodordTemplate") - 产品资费 ICB 参数（平铺，不做显隐联动）
@@ -556,37 +559,52 @@ function convertIcbToAttrGroupChild(icb: IcbSpec, templateNum: string): Record<s
 function buildSkuTemplateChildren(sku: SkuSpec): any[] {
     const children: any[] = [];
 
-    // children.push({
-    //     type: 'attribute-group',
-    //     label: '产品基本信息',
-    //     hideLabel: true,
-    //     input: true,
-    //     id: `attrgroup_sku_prodordCharacters_${sku.skuNum}`,
-    //     props: {
-    //         style: {
-    //             margin: '10px'
-    //         }
-    //     },
-    // });
-    // children.push({
-    //     label: "产品信息",
-    //     "props": {},
-    //     "type": "card",
-    //     "children": [
-    //         {
-    //         "field": "action",
-    //         "input": true,
-    //         "label": "action",
-    //         "props": {
-    //             "placeholder": "-",
-    //             defaultValue:"action"
-    //         },
-    //         "type": "text-view",
-    //         "id": "text-view_7551"
-    //         }
-    //     ],
-    //     "id": "card_3591"
-    //     })
+    // 0. 附加信息（card 视觉容器，默认隐藏，数据平铺到 sku item 根节点）
+    //    section-group 引擎会将 card 内部子组件的 field 直接绑定到 item 对象
+    children.push({
+        type: 'card',
+        label: '附加信息',
+        props: {
+            gridEnable: true,
+            gridCols: 4
+        },
+        id: `card_extra`,
+        children: [
+            {
+                type: 'text-view',
+                field: 'action',
+                label: 'action',
+                input: true,
+                id: `extra_action`,
+                props: {
+                    placeholder: '',
+                    defaultValue: null
+                }
+            },
+            {
+                 type: 'text-view',
+                field: 'baseSku',
+                label: 'baseSku',
+                input: true,
+                id: `extra_baseSku`,
+                props: {
+                    placeholder: '',
+                    defaultValue: null
+                }
+            },
+            {
+                type: 'text-view',
+                field: 'isBackTracking',
+                label: 'isBackTracking',
+                input: true,
+                id: `extra_isBackTracking`,
+                props: {
+                  placeholder: '',
+                  defaultValue:  sku.isBackTracking || 0
+                }
+            }
+        ]
+    });
 
     // 1. SKU 属性（attribute-group）
     const skuFields = (sku.bizCharSpecLst || []).filter(f => (f as SkuCharSpec).readonly !== 2);
@@ -704,7 +722,17 @@ export function buildSkuSection(skuList: SkuSpec[]): any[] {
                 config:{
                     options: skuList.map(s => ({
                         label: s.skuName,
-                        value: s.skuNum
+                        value: s.skuNum,
+                        skuName: s.skuName,
+                        productType: s.productType,
+                        skuInstNum:s.skuInstNum,
+                        skuInstName: s.skuInstName,
+                        skuBusinessNum: s.skuBusinessNum,
+                        skuBusinessName: s.skuBusinessName,
+                        skuInstBusinessNum: s.skuInstBusinessNum,
+                        baseSku: s.baseSku,
+                        operationSubType: s.operationSubType,
+                        operationAction:s.operationAction
                     }))
                 }
             }

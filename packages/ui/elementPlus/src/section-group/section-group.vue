@@ -115,6 +115,17 @@ async function validate(): Promise<void> {
     const tpl = children.value[i];
     if (!tpl) return;
     (tpl.children ?? []).forEach((tplChild) => {
+      // card 容器：展开子组件进行校验
+      if (tplChild.type === 'card') {
+        (tplChild.children ?? []).forEach((cardChild) => {
+          if (isContainerChild(cardChild)) return;
+          allFields.push({
+            child: cardChild,
+            getValue: () => getChildValue(cardChild, item),
+          });
+        });
+        return;
+      }
       if (isContainerChild(tplChild)) return;
       allFields.push({
         child: tplChild,
@@ -239,6 +250,14 @@ watch(
         internalData.value[i] = {};
         // 区块变为可见时，清除该区块内子组件的旧校验错误
         (tpl.children ?? []).forEach((tplChild) => {
+          if (tplChild.type === 'card') {
+            (tplChild.children ?? []).forEach((cardChild) => {
+              if (cardChild.id && !isContainerChild(cardChild)) {
+                delete childErrors.value[cardChild.id];
+              }
+            });
+            return;
+          }
           if (tplChild.id && !isContainerChild(tplChild)) {
             delete childErrors.value[tplChild.id];
           }
@@ -247,6 +266,14 @@ watch(
         internalData.value[i] = null;
         // 区块隐藏时，清除该区块内子组件的校验错误
         (tpl.children ?? []).forEach((tplChild) => {
+          if (tplChild.type === 'card') {
+            (tplChild.children ?? []).forEach((cardChild) => {
+              if (cardChild.id && !isContainerChild(cardChild)) {
+                delete childErrors.value[cardChild.id];
+              }
+            });
+            return;
+          }
           if (tplChild.id && !isContainerChild(tplChild)) {
             delete childErrors.value[tplChild.id];
           }
@@ -361,8 +388,51 @@ const visibleCount = computed(
           </div>
           <div class="ep-section-group__card-body">
             <template v-for="entry in rowSchemas[i]" :key="entry.schema.id">
+              <!-- card 视觉容器：展开子组件，数据绑定到 item 而非 formData -->
+              <template v-if="entry.child.type === 'card'">
+                <div
+                  v-if="!entry.child.props?.hidden"
+                  class="ep-section-group__form-card"
+                >
+                  <div
+                    v-if="entry.child.label"
+                    class="ep-section-group__form-card__header"
+                  >
+                    {{ entry.child.label }}
+                  </div>
+                  <div class="ep-section-group__form-card__body">
+                    <template v-for="cardChild in (entry.child.children ?? [])" :key="cardChild.id">
+                      <!-- card 内嵌容器子组件 -->
+                      <template v-if="isContainerChild(cardChild)">
+                        <EpicNode
+                          :component-schema="getRowChildSchema(cardChild)"
+                          :model-value="item[cardChild.field ?? '']"
+                          @update:model-value="(val: any) => { item[cardChild.field ?? ''] = val; emitOutput() }"
+                        />
+                      </template>
+                      <!-- card 内非容器子组件 -->
+                      <ElFormItem
+                        v-else
+                        class="ep-section-group__form-item"
+                        :label="cardChild.hideLabel ? '' : (cardChild.label || '')"
+                        label-width="auto"
+                        :error="childErrors[cardChild.id!]"
+                        :validate-status="childErrors[cardChild.id!] ? 'error' : ''"
+                        :required="isChildRequired(cardChild)"
+                      >
+                        <EpicNode
+                          :component-schema="getRowChildSchema(cardChild)"
+                          :model-value="item[cardChild.field ?? '']"
+                          @update:model-value="(val: any) => handleFieldChange(cardChild, item, cardChild.field ?? '', val)"
+                          @blur="() => handleFieldBlur(cardChild, item)"
+                        />
+                      </ElFormItem>
+                    </template>
+                  </div>
+                </div>
+              </template>
               <!-- 容器子组件（如 attribute-group）：直接渲染，由容器自身管理校验 -->
-              <template v-if="isContainerChild(entry.child)">
+              <template v-else-if="isContainerChild(entry.child)">
                 <EpicNode
                   :component-schema="entry.schema"
                   :model-value="item[entry.fieldKey]"
@@ -471,6 +541,31 @@ const visibleCount = computed(
 
   &__card-body {
     padding: 12px;
+  }
+
+  /* 内嵌 card 视觉容器（纯视觉包装，不参与数据管理） */
+  &__form-card {
+    border: 1px solid var(--el-border-color-lighter, #ebeef5);
+    border-radius: 4px;
+    margin-bottom: 12px;
+    overflow: hidden;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    &__header {
+      padding: 8px 12px;
+      font-weight: 500;
+      font-size: 14px;
+      color: var(--el-text-color-primary, #303133);
+      background: var(--el-fill-color-lighter, #fafafa);
+      border-bottom: 1px solid var(--el-border-color-lighter, #ebeef5);
+    }
+
+    &__body {
+      padding: 12px;
+    }
   }
 
   /* 运行模式：非容器子组件的 ElFormItem 样式 */
