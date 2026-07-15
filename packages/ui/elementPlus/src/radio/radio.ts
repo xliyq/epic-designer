@@ -35,6 +35,12 @@ export default defineComponent({
         ...restAttrs,
         'onUpdate:modelValue': handleUpdate,
       };
+
+      // 远程模式时显式传空 options，防止 attrs 中静态 options fallthrough
+      if (isRemote.value) {
+        radioProps.options = finalOptions.value;
+      }
+
       return h(ElRadioGroup, radioProps, {
         default: () => [
           radioProps?.radioButton
