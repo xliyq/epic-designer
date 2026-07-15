@@ -364,6 +364,13 @@ function parseValueJPath(valueJPath: string): { namePath: string; valuePath: str
 
 /**
  * 根据子组件的 valueJPath 配置，将 label/value 同步写入 formData 指定路径
+ *
+ * 路径规则：
+ *   - / 开头表示相对于当前 attribute-group 的父级路径
+ *     例：attribute-group field = "package.poordExtendCharacters"
+ *         valueJPath = "/validateModeName$$/validateModeNum"
+ *         -> 写入 formData.package.validateModeName 和 formData.package.validateModeNum
+ *   - 无 / 开头时直接作为字段名使用（预留）
  */
 function syncValueJPath(
   child: ComponentSchema,
@@ -376,13 +383,23 @@ function syncValueJPath(
   if (!parsed) return;
   const { namePath, valuePath } = parsed;
 
+  // 计算父级前缀：从 attribute-group 的 field 中去掉最后一段
+  // 例：field = "package.poordExtendCharacters" -> prefix = "package"
+  //     field = "poordCharacters" -> prefix = ""
+  const fieldStr = field.value;
+  const lastDot = fieldStr.lastIndexOf('.');
+  const parentPrefix = lastDot > 0 ? fieldStr.substring(0, lastDot) : '';
+
+  const resolvePath = (path: string) =>
+    parentPrefix ? `${parentPrefix}.${path}` : path;
+
   if (rawValue == null || rawValue === '' || (Array.isArray(rawValue) && rawValue.length === 0)) {
     // 空值时清空目标字段
-    if (namePath) setValueByPath(formData, namePath, null);
-    if (valuePath) setValueByPath(formData, valuePath, null);
+    if (namePath) setValueByPath(formData, resolvePath(namePath), null);
+    if (valuePath) setValueByPath(formData, resolvePath(valuePath), null);
   } else {
-    if (namePath) setValueByPath(formData, namePath, matchedLabel ?? '');
-    if (valuePath) setValueByPath(formData, valuePath, rawValue);
+    if (namePath) setValueByPath(formData, resolvePath(namePath), matchedLabel ?? '');
+    if (valuePath) setValueByPath(formData, resolvePath(valuePath), rawValue);
   }
 }
 
