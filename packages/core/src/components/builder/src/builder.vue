@@ -22,9 +22,11 @@ import {
   ATTRIBUTE_META_KEY,
   BUILDER_KEY,
   createEventBus,
+  FORM_DATA_KEY,
   FORM_INSTANCES_KEY,
   provideBuilderDisabled,
   provideBuilderReadonly,
+  provideFormData,
   providePageManager,
 } from '@ies/hooks';
 import { pluginManager } from '@ies/manager';
@@ -131,6 +133,19 @@ createEventBus();
 // 提供依赖注入的上下文
 provideBuilderDisabled(computed(() => props.disabled));
 provideBuilderReadonly(computed(() => props.readonly));
+
+// 提供表单数据给子组件（远程选项加载等场景使用）
+const formDataRef = computed(() => {
+  // 合并所有表单的数据
+  const allForms = pageManager.forms;
+  const result: Record<string, any> = {};
+  for (const formName in allForms) {
+    Object.assign(result, allForms[formName]);
+  }
+  return result;
+});
+provideFormData(formDataRef);
+
 provide(BUILDER_KEY, {
   fieldStateMap: computed(() => {
     //  将fieldStates转换对象类型

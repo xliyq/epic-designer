@@ -50,6 +50,10 @@ export function setupComponent(pluginManager: PluginManager): void {
     async () => await import('./EOptionsEditor/index.vue'),
   );
   pluginManager.component.add(
+    'ERemoteConfigEditor',
+    async () => await import('./ERemoteConfigEditor/index.vue'),
+  );
+  pluginManager.component.add(
     'ESyncFieldsEditor',
     async () => await import('./ESyncFieldsEditor/index.vue'),
   );

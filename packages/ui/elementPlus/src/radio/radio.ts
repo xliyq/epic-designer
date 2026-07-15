@@ -1,6 +1,7 @@
-import { defineComponent, h } from 'vue';
+import { computed, defineComponent, h } from 'vue';
 
 import { ElRadio, ElRadioButton, ElRadioGroup } from 'element-plus';
+import { useFormData, useRemoteOptions } from '@ies/hooks';
 
 import 'element-plus/es/components/select/style/css';
 
@@ -12,6 +13,16 @@ export default defineComponent({
       emit('update:modelValue', e);
     }
 
+    // 远程选项
+    const formData = useFormData();
+    const remoteConfig = computed(() => attrs.remoteConfig as any);
+    const isRemote = computed(() => remoteConfig.value?.enabled);
+    const { options: remoteOptions } = useRemoteOptions(remoteConfig, formData);
+
+    const finalOptions = computed(() =>
+      isRemote.value ? remoteOptions.value : (attrs.options as any[]) ?? [],
+    );
+
     return () => {
       const props: Record<string, any> = {
         ...attrs,
@@ -20,14 +31,14 @@ export default defineComponent({
       return h(ElRadioGroup, props, {
         default: () => [
           props?.radioButton
-            ? props.options?.map((option: any) =>
+            ? finalOptions.value?.map((option: any) =>
                 h(
                   ElRadioButton,
                   { value: option.value },
                   { default: () => option.label },
                 ),
               )
-            : props.options?.map((option: any) =>
+            : finalOptions.value?.map((option: any) =>
                 h(
                   ElRadio,
                   { value: option.value },

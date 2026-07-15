@@ -1,4 +1,5 @@
-﻿import type { ComponentConfigModel } from '@ies/designer';
+﻿import type { ComponentConfigModel, RemoteConfig } from '@ies/designer';
+import { createDefaultRemoteConfig } from '@ies/utils';
 
 export default {
   component: () => import('./select'),
@@ -233,6 +234,13 @@ export default {
         type: 'EOptionsEditor',
       },
       {
+        description: '配置远程数据源，通过 HTTP 请求动态加载选项',
+        field: 'props.remoteConfig',
+        label: '远程数据',
+        layout: 'vertical',
+        type: 'ERemoteConfigEditor',
+      },
+      {
         description: '校验规则需要配合表单使用',
         field: 'rules',
         label: '表单校验',
@@ -266,6 +274,7 @@ export default {
       placeholder: '请选择',
       placement: 'bottom-start',
       size: 'default',
+      remoteConfig: createDefaultRemoteConfig() as RemoteConfig,
     },
     type: 'select',
   },
