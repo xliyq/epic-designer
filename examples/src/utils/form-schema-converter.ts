@@ -136,6 +136,8 @@ export interface SkuSpec {
     skuBusinessName?: string;
     skuInstBusinessNum?: string;
     operationSubType?: string;
+    operationAction?: string;
+    baseSku?: string;
     optionalFlag?: string;
     /** "radio" | "checkbox" */
     optType?: string;
@@ -777,7 +779,19 @@ export function buildSkuSection(skuList: SkuSpec[]): any[] {
             type: 'section-template',
             label: sku.skuName,
             props: {
-                optionKey: sku.skuNum
+                optionKey: sku.skuNum,
+                optionData: {
+                    action: sku.operationAction ?? '',
+                    baseSku: sku.baseSku ?? sku.skuNum ?? '',
+                    isBackTracking: sku.isBackTracking ?? 0,
+                    productType: sku.productType ?? '',
+                    operationSubType: sku.operationSubType ?? '',
+                    skuInstNum: sku.skuInstNum ?? '',
+                    skuInstName: sku.skuInstName ?? '',
+                    skuBusinessNum: sku.skuBusinessNum ?? '',
+                    skuBusinessName: sku.skuBusinessName ?? '',
+                    skuInstBusinessNum: sku.skuInstBusinessNum ?? '',
+                }
             },
             id: `sku_tpl_${sku.skuNum}`,
             children: buildSkuTemplateChildren(sku)

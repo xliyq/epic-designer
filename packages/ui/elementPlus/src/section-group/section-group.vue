@@ -247,7 +247,9 @@ watch(
       const optKey = tpl.optionKey ?? tpl.props?.optionKey ?? '';
       const isSelected = selectedArray.includes(String(optKey));
       if (isSelected && !internalData.value[i]) {
-        internalData.value[i] = {};
+        // 注入 optionData 作为初始值（额外字段如 action、baseSku 等）
+        const optionData = tpl.props?.optionData ?? {};
+        internalData.value[i] = { ...optionData };
         // 区块变为可见时，清除该区块内子组件的旧校验错误
         (tpl.children ?? []).forEach((tplChild) => {
           if (tplChild.type === 'card') {
