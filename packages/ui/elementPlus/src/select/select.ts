@@ -1,4 +1,4 @@
-import { computed, defineComponent, h, inject } from 'vue';
+import { computed, defineComponent, h } from 'vue';
 
 import { ElOption, ElSelect } from 'element-plus';
 import { useFormData, useRemoteOptions } from '@ies/hooks';
@@ -7,8 +7,14 @@ import 'element-plus/es/components/select/style/css';
 
 // 二次封装组件
 export default defineComponent({
+  props: {
+    remoteConfig: {
+      type: Object,
+      default: null,
+    },
+  },
   emits: ['update:modelValue'],
-  setup(_, { attrs, emit }) {
+  setup(props, { attrs, emit }) {
     function handleUpdate(e = null): void {
       emit('update:modelValue', e);
     }
@@ -16,8 +22,8 @@ export default defineComponent({
     // 获取表单数据（设计器中返回空对象）
     const formData = useFormData();
 
-    // 远程选项配置
-    const remoteConfig = computed(() => attrs.remoteConfig as any);
+    // 远程选项配置（通过 props 声明确保响应式）
+    const remoteConfig = computed(() => props.remoteConfig as any);
 
     // 是否启用远程数据
     const isRemote = computed(() => remoteConfig.value?.enabled);
@@ -34,7 +40,7 @@ export default defineComponent({
     );
 
     return () => {
-      const props: Record<string, any> = {
+      const selectProps: Record<string, any> = {
         ...attrs,
         key: String(attrs.multiple),
         'onUpdate:modelValue': handleUpdate,
@@ -43,10 +49,10 @@ export default defineComponent({
 
       // 远程模式时覆盖 loading
       if (isRemote.value) {
-        props.loading = loading.value;
+        selectProps.loading = loading.value;
       }
 
-      return h(ElSelect, props, {
+      return h(ElSelect, selectProps, {
         default: () => [
           finalOptions.value?.map((option: any) =>
             h(ElOption, {

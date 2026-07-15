@@ -835,12 +835,14 @@ function buildOrderInfoCard(data: any): Record<string, any> {
         { field: 'package.packageName', label: '套餐名称', id: 'packageName', key: 'packageName' },
         { field: 'package.packageNum',  label: '套餐编码', id: 'packageNum',  key: 'packageNum' },
         { field: 'package.offerName',   label: '商品名称', id: 'offerName',   key: 'offerName' },
-        { field: 'package.offerNum',    label: '商品编码', id: 'offerNum',    key: 'offerNum' },
+        { field: 'offerNum',    label: '商品编码', id: 'offerNum',    key: 'offerNum' },
         { field: 'package.description', label: '套餐描述', id: 'description', key: 'description', span: 4 },
         { field: 'package.packageBusinessName', label: '业务名称', id: 'packageBusinessName', key: 'packageBusinessName' },
         { field: 'package.packageBusinessNum', label: '业务编码', id: 'packageBusinessNum', key: 'packageBusinessNum' },
         { field: 'package.offerType', label: '类型', id: 'offerType', key: 'offerType' },
-        { field: 'package.alias', label: '别名', id: 'alias', key: 'alias' },
+        { field: 'alias', label: '别名', id: 'alias', key: 'alias' },
+        { field: 'operationType', label: 'operationType', id: 'operationType', key: 'operationType' },
+        { field: 'orderSource', label: 'orderSource', id: 'orderSource', key: 'orderSource' },
     ];
 
     return createCard('订购信息', textViewFields.map(f => ({

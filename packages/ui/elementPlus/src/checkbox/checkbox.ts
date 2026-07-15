@@ -7,15 +7,21 @@ import 'element-plus/es/components/select/style/css';
 
 // 二次封装组件
 export default defineComponent({
+  props: {
+    remoteConfig: {
+      type: Object,
+      default: null,
+    },
+  },
   emits: ['update:modelValue'],
-  setup(_, { attrs, emit }) {
+  setup(props, { attrs, emit }) {
     function handleUpdate(e = null): void {
       emit('update:modelValue', e);
     }
 
     // 远程选项
     const formData = useFormData();
-    const remoteConfig = computed(() => attrs.remoteConfig as any);
+    const remoteConfig = computed(() => props.remoteConfig as any);
     const isRemote = computed(() => remoteConfig.value?.enabled);
     const { options: remoteOptions } = useRemoteOptions(remoteConfig, formData);
 
@@ -24,13 +30,13 @@ export default defineComponent({
     );
 
     return () => {
-      const props: Record<string, any> = {
+      const checkboxProps: Record<string, any> = {
         ...attrs,
         'onUpdate:modelValue': handleUpdate,
       };
-      return h(ElCheckboxGroup, props, {
+      return h(ElCheckboxGroup, checkboxProps, {
         default: () => [
-          props?.radioButton
+          checkboxProps?.radioButton
             ? finalOptions.value?.map((option: any) =>
                 h(ElCheckboxButton, {
                   label: option.label,

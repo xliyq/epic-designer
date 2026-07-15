@@ -229,26 +229,43 @@ export function useRemoteOptions(
     });
   }
 
-  // 监听联动字段变化，自动重新请求
+  // 监听 remoteConfig 变化：enabled + autoLoad 为 true 时自动发起首次请求
   watch(
     () => {
       const config = remoteConfig.value;
-      if (!config?.watchFields?.length) return null;
-      return config.watchFields.map((f) => formData.value[f]);
+      if (!config?.enabled) return null;
+      return {
+        enabled: config.enabled,
+        autoLoad: config.autoLoad,
+        url: config.url,
+        // 联动字段的当前值，变化时触发重新请求
+        watchValues: config.watchFields?.length
+          ? config.watchFields.map((f) => formData.value[f])
+          : [],
+      };
     },
     (newVal, oldVal) => {
-      if (newVal === null) return;
-      // 避免初始化时重复触发（autoLoad 会处理首次加载）
-      if (oldVal === undefined) return;
-      fetchOptions();
-    },
-    { deep: true },
-  );
+      if (!newVal) return;
 
-  // autoLoad 时立即请求
-  if (remoteConfig.value?.enabled && remoteConfig.value?.autoLoad) {
-    fetchOptions();
-  }
+      // 首次触发（oldVal === null 表示从无到有，或初始化）
+      if (oldVal === null || oldVal === undefined) {
+        if (newVal.autoLoad) {
+          fetchOptions();
+        }
+        return;
+      }
+
+      // 后续变化：联动字段值变化时重新请求
+      if (
+        newVal.watchValues.some(
+          (v: any, i: number) => v !== oldVal?.watchValues?.[i],
+        )
+      ) {
+        fetchOptions();
+      }
+    },
+    { deep: true, immediate: true },
+  );
 
   return {
     options,
