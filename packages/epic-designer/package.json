@@ -1,34 +1,42 @@
 {
   "name": "@ies/designer",
-  "version": "0.0.2",
-  "description": "基于vue3的低代码拖拽表单设计器",
+  "version": "0.0.3",
+  "description": "A low-code drag-and-drop form designer based on Vue 3",
   "private": false,
   "keywords": [
-    "表单设计",
-    "表单设计器",
-    "低代码",
-    "可视化",
-    "设计器",
     "form",
-    "designer"
+    "designer",
+    "low-code",
+    "visual",
+    "form-builder"
   ],
-  "bugs": {
-    "url": "https://github.com/xliyq/epic-designer/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/xliyq/epic-designer"
-  },
   "author": "",
+  "license": "MIT",
   "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./dist/style.css": "./dist/style.css",
+    "./style.css": "./dist/style.css"
+  },
+  "sideEffects": [
+    "**/*.css",
+    "**/*.less"
+  ],
   "scripts": {
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest"
   },
-  "main": "index.ts",
-  "module": "index.ts",
-  "typings": "index.ts",
   "publishConfig": {
     "registry": "https://npm.ies.work/"
   },

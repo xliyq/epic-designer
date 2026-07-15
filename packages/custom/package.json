@@ -1,6 +1,6 @@
 {
   "name": "@ies/custom",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Custom extensions for epic-designer",
   "private": false,
   "type": "module",

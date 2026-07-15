@@ -1,6 +1,6 @@
 {
   "name": "@ies/utils",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Epic Designer 核心工具库，提供通用工具函数和管理器",
   "private": false,
   "author": "kchengz",
