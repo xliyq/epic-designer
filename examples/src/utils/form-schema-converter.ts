@@ -842,7 +842,8 @@ function buildOrderInfoCard(data: any): Record<string, any> {
         { field: 'package.offerType', label: '类型', id: 'offerType', key: 'offerType' },
         { field: 'alias', label: '别名', id: 'alias', key: 'alias' },
         { field: 'operationType', label: 'operationType', id: 'operationType', key: 'operationType' },
-        { field: 'orderSource', label: 'orderSource', id: 'orderSource', key: 'orderSource' },
+        { field: 'operation', label: 'operation', id: 'operation', key: 'operation',defaultValue:'addOrder' },
+        { field: 'orderSource', label: 'orderSource', id: 'orderSource', key: 'orderSource',defaultValue:'web'},
     ];
 
     return createCard('订购信息', textViewFields.map(f => ({
@@ -852,7 +853,7 @@ function buildOrderInfoCard(data: any): Record<string, any> {
         input: true,
         id: f.id,
         props: {
-            defaultValue: data[f.key] || '',
+            defaultValue: data[f.key] || f.defaultValue|| '',
             readonly: true,
             placeholder: '',
             ...(f.span ? { span: f.span } : {}),

@@ -1,4 +1,6 @@
 export * from './useComponentManager';
+export * from './useDataSource';
+export * from './useDataSourceManager';
 export * from './useFormSchema';
 export { useGlobal } from './useGlobal';
 export * from './useHookManager';

@@ -1,4 +1,5 @@
 export * from './builder';
+export * from './dataSource';
 export * from './designer';
 export * from './epic-designer';
 export * from './instance';

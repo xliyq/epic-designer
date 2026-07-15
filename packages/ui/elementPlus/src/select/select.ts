@@ -1,7 +1,7 @@
 import { computed, defineComponent, h } from 'vue';
 
 import { ElOption, ElSelect } from 'element-plus';
-import { useFormData, useRemoteOptions } from '@ies/hooks';
+import { useDataSource, useFormData } from '@ies/hooks';
 
 import 'element-plus/es/components/select/style/css';
 
@@ -9,8 +9,17 @@ import 'element-plus/es/components/select/style/css';
 export default defineComponent({
   inheritAttrs: false,
   props: {
+    dataSource: {
+      type: Object,
+      default: null,
+    },
+    // 向后兼容旧 schema
     remoteConfig: {
       type: Object,
+      default: null,
+    },
+    options: {
+      type: Array,
       default: null,
     },
   },
@@ -20,28 +29,25 @@ export default defineComponent({
       emit('update:modelValue', e);
     }
 
-    // 获取表单数据（设计器中返回空对象）
     const formData = useFormData();
 
-    // 远程选项配置（通过 props 声明确保响应式）
-    const remoteConfig = computed(() => props.remoteConfig as any);
+    // 向后兼容：将旧 schema 转换为新 dataSource 格式
+    const dataSource = computed(() => {
+      if (props.dataSource) return props.dataSource;
+      if (props.remoteConfig?.enabled) {
+        return { type: 'http', config: props.remoteConfig };
+      }
+      return { type: 'static', config: { options: props.options ?? [] } };
+    });
 
-    // 是否启用远程数据
-    const isRemote = computed(() => remoteConfig.value?.enabled);
+    const isRemote = computed(() => dataSource.value?.type !== 'static');
 
-    // 远程选项加载
-    const { options: remoteOptions, loading } = useRemoteOptions(
-      remoteConfig,
-      formData,
-    );
+    const { options: dsOptions, loading } = useDataSource(dataSource, formData);
 
-    // 合并选项：远程模式用 remoteOptions，否则用静态 attrs.options
-    const finalOptions = computed(() =>
-      isRemote.value ? remoteOptions.value : (attrs.options as any[]) ?? [],
-    );
+    const finalOptions = computed(() => dsOptions.value ?? []);
 
     return () => {
-      const { options: _attrsOptions, remoteConfig: _attrsRemoteConfig, ...restAttrs } = attrs;
+      const { options: _attrsOptions, remoteConfig: _attrsRemoteConfig, dataSource: _attrsDataSource, ...restAttrs } = attrs;
       const selectProps: Record<string, any> = {
         ...restAttrs,
         key: String(attrs.multiple),
@@ -49,10 +55,8 @@ export default defineComponent({
         placeholder: attrs.placeholder ?? '请选择',
       };
 
-      // 远程模式时不传静态 options 给 ElSelect，覆盖 loading
       if (isRemote.value) {
         selectProps.loading = loading.value;
-        selectProps.options = finalOptions.value;
       }
 
       return h(ElSelect, selectProps, {
@@ -65,6 +69,9 @@ export default defineComponent({
           ),
         ],
       });
+    };
+  },
+});
     };
   },
 });
