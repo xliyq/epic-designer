@@ -1,6 +1,7 @@
 import type { PluginManager } from '@ies/manager';
 
 import { EpicNode } from '@ies/base-ui';
+import { registerBuiltinProviders } from '@ies/hooks';
 
 import EpField from './EpField';
 import MonacoEditor from './MonacoEditor';

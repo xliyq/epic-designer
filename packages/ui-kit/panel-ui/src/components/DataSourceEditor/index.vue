@@ -31,21 +31,42 @@ const dataSource = computed({
   set: (val) => emit('update:modelValue', val),
 });
 
-// 获取所有已注册的数据源提供者
-const providers = computed<DataSourceProvider[]>(() => {
-  return pluginManager.dataSource.getAll();
+// 数据源模式选项：静态模式始终内置，其他来自注册的 provider
+const modes = computed(() => {
+  const list: { id: string; label: string }[] = [
+    { id: 'static', label: '静态数据' },
+  ];
+  const providers = pluginManager.dataSource.getAll();
+  providers.forEach((p) => {
+    if (p.id !== 'static') {
+      list.push({ id: p.id, label: p.label });
+    }
+  });
+  return list;
 });
 
-// 当前选中的提供者
-const currentProvider = computed(() =>
-  pluginManager.dataSource.get(dataSource.value.type),
-);
+// 当前选中的提供者（静态模式不需要注册）
+const currentProvider = computed(() => {
+  if (dataSource.value.type === 'static') {
+    return {
+      id: 'static',
+      label: '静态数据',
+      editor: 'EOptionsEditor',
+      defaultConfig: { options: [] },
+      loader: async (config: any) => config.options ?? [],
+    } as DataSourceProvider;
+  }
+  return pluginManager.dataSource.get(dataSource.value.type);
+});
 
 // 切换数据源类型
 function switchType(type: string) {
+  if (type === 'static') {
+    dataSource.value = { type: 'static', config: { options: [] } };
+    return;
+  }
   const provider = pluginManager.dataSource.get(type);
   if (!provider) return;
-
   dataSource.value = {
     type,
     config: { ...provider.defaultConfig },
@@ -81,13 +102,13 @@ function handleEditorUpdate(newConfig: any) {
     </div>
     <div class="ep-datasource-editor__modes">
       <button
-        v-for="provider in providers"
-        :key="provider.id"
+        v-for="mode in modes"
+        :key="mode.id"
         class="ep-datasource-editor__mode-btn"
-        :class="{ active: dataSource.type === provider.id }"
-        @click="switchType(provider.id)"
+        :class="{ active: dataSource.type === mode.id }"
+        @click="switchType(mode.id)"
       >
-        {{ provider.label }}
+        {{ mode.label }}
       </button>
     </div>
 
