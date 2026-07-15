@@ -493,26 +493,22 @@ export function createCard(label: string, children: any[], options: { gridCols?:
 }
 
 /**
- * 将 ICB 参数转换为 attribute-group 子组件格式
- * ICB 参数统一用 input 组件
+ * 将 ICB 参数转换为 icb-group 子组件格式
+ * ICB 参数统一用 input 组件，通过 icb-group 渲染
+ *
+ * 与 convertIcbToAttrGroupChild 的区别：
+ * - 使用 parameterNum 替代 charNum
+ * - 使用 suffix 属性显示单位后缀
+ * - 使用 metaOverrides 携带 ICB 元数据（parameterDescribe, archiveFlag, ratePlanId 等）
  *
  * @param icb - ICB 参数定义
- * @param templateNum - 所属模板编号
- * @returns attribute-group 子组件 schema
+ * @returns icb-group 子组件 schema
  */
-function convertIcbToAttrGroupChild(icb: IcbSpec, templateNum: string): Record<string, any> {
+function convertIcbToIcbGroupChild(icb: IcbSpec): Record<string, any> {
     const isReadonly = icb.displayType === 1;
-    const labelParts = [icb.parameterName];
-    if (icb.parameterDescribe) {
-        labelParts.push(icb.parameterDescribe);
-    }
-    if (icb.parameterUnitDesc) {
-        labelParts.push(`(${icb.parameterUnitDesc})`);
-    }
 
     const props: Record<string, any> = {
-        charNum: icb.parameterNum,
-        syncFields: ['charValue'],
+        parameterNum: icb.parameterNum,
         placeholder: icb.placeHolder || `请输入${icb.parameterName}`
     };
 
@@ -526,9 +522,25 @@ function convertIcbToAttrGroupChild(icb: IcbSpec, templateNum: string): Record<s
         props.defaultValue = icb.parameterValue;
     }
 
+    // 单位后缀
+    if (icb.parameterUnitDesc) {
+        props.suffix = icb.parameterUnitDesc;
+    }
+
+    // metaOverrides：携带 ICB 元数据到输出数据项
+    const metaOverrides: Record<string, any> = {};
+    if (icb.parameterDescribe) metaOverrides.parameterDescribe = icb.parameterDescribe;
+    if (icb.archiveFlag) metaOverrides.archiveFlag = icb.archiveFlag;
+    if (icb.chargeCode) metaOverrides.chargeCode = icb.chargeCode;
+    if (icb.chargeName) metaOverrides.chargeName = icb.chargeName;
+    if (icb.parameterDescribe) metaOverrides.description = icb.parameterDescribe;
+    if (Object.keys(metaOverrides).length > 0) {
+        props.metaOverrides = JSON.stringify(metaOverrides);
+    }
+
     const child: Record<string, any> = {
         type: 'input',
-        label: labelParts.join(' '),
+        label: icb.parameterName,
         input: true,
         id: `icb_${icb.parameterNum}_${generateShortId()}`,
         props
@@ -544,6 +556,168 @@ function convertIcbToAttrGroupChild(icb: IcbSpec, templateNum: string): Record<s
     }
 
     return child;
+}
+
+/**
+ * 构建费率模板的 section-group + icb-group 结构
+ *
+ * 结构:
+ *   radio/checkbox (field="selectedTemplateNums") - 费率模板选择
+ *   section-group (field="prodordTemplate")
+ *     └── section-template × N (每个费率模板, optionKey=templateNum)
+ *         ├── optionData: 模板元数据
+ *         ├── icb-group (field="prodordIcbs") - ICB 参数（用户可填）
+ *         └── icb-group (field="icbList", hidden) - ICB 参数副本
+ *
+ * @param rateTemplates - 费率模板规格列表
+ * @param sku - 所属 SKU（用于生成唯一 id）
+ * @returns 子组件 schema 数组 [选择控件, section-group]
+ */
+function buildRateTemplateSection(rateTemplates: RateTemplateSpec[], sku: SkuSpec): any[] {
+    if (!rateTemplates || rateTemplates.length === 0) return [];
+
+    // 根据 limitCount 决定单选/多选（默认多选）
+    const limitCount = sku.limitCount || 'n';
+    const selectType = limitCount === '1' ? 'radio' : 'checkbox';
+
+    const result: any[] = [];
+
+    // 1. 费率模板选择控件
+    const selectField: Record<string, any> = {
+        type: selectType,
+        field: 'selectedTemplateNums',
+        label: '产品资费',
+        input: true,
+        id: `${selectType}_tpl_${sku.skuNum}_${generateShortId()}`,
+        props: {
+            dataSource: {
+                type: 'static',
+                config: {
+                    options: rateTemplates.map(t => ({
+                        label: t.templateName || t.description || t.templateNum,
+                        value: t.templateNum
+                    }))
+                }
+            }
+        }
+    };
+
+    // 校验规则
+    if (selectType === 'radio') {
+        selectField.rules = [{
+            required: true,
+            message: '请选择产品资费',
+            trigger: ['change'],
+            type: 'string'
+        }];
+    } else {
+        selectField.rules = [{
+            required: true,
+            message: '请至少选择一个产品资费',
+            trigger: ['change'],
+            type: 'array'
+        }];
+    }
+
+    result.push(selectField);
+
+    // 2. section-group 用于费率模板的显隐联动
+    const sectionGroup: Record<string, any> = {
+        type: 'section-group',
+        field: 'prodordTemplate',
+        label: '费率模板',
+        hideLabel: true,
+        input: true,
+        id: `section_prodordTemplate_${sku.skuNum}`,
+        props: {
+            title: '费率模板',
+            keyField: 'templateNum',
+            selectionField: 'selectedTemplateNums',
+            bordered: true,
+            collapsible: false
+        },
+        children: rateTemplates.map(tmpl => ({
+            type: 'section-template',
+            label: tmpl.templateName || tmpl.templateNum,
+            props: {
+                optionKey: tmpl.templateNum,
+                // 模板元数据，选中时自动注入到数组项
+                optionData: {
+                    templateNum: tmpl.templateNum ?? '',
+                    templateName: tmpl.templateName ?? '',
+                    templateType: tmpl.templateType ?? '',
+                    componentType: tmpl.componentType ?? '',
+                    ratePlanProvId: null,
+                    rateTmplType: tmpl.rateTmplType ?? '',
+                    templateValue: null,
+                    action: null,
+                    description: tmpl.description ?? ''
+                }
+            },
+            id: `tpl_${tmpl.templateNum}_${generateShortId()}`,
+            children: buildRateTemplateChildren(tmpl)
+        }))
+    };
+
+    result.push(sectionGroup);
+
+    return result;
+}
+
+/**
+ * 构建费率模板 section-template 内部的子组件
+ *
+ * 每个 section-template 内部包含:
+ *   1. icb-group (field="prodordIcbs") - ICB 参数（用户可填）
+ *   2. icb-group (field="icbList", hidden) - ICB 参数副本
+ *
+ * @param tmpl - 费率模板规格
+ * @returns 子组件 schema 数组
+ */
+function buildRateTemplateChildren(tmpl: RateTemplateSpec): any[] {
+    const children: any[] = [];
+    const icbList = tmpl.bizIcbSpecLst || [];
+
+    if (icbList.length === 0) return children;
+
+    const icbChildren = icbList.map(icb => convertIcbToIcbGroupChild(icb));
+
+    // 1. prodordIcbs - 用户可填的 ICB 参数
+    children.push({
+        type: 'icb-group',
+        field: 'prodordIcbs',
+        label: '资费参数',
+        hideLabel: true,
+        input: true,
+        id: `icbgroup_prodordIcbs_${tmpl.templateNum}`,
+        props: {
+            title: '资费参数',
+            bordered: true,
+            collapsible: false,
+            gridEnable: true,
+            gridCols: 2
+        },
+        children: icbChildren
+    });
+
+    // 2. icbList - 隐藏的 ICB 参数副本（数据同步）
+    children.push({
+        type: 'icb-group',
+        field: 'icbList',
+        label: 'ICB副本',
+        hideLabel: true,
+        input: true,
+        id: `icbgroup_icbList_${tmpl.templateNum}`,
+        props: {
+            title: 'ICB副本',
+            bordered: false,
+            collapsible: false,
+            hidden: true
+        },
+        children: icbChildren
+    });
+
+    return children;
 }
 
 /**
@@ -629,62 +803,11 @@ function buildSkuTemplateChildren(sku: SkuSpec): any[] {
         });
     }
 
-    // 2. 产品资费选择 + ICB 参数
+    // 2. 产品资费选择 + ICB 参数（使用 section-group + icb-group）
     const rateTemplates = sku.bizRateTempSpecLst || [];
     if (rateTemplates.length > 0) {
-        // 产品资费选择 checkbox
-        children.push({
-            type: 'checkbox',
-            field: 'selectedTemplateNums',
-            label: '产品资费',
-            input: true,
-            id: `checkbox_tpl_${sku.skuNum}_${generateShortId()}`,
-            props: {
-                dataSource:{
-                    type:'static',
-                    config:{
-                        options: rateTemplates.map(t => ({
-                            label: t.description,
-                            value: t.templateNum
-                        }))
-                    }
-                }
-            },
-            rules: [{
-                required: true,
-                message: '请至少选择一个产品资费',
-                trigger: ['change'],
-                type: 'array'
-            }]
-        });
-
-        // 所有产品资费的 ICB 参数平铺到一个 attribute-group
-        const allIcbs: Array<{ icb: IcbSpec; templateNum: string }> = [];
-        for (const tmpl of rateTemplates) {
-            const icbList = tmpl.bizIcbSpecLst || [];
-            for (const icb of icbList) {
-                allIcbs.push({ icb, templateNum: tmpl.templateNum });
-            }
-        }
-
-        if (allIcbs.length > 0) {
-            children.push({
-                type: 'attribute-group',
-                field: 'prodordTemplate',
-                label: '资费参数',
-                hideLabel: true,
-                input: true,
-                id: `attrgroup_sku_prodordTemplate_${sku.skuNum}`,
-                props: {
-                    title: '资费参数',
-                    bordered: true,
-                    collapsible: false,
-                    gridEnable: true,
-                    gridCols: 2
-                },
-                children: allIcbs.map(({ icb, templateNum }) => convertIcbToAttrGroupChild(icb, templateNum))
-            });
-        }
+        const rateSections = buildRateTemplateSection(rateTemplates, sku);
+        children.push(...rateSections);
     }
 
     return children;
@@ -791,6 +914,7 @@ export function buildSkuSection(skuList: SkuSpec[]): any[] {
                     skuBusinessNum: sku.skuBusinessNum ?? '',
                     skuBusinessName: sku.skuBusinessName ?? '',
                     skuInstBusinessNum: sku.skuInstBusinessNum ?? '',
+                    selectedTemplateNums: [] // 显式初始化，确保响应式追踪
                 }
             },
             id: `sku_tpl_${sku.skuNum}`,

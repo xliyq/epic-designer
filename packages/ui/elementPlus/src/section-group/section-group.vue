@@ -7,6 +7,7 @@ import { ElFormItem } from 'element-plus';
 import { EpicNode } from '@ies/base-ui';
 import {
   SECTION_GROUP_CTX_KEY,
+  SECTION_PARENT_ITEM_KEY,
   useFormItem,
   usePageManager,
 } from '@ies/designer';
@@ -14,6 +15,7 @@ import { pluginManager } from '@ies/manager';
 import { deepEqual, getValueByPath } from '@ies/utils';
 
 import { useContainerValidate } from '../common/useContainerValidate';
+import SectionItemProvider from './section-item-provider.vue';
 
 defineOptions({
   name: 'EpSectionGroup',
@@ -44,6 +46,9 @@ const selectionField = computed(
   () => props.componentSchema?.props?.selectionField ?? '',
 );
 
+// 注入父 section-group 的当前 item 数据（嵌套场景使用）
+const parentSectionItem = inject(SECTION_PARENT_ITEM_KEY, null);
+
 const children = computed(() => props.componentSchema?.children ?? []);
 
 // ========== 容器校验 ==========
@@ -56,6 +61,7 @@ const { childErrors, validateField, validateAll, clearValidate } = useContainerV
  */
 function isContainerChild(child: ComponentSchema): boolean {
   return child.type === 'attribute-group'
+    || child.type === 'icb-group'
     || child.type === 'section-group'
     || child.type === 'card'
     || child.type === 'sub-form';
@@ -228,11 +234,16 @@ watch(
 );
 
 // 监听选择字段变化 -> 控制显隐
-// selectionField 支持点号嵌套路径（如 "prodordSkus.0.selectedTemplateNums"），
-// 也兼容原来的顶层一级路径（如 "selectedOffers"），getValueByPath 对单段路径等价于直接读取。
+// 1. 嵌套场景：从父 section-group 的 item 上下文读取 selectionField
+// 2. 顶层场景：从 formData 读取（兼容原行为）
 watch(
   () => {
     if (!selectionField.value) return undefined;
+    // 嵌套场景优先：显式读取关键属性以确保响应式依赖被收集
+    if (parentSectionItem?.value) {
+      return parentSectionItem.value[selectionField.value];
+    }
+    // 顶层场景：从 formData 读取
     return getValueByPath(formData, selectionField.value);
   },
   (selected: any) => {
@@ -302,7 +313,7 @@ watch(
       nextTick(() => emitOutput());
     }
   },
-  { deep: true },
+  { deep: true, immediate: true },
 );
 
 // 不再 watch(internalData) 自动 emit
@@ -403,6 +414,7 @@ const visibleCount = computed(
     <div v-else v-show="!collapsed" class="ep-section-group__body">
       <template v-for="(item, i) in internalData" :key="i">
         <div v-if="item && rowSchemas[i]" class="ep-section-group__card">
+          <SectionItemProvider :item="item">
           <div class="ep-section-group__card-header">
             {{ getSectionLabel(children[i]) }}
           </div>
@@ -478,6 +490,7 @@ const visibleCount = computed(
               </ElFormItem>
             </template>
           </div>
+          </SectionItemProvider>
         </div>
       </template>
     </div>

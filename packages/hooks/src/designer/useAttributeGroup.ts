@@ -32,3 +32,11 @@ export interface SectionGroupCtx {
 
 export const SECTION_GROUP_CTX_KEY: InjectionKey<SectionGroupCtx | null> =
   Symbol('sectionGroupCtx');
+
+/**
+ * section-group 运行时父级 item 上下文，用于嵌套 section-group 读取父级数据。
+ * 当 section-group 嵌套在另一个 section-group 内部时，父级提供当前 item 的响应式引用，
+ * 子 section-group 可以从此上下文读取 selectionField 等字段。
+ */
+export const SECTION_PARENT_ITEM_KEY: InjectionKey<Record<string, any> | null> =
+  Symbol('sectionParentItem');
