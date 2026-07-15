@@ -72,6 +72,3 @@ export default defineComponent({
     };
   },
 });
-    };
-  },
-});
