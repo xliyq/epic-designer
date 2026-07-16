@@ -26,6 +26,7 @@ import FormItem from './formItem';
 import Input from './input';
 import InputNumber from './input-number';
 import Modal from './modal';
+import ModalPicker from './modal-picker';
 import Radio from './radio';
 import Row from './row';
 import Select from './select';
@@ -83,6 +84,7 @@ export function setupElementPlus(
     Collapse,
     CollapseItem,
     Modal,
+    ModalPicker,
     Tabs,
     TabsPane,
   ];

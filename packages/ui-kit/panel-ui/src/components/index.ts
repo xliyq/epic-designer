@@ -68,6 +68,14 @@ export function setupComponent(pluginManager: PluginManager): void {
     'EJsonEditor',
     async () => await import('./EJsonEditor/index.vue'),
   );
+  pluginManager.component.add(
+    'TableColumnsEditor',
+    async () => await import('./TableColumnsEditor/index.vue'),
+  );
+  pluginManager.component.add(
+    'SearchFieldsEditor',
+    async () => await import('./SearchFieldsEditor/index.vue'),
+  );
 
   pluginManager.component.add('EpicNode', EpicNode);
 

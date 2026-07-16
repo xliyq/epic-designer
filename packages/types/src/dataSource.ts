@@ -78,6 +78,28 @@ export interface DataSourceContext {
 }
 
 /**
+ * 分页查询结果
+ */
+export interface PagedResult {
+  /** 当前页数据 */
+  list: DataSourceOption[];
+  /** 总记录数 */
+  total: number;
+}
+
+/**
+ * 分页查询上下文（扩展 DataSourceContext）
+ */
+export interface PagedDataSourceContext extends DataSourceContext {
+  /** 当前页码（从 1 开始） */
+  pageNum: number;
+  /** 每页条数 */
+  pageSize: number;
+  /** 搜索参数（搜索字段名 -> 值） */
+  searchParams: Record<string, any>;
+}
+
+/**
  * 数据源提供者
  *
  * 第三方通过 pluginManager.dataSource.register() 注册自定义数据源提供者，
@@ -113,6 +135,32 @@ export interface DataSourceProvider {
    * 当这些字段值变化时自动重新加载
    */
   watchFields?: (config: Record<string, any>) => string[];
+
+  /**
+   * 分页加载函数（可选）
+   * 实现了此方法的 provider 支持服务端分页。
+   * 未实现时，组件回退到 loader() 全量加载 + 前端分页。
+   * @param config provider 配置数据
+   * @param context 分页查询上下文（含 pageNum、pageSize、searchParams）
+   * @returns 分页结果（list + total）
+   */
+  pagedLoader?: (
+    config: Record<string, any>,
+    context: PagedDataSourceContext,
+  ) => Promise<PagedResult>;
+
+  /**
+   * 根据 value 获取完整数据项（可选）
+   * 用于组件回显：已知 value，需要获取 label 等展示信息。
+   * 未实现时，组件尝试从已加载的数据中匹配。
+   * @param config provider 配置数据
+   * @param context 数据源上下文（额外包含 value 字段）
+   * @returns 单个选项或选项数组（多选时）
+   */
+  detailLoader?: (
+    config: Record<string, any>,
+    context: DataSourceContext & { value: any | any[] },
+  ) => Promise<DataSourceOption | DataSourceOption[]>;
 }
 
 /**

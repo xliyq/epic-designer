@@ -63,6 +63,14 @@ export const frameworkRoutes = [
         },
       },
       {
+        path: 'modalPicker',
+        name: 'modalPicker',
+        component: () => import('@/views/designer/modalPicker/index.vue'),
+        meta: {
+          title: '弹窗选择组件',
+        },
+      },
+      {
         path: 'panel',
         name: 'panel',
         component: () => import('@/views/designer/panel/index.vue'),
