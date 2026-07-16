@@ -120,8 +120,23 @@
   &__tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    padding: 4px 0;
+    gap: 2px;
+    padding: 2px 0;
+    max-width: 100%;
+    overflow: hidden;
+
+    .el-tag {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  // 多选时输入框内 tags 占据空间，需要增加最小高度
+  &__trigger .el-input__wrapper {
+    min-height: 32px;
+    height: auto;
   }
 }
 

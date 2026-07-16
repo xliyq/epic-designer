@@ -144,6 +144,14 @@ export const frameworkRoutes = [
           title: '选项数据访问',
         },
       },
+      {
+        path: 'modalPicker',
+        name: 'builderModalPicker',
+        component: () => import('@/views/builder/modalPicker/index.vue'),
+        meta: {
+          title: '弹窗选择组件',
+        },
+      },
     ],
   },
   {

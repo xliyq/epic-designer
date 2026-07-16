@@ -210,6 +210,11 @@ export function deepCompareAndModify(
 
   // 循环遍历obj2的所有属性
   for (const [key, val2] of Object.entries(obj2)) {
+    // 如果双方都是数组 → 直接替换整个数组（不递归逐元素合并）
+    if (Array.isArray(typedObj1[key]) && Array.isArray(val2)) {
+      typedObj1[key] = val2;
+      continue;
+    }
     // 如果obj1的属性值是对象或数组，则递归调用该函数
     if (
       typedObj1[key] &&

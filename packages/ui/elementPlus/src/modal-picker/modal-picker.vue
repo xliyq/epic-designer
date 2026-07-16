@@ -5,11 +5,13 @@ import { computed, nextTick, onMounted, reactive, ref, useAttrs, watch } from 'v
 
 import {
   ElButton,
+  ElConfigProvider,
   ElDatePicker,
   ElDialog,
   ElForm,
   ElFormItem,
   ElInput,
+  ElLoadingDirective,
   ElMessage,
   ElOption,
   ElPagination,
@@ -19,17 +21,20 @@ import {
   ElTableColumn,
   ElTag,
 } from 'element-plus';
+import zhCn from 'element-plus/es/locale/lang/zh-cn';
 
 import { useFormData } from '@ies/hooks';
 import { pluginManager } from '@ies/manager';
 
 // 样式导入
 import 'element-plus/es/components/button/style/css';
+import 'element-plus/es/components/config-provider/style/css';
 import 'element-plus/es/components/date-picker/style/css';
 import 'element-plus/es/components/dialog/style/css';
 import 'element-plus/es/components/form-item/style/css';
 import 'element-plus/es/components/form/style/css';
 import 'element-plus/es/components/input/style/css';
+import 'element-plus/es/components/loading/style/css';
 import 'element-plus/es/components/pagination/style/css';
 import 'element-plus/es/components/radio/style/css';
 import 'element-plus/es/components/select/style/css';
@@ -37,7 +42,11 @@ import 'element-plus/es/components/table-column/style/css';
 import 'element-plus/es/components/table/style/css';
 import 'element-plus/es/components/tag/style/css';
 
-defineOptions({ name: 'EpModalPicker', inheritAttrs: false });
+defineOptions({
+  name: 'EpModalPicker',
+  inheritAttrs: false,
+  directives: { loading: ElLoadingDirective },
+});
 
 const props = defineProps<{
   dataSource?: DataSourceSchema | null;
@@ -271,33 +280,73 @@ function openDialog() {
     searchForm[key] = undefined;
   }
   currentPage.value = 1;
-  // 从缓存恢复已选项
-  tempSelected.value = Array.from(selectedCache.value.values()).map((item) => ({ ...item }));
+  // 从当前 modelValue 构建临时选中，不依赖 selectedCache
+  tempSelected.value = buildTempSelectedFromValue();
   currentRowKey.value = null;
   loadData();
+}
+
+/**
+ * 当 detailLoader 不存在时，回退到 provider.loader 全量加载并匹配
+ */
+async function resolveLabelsFromLoader(values: any[]): Promise<void> {
+  const ds = props.dataSource;
+  if (!ds || values.length === 0) return;
+  const provider = pluginManager.dataSource.get(ds.type);
+  if (!provider?.loader) return;
+
+  const context: any = {
+    formData: formData.value,
+    global: pluginManager.global,
+  };
+
+  try {
+    const allItems = await provider.loader(ds.config, context);
+    const newCache = new Map(selectedCache.value);
+    const rowKey = rowKeyField.value;
+    for (const value of values) {
+      if (newCache.has(value)) continue; // 已有缓存跳过
+      const match = allItems.find((item: any) => item[rowKey] === value);
+      if (match) newCache.set(value, match);
+    }
+    if (newCache.size !== selectedCache.value.size) {
+      selectedCache.value = newCache;
+    }
+  } catch (e) {
+    console.error('[modal-picker] 全量加载识别失败:', e);
+  }
+}
+
+/** 从当前 modelValue 构建临时选中列表 */
+function buildTempSelectedFromValue(): any[] {
+  const val = modelValue.value;
+  if (val == null) return [];
+  const items = Array.isArray(val) ? val : [val];
+  return items
+    .map((v) => {
+      const cached = selectedCache.value.get(v);
+      // 有缓存就用缓存数据，否则创建一个最小对象用于匹配
+      return cached ? { ...cached } : { [rowKeyField.value]: v, label: String(v) };
+    })
+    .filter(Boolean);
 }
 
 // 单选：行点击选中
 function handleRowClick(row: any) {
   if (multiple.value) {
-    // 多选：切换该行选中状态
+    // 多选：不手动改 tempSelected，让 handleSelectionChange 接管
+    // row-click 触发时 ElTable 已自动切换了 checkbox 状态
     const tableRef = tableRefInstance.value;
     if (!tableRef) return;
     const rowKey = getItemValue(row);
-    const existIdx = tempSelected.value.findIndex((item) => getItemValue(item) === rowKey);
-    if (existIdx >= 0) {
-      // 取消选中
-      tempSelected.value.splice(existIdx, 1);
+    const alreadySelected = tempSelected.value.some((item) => getItemValue(item) === rowKey);
+    // 如果该行是新选中且超过限制 → 撤销
+    if (!alreadySelected && multipleLimit.value > 0 && tempSelected.value.length >= multipleLimit.value) {
       tableRef.toggleRowSelection(row, false);
-    } else {
-      // 检查限制
-      if (multipleLimit.value > 0 && tempSelected.value.length >= multipleLimit.value) {
-        ElMessage.warning(`最多只能选择 ${multipleLimit.value} 项`);
-        return;
-      }
-      tempSelected.value.push({ ...row });
-      tableRef.toggleRowSelection(row, true);
+      ElMessage.warning(`最多只能选择 ${multipleLimit.value} 项`);
+      return;
     }
+    // 否则让 selection-change 事件更新 tempSelected
   } else {
     // 单选：直接选中
     tempSelected.value = [{ ...row }];
@@ -408,32 +457,100 @@ onMounted(async () => {
   const ds = props.dataSource;
   if (!ds) return;
   const provider = pluginManager.dataSource.get(ds.type);
-  if (!provider?.detailLoader) return;
+  if (!provider) return;
 
-  try {
-    const result = await provider.detailLoader(ds.config, {
-      formData: formData.value,
-      global: pluginManager.global,
-      value: val,
-    });
-    if (Array.isArray(result)) {
-      selectedCache.value = new Map(result.map((item) => [getItemValue(item), item]));
-    } else if (result) {
-      selectedCache.value = new Map([[getItemValue(result), result]]);
+  if (provider.detailLoader) {
+    try {
+      const result = await provider.detailLoader(ds.config, {
+        formData: formData.value,
+        global: pluginManager.global,
+        value: val,
+      });
+      if (Array.isArray(result)) {
+        selectedCache.value = new Map(result.map((item) => [getItemValue(item), item]));
+      } else if (result) {
+        selectedCache.value = new Map([[getItemValue(result), result]]);
+      }
+    } catch (e) {
+      console.error('[modal-picker] 回显加载失败:', e);
     }
-  } catch (e) {
-    console.error('[modal-picker] 回显加载失败:', e);
+  } else {
+    // 无 detailLoader（如静态数据源）→ 回退到 loader 全量加载匹配
+    const values = Array.isArray(val) ? val : [val];
+    await resolveLabelsFromLoader(values);
   }
 });
 
-// 监听 modelValue 变化（外部清空时同步缓存）
+// 监听 modelValue 变化（外部设值/清空时同步缓存）
 watch(
   () => attrs.modelValue,
-  (val) => {
-    if (val == null || (Array.isArray(val) && val.length === 0)) {
+  async (val, oldVal) => {
+    const isMulti = multiple.value;
+    const isEmpty = val == null || (Array.isArray(val) && val.length === 0);
+    const wasEmpty = oldVal == null || (Array.isArray(oldVal) && oldVal.length === 0);
+
+    // 清空 → 清除缓存
+    if (isEmpty) {
       selectedCache.value = new Map();
+      tempSelected.value = [];
+      return;
+    }
+
+    // 值没变化则跳过
+    if (oldVal !== undefined && !wasEmpty && val === oldVal) return;
+
+    // 值变化：清除旧缓存中不再使用的条目，再调 detailLoader
+    const currentValues = isMulti ? (val as any[]) : [val];
+    const oldValues = oldVal && !wasEmpty ? (isMulti ? (oldVal as any[]) : [oldVal]) : [];
+
+    // 移除旧值中不在当前值的条目
+    const newCache = new Map(selectedCache.value);
+    oldValues.forEach((v) => {
+      if (!currentValues.includes(v)) {
+        newCache.delete(v);
+      }
+    });
+    selectedCache.value = newCache;
+
+    // 更新 tempSelected 以便外部值变化后弹窗能正确恢复选中
+    tempSelected.value = buildTempSelectedFromValue();
+
+    // 调 detailLoader 获取新值的 label
+    const ds = props.dataSource;
+    if (!ds) return;
+    const provider = pluginManager.dataSource.get(ds.type);
+    if (!provider) return;
+
+    // 只加载缓存中还没有的值
+    const needFetch = currentValues.filter((v) => !selectedCache.value.has(v));
+    if (needFetch.length === 0) return;
+
+    if (provider.detailLoader) {
+      try {
+        const fetchValue = isMulti ? needFetch : needFetch[0];
+        const result = await provider.detailLoader(ds.config, {
+          formData: formData.value,
+          global: pluginManager.global,
+          value: fetchValue,
+        });
+        const updatedCache = new Map(selectedCache.value);
+        if (Array.isArray(result)) {
+          result.forEach((item) => updatedCache.set(getItemValue(item), item));
+        } else if (result) {
+          updatedCache.set(getItemValue(result), result);
+        }
+        selectedCache.value = updatedCache;
+        // 重新构建 tempSelected 以反映最新数据
+        tempSelected.value = buildTempSelectedFromValue();
+      } catch (e) {
+        console.error('[modal-picker] 回显加载失败:', e);
+      }
+    } else {
+      // 无 detailLoader（如静态数据源）→ 回退到 loader 全量加载匹配
+      await resolveLabelsFromLoader(needFetch);
     }
   },
+  { deep: true },
 );
 </script>
 
@@ -441,28 +558,31 @@ watch(
   <div class="ep-modal-picker">
     <!-- 外层触发区域 -->
     <div class="ep-modal-picker__trigger" @click="openDialog">
-      <!-- 多选 tag 展示 -->
-      <template v-if="multiple && displayTags.length > 0">
-        <div class="ep-modal-picker__tags">
-          <ElTag
-            v-for="tag in displayTags"
-            :key="tag.value"
-            closable
-            :disable-transitions="false"
-            @close="handleTagClose(tag.value)"
-            @click.stop
-          >
-            {{ tag.label }}
-          </ElTag>
-        </div>
-      </template>
       <!-- 只读输入框 -->
       <ElInput
-        :model-value="displayText"
+        :model-value="multiple ? '' : displayText"
         :placeholder="(attrs.placeholder as string) || '请选择'"
         readonly
         :disabled="disabled"
       >
+        <template #prefix>
+          <!-- 多选 tag 展示（在输入框内部） -->
+          <template v-if="multiple && displayTags.length > 0">
+            <div class="ep-modal-picker__tags">
+              <ElTag
+                v-for="tag in displayTags"
+                :key="tag.value"
+                closable
+                size="small"
+                :disable-transitions="false"
+                @close="handleTagClose(tag.value)"
+                @click.stop
+              >
+                {{ tag.label }}
+              </ElTag>
+            </div>
+          </template>
+        </template>
         <template #suffix>
           <span
             v-if="clearable && !disabled && (displayText || displayTags.length > 0)"
@@ -477,13 +597,14 @@ watch(
     </div>
 
     <!-- 弹窗 -->
-    <ElDialog
-      v-model="dialogVisible"
-      :title="modalTitle"
-      :width="modalWidth"
-      append-to-body
-      destroy-on-close
-      class="ep-modal-picker__dialog"
+    <ElConfigProvider :locale="zhCn">
+      <ElDialog
+        v-model="dialogVisible"
+        :title="modalTitle"
+        :width="modalWidth"
+        append-to-body
+        destroy-on-close
+        class="ep-modal-picker__dialog"
     >
       <!-- 搜索区域 -->
       <div
@@ -599,6 +720,7 @@ watch(
           <ElButton type="primary" @click="handleConfirm">确定</ElButton>
         </div>
       </template>
-    </ElDialog>
+      </ElDialog>
+    </ElConfigProvider>
   </div>
 </template>

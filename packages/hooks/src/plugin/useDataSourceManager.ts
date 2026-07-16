@@ -249,7 +249,8 @@ function mapItems(items: any[], config: Record<string, any>): DataSourceOption[]
 
   function walk(list: any[]): DataSourceOption[] {
     return list.map((item: any) => {
-      const result: DataSourceOption = { label: item[lk], value: item[vk] };
+      // 保留原始数据全部字段，同时确保 label/value 映射正确
+      const result: DataSourceOption = { ...item, label: item[lk], value: item[vk] };
       if (item[ck]) result.children = walk(item[ck]);
       return result;
     });
