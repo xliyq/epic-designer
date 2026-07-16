@@ -128,6 +128,14 @@ export const frameworkRoutes = [
           title: '字段状态',
         },
       },
+      {
+        path: 'exposeMethods',
+        name: 'exposeMethods',
+        component: () => import('@/views/builder/exposeMethods/index.vue'),
+        meta: {
+          title: '选项数据访问',
+        },
+      },
     ],
   },
   {

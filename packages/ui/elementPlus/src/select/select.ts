@@ -1,4 +1,4 @@
-import { computed, defineComponent, h } from 'vue';
+import { computed, defineComponent, h, ref, watch } from 'vue';
 
 import { ElOption, ElSelect } from 'element-plus';
 import { useDataSource, useFormData } from '@ies/hooks';
@@ -19,8 +19,13 @@ export default defineComponent({
     },
   },
   emits: ['update:modelValue'],
-  setup(props, { attrs, emit }) {
+  setup(props, { attrs, emit, expose }) {
+    // 本地同步缓存 modelValue，避免 attrs 异步更新导致 getSelected 拿到旧值
+    const modelValueRef = ref(attrs.modelValue);
+    watch(() => attrs.modelValue, (val) => { modelValueRef.value = val; });
+
     function handleUpdate(e = null): void {
+      modelValueRef.value = e;
       emit('update:modelValue', e);
     }
 
@@ -33,9 +38,11 @@ export default defineComponent({
 
     const isRemote = computed(() => dataSource.value?.type !== 'static');
 
-    const { options: dsOptions, loading } = useDataSource(dataSource, formData);
+    const { options: dsOptions, loading, getOptions, getSelected } = useDataSource(dataSource, formData, modelValueRef);
 
     const finalOptions = computed(() => dsOptions.value ?? []);
+
+    expose({ getOptions, getSelected });
 
     return () => {
       const { options: _attrsOptions, dataSource: _attrsDataSource, ...restAttrs } = attrs;

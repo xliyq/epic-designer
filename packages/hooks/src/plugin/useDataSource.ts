@@ -19,10 +19,12 @@ import { pluginManager } from '@ies/manager';
  *
  * @param dataSourceRef dataSource schema（响应式），通常来自 computed(() => props.dataSource)
  * @param formData 表单数据
+ * @param modelValueRef 当前 modelValue（可选），用于 getSelected 查找选中项
  */
 export function useDataSource(
   dataSourceRef: ComputedRef<DataSourceSchema | undefined> | Ref<DataSourceSchema | undefined>,
   formData: Ref<Record<string, any>>,
+  modelValueRef?: ComputedRef<any> | Ref<any>,
 ) {
   const options = ref<DataSourceOption[]>([]);
   const loading = ref(false);
@@ -131,9 +133,27 @@ export function useDataSource(
     { deep: true, immediate: true },
   );
 
+  // 获取当前完整选项数组
+  function getOptions(): DataSourceOption[] {
+    return options.value ?? [];
+  }
+
+  // 获取当前选中项的完整数据对象（按 value 字段匹配，非仅 value）
+  function getSelected(): any {
+    const val = modelValueRef?.value;
+    if (val == null) return null;
+    const opts = options.value ?? [];
+    if (Array.isArray(val)) {
+      return opts.filter((opt: any) => val.includes(opt.value));
+    }
+    return opts.find((opt: any) => opt.value === val) ?? null;
+  }
+
   return {
     options,
     loading,
     reload: loadData,
+    getOptions,
+    getSelected,
   };
 }
