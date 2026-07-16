@@ -27,6 +27,7 @@
     },
     "./uno.config": "./uno.config.ts",
     "./dist/style.css": "./dist/style.css",
+    "./dist/designer.css": "./dist/designer.css",
     "./style.css": "./dist/style.css"
   },
   "sideEffects": [

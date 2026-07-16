@@ -495,50 +495,6 @@ const pageSchema = ref<PageSchema>({
           "id": "sku_tpl_2025999480006336",
           "children": [
             {
-              "type": "card",
-              "label": "附加信息",
-              "props": {
-                "gridEnable": true,
-                "gridCols": 4
-              },
-              "id": "card_extra",
-              "children": [
-                {
-                  "type": "text-view",
-                  "field": "action",
-                  "label": "action",
-                  "input": true,
-                  "id": "extra_action",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": null
-                  }
-                },
-                {
-                  "type": "text-view",
-                  "field": "baseSku",
-                  "label": "baseSku",
-                  "input": true,
-                  "id": "extra_baseSku",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": null
-                  }
-                },
-                {
-                  "type": "text-view",
-                  "field": "isBackTracking",
-                  "label": "isBackTracking",
-                  "input": true,
-                  "id": "extra_isBackTracking",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": 0
-                  }
-                }
-              ]
-            },
-            {
               "type": "attribute-group",
               "field": "prodordCharacters",
               "label": "产品属性",
@@ -899,50 +855,6 @@ const pageSchema = ref<PageSchema>({
           },
           "id": "sku_tpl_2025999480006500",
           "children": [
-            {
-              "type": "card",
-              "label": "附加信息",
-              "props": {
-                "gridEnable": true,
-                "gridCols": 4
-              },
-              "id": "card_extra",
-              "children": [
-                {
-                  "type": "text-view",
-                  "field": "action",
-                  "label": "action",
-                  "input": true,
-                  "id": "extra_action",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": null
-                  }
-                },
-                {
-                  "type": "text-view",
-                  "field": "baseSku",
-                  "label": "baseSku",
-                  "input": true,
-                  "id": "extra_baseSku",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": null
-                  }
-                },
-                {
-                  "type": "text-view",
-                  "field": "isBackTracking",
-                  "label": "isBackTracking",
-                  "input": true,
-                  "id": "extra_isBackTracking",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": 0
-                  }
-                }
-              ]
-            },
             {
               "type": "attribute-group",
               "field": "prodordCharacters",
@@ -1405,50 +1317,6 @@ const pageSchema = ref<PageSchema>({
           "id": "sku_tpl_2025999480006501",
           "children": [
             {
-              "type": "card",
-              "label": "附加信息",
-              "props": {
-                "gridEnable": true,
-                "gridCols": 4
-              },
-              "id": "card_extra",
-              "children": [
-                {
-                  "type": "text-view",
-                  "field": "action",
-                  "label": "action",
-                  "input": true,
-                  "id": "extra_action",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": null
-                  }
-                },
-                {
-                  "type": "text-view",
-                  "field": "baseSku",
-                  "label": "baseSku",
-                  "input": true,
-                  "id": "extra_baseSku",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": null
-                  }
-                },
-                {
-                  "type": "text-view",
-                  "field": "isBackTracking",
-                  "label": "isBackTracking",
-                  "input": true,
-                  "id": "extra_isBackTracking",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": 0
-                  }
-                }
-              ]
-            },
-            {
               "type": "attribute-group",
               "field": "prodordCharacters",
               "label": "产品属性",
@@ -1779,50 +1647,6 @@ const pageSchema = ref<PageSchema>({
           },
           "id": "sku_tpl_2025999480006502",
           "children": [
-            {
-              "type": "card",
-              "label": "附加信息",
-              "props": {
-                "gridEnable": true,
-                "gridCols": 4
-              },
-              "id": "card_extra",
-              "children": [
-                {
-                  "type": "text-view",
-                  "field": "action",
-                  "label": "action",
-                  "input": true,
-                  "id": "extra_action",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": null
-                  }
-                },
-                {
-                  "type": "text-view",
-                  "field": "baseSku",
-                  "label": "baseSku",
-                  "input": true,
-                  "id": "extra_baseSku",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": null
-                  }
-                },
-                {
-                  "type": "text-view",
-                  "field": "isBackTracking",
-                  "label": "isBackTracking",
-                  "input": true,
-                  "id": "extra_isBackTracking",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": 0
-                  }
-                }
-              ]
-            },
             {
               "type": "attribute-group",
               "field": "prodordCharacters",
@@ -2286,50 +2110,6 @@ const pageSchema = ref<PageSchema>({
           "id": "sku_tpl_2025999480009112",
           "children": [
             {
-              "type": "card",
-              "label": "附加信息",
-              "props": {
-                "gridEnable": true,
-                "gridCols": 4
-              },
-              "id": "card_extra",
-              "children": [
-                {
-                  "type": "text-view",
-                  "field": "action",
-                  "label": "action",
-                  "input": true,
-                  "id": "extra_action",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": null
-                  }
-                },
-                {
-                  "type": "text-view",
-                  "field": "baseSku",
-                  "label": "baseSku",
-                  "input": true,
-                  "id": "extra_baseSku",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": null
-                  }
-                },
-                {
-                  "type": "text-view",
-                  "field": "isBackTracking",
-                  "label": "isBackTracking",
-                  "input": true,
-                  "id": "extra_isBackTracking",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": 0
-                  }
-                }
-              ]
-            },
-            {
               "type": "attribute-group",
               "field": "prodordCharacters",
               "label": "产品属性",
@@ -2658,50 +2438,6 @@ const pageSchema = ref<PageSchema>({
           },
           "id": "sku_tpl_2025999480009113",
           "children": [
-            {
-              "type": "card",
-              "label": "附加信息",
-              "props": {
-                "gridEnable": true,
-                "gridCols": 4
-              },
-              "id": "card_extra",
-              "children": [
-                {
-                  "type": "text-view",
-                  "field": "action",
-                  "label": "action",
-                  "input": true,
-                  "id": "extra_action",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": null
-                  }
-                },
-                {
-                  "type": "text-view",
-                  "field": "baseSku",
-                  "label": "baseSku",
-                  "input": true,
-                  "id": "extra_baseSku",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": null
-                  }
-                },
-                {
-                  "type": "text-view",
-                  "field": "isBackTracking",
-                  "label": "isBackTracking",
-                  "input": true,
-                  "id": "extra_isBackTracking",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": 0
-                  }
-                }
-              ]
-            },
             {
               "type": "attribute-group",
               "field": "prodordCharacters",
@@ -3291,50 +3027,6 @@ const pageSchema = ref<PageSchema>({
           },
           "id": "sku_tpl_2025999480009114",
           "children": [
-            {
-              "type": "card",
-              "label": "附加信息",
-              "props": {
-                "gridEnable": true,
-                "gridCols": 4
-              },
-              "id": "card_extra",
-              "children": [
-                {
-                  "type": "text-view",
-                  "field": "action",
-                  "label": "action",
-                  "input": true,
-                  "id": "extra_action",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": null
-                  }
-                },
-                {
-                  "type": "text-view",
-                  "field": "baseSku",
-                  "label": "baseSku",
-                  "input": true,
-                  "id": "extra_baseSku",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": null
-                  }
-                },
-                {
-                  "type": "text-view",
-                  "field": "isBackTracking",
-                  "label": "isBackTracking",
-                  "input": true,
-                  "id": "extra_isBackTracking",
-                  "props": {
-                    "placeholder": "",
-                    "defaultValue": 0
-                  }
-                }
-              ]
-            },
             {
               "type": "attribute-group",
               "field": "prodordCharacters",

@@ -540,7 +540,7 @@ function convertIcbToIcbGroupChild(icb: IcbSpec): Record<string, any> {
 
     const child: Record<string, any> = {
         type: 'input',
-        label: icb.parameterName,
+        label: icb.parameterDescribe,
         input: true,
         id: `icb_${icb.parameterNum}_${generateShortId()}`,
         props
@@ -550,7 +550,7 @@ function convertIcbToIcbGroupChild(icb: IcbSpec): Record<string, any> {
     if (icb.regular) {
         child.rules = [{
             pattern: icb.regular,
-            message: `${icb.parameterName}格式不正确`,
+            message: `${icb.parameterDescribe}格式不正确`,
             trigger: ['change', 'blur']
         }];
     }
@@ -691,7 +691,7 @@ function buildRateTemplateChildren(tmpl: RateTemplateSpec): any[] {
         input: true,
         id: `icbgroup_prodordIcbs_${tmpl.templateNum}`,
         props: {
-            title: '资费参数',
+            title: tmpl.description || '',
             bordered: true,
             collapsible: false,
             gridEnable: true,
@@ -712,7 +712,7 @@ function buildRateTemplateChildren(tmpl: RateTemplateSpec): any[] {
             title: 'ICB副本',
             bordered: false,
             collapsible: false,
-            hidden: true
+            hidden: false
         },
         children: icbChildren
     });
@@ -724,7 +724,6 @@ function buildRateTemplateChildren(tmpl: RateTemplateSpec): any[] {
  * 构建 SKU section-template 内部的子组件列表
  *
  * 每个 SKU 的 section-template 内部包含:
- *   0. card "附加信息" - 隐藏字段（action、a、b），数据平铺到 sku item 根节点
  *   1. attribute-group (field="prodordCharacters") - SKU 属性
  *   2. checkbox (field="selectedTemplateNums") - 产品资费选择
  *   3. attribute-group (field="prodordTemplate") - 产品资费 ICB 参数（平铺，不做显隐联动）
@@ -734,53 +733,6 @@ function buildRateTemplateChildren(tmpl: RateTemplateSpec): any[] {
  */
 function buildSkuTemplateChildren(sku: SkuSpec): any[] {
     const children: any[] = [];
-
-    // 0. 附加信息（card 视觉容器，默认隐藏，数据平铺到 sku item 根节点）
-    //    section-group 引擎会将 card 内部子组件的 field 直接绑定到 item 对象
-    children.push({
-        type: 'card',
-        label: '附加信息',
-        props: {
-            gridEnable: true,
-            gridCols: 4
-        },
-        id: `card_extra`,
-        children: [
-            {
-                type: 'text-view',
-                field: 'action',
-                label: 'action',
-                input: true,
-                id: `extra_action`,
-                props: {
-                    placeholder: '',
-                    defaultValue: null
-                }
-            },
-            {
-                 type: 'text-view',
-                field: 'baseSku',
-                label: 'baseSku',
-                input: true,
-                id: `extra_baseSku`,
-                props: {
-                    placeholder: '',
-                    defaultValue: null
-                }
-            },
-            {
-                type: 'text-view',
-                field: 'isBackTracking',
-                label: 'isBackTracking',
-                input: true,
-                id: `extra_isBackTracking`,
-                props: {
-                  placeholder: '',
-                  defaultValue:  sku.isBackTracking || 0
-                }
-            }
-        ]
-    });
 
     // 1. SKU 属性（attribute-group）
     const skuFields = (sku.bizCharSpecLst || []).filter(f => (f as SkuCharSpec).readonly !== 2);
