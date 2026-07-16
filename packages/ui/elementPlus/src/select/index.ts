@@ -2,7 +2,7 @@
 import { createDefaultDataSource } from '@ies/utils';
 
 export default {
-  component: () => import('./select'),
+  component: () => import('./select.vue'),
   config: {
     attribute: [
       {

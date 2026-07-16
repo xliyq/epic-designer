@@ -120,42 +120,47 @@ function handleComponentTypeChange(newType: string) {
   designer.revoke.push('切换组件类型', true);
 }
 
-// 获取组件属性配置
-const componentAttributes = computed(() => {
-  if (!selectedNode.value || !selectedNode.value.type) {
-    return [];
-  }
-
-  // 上下文面板优先：如果检测到特殊上下文，替换标准属性
-  if (contextAttributes.value) {
-    return contextAttributes.value;
-  }
-
-  const baseAttributes =
-    componentConfigs[selectedNode.value.type]?.config?.attribute ?? [];
-  const allAttributes = [...baseAttributes];
-
-  // 所有组件统一注入公共属性
-  const matched = designer.state.matched
-  const parent = matched.length >= 2 ? matched[matched.length - 2] : undefined
-  const gridCols = parent?.props?.gridCols ?? 4
-  const parentGridEnabled = parent?.props?.gridEnable === true
-  allAttributes.push({
-    field: 'hideLabel',
-    label: '隐藏标签',
-    type: 'switch',
-    description: '隐藏表单项标签并清除标签占位空间',
+  // 获取选中节点的父节点，用于判断栅格配置
+  const parent = computed(() => {
+    const matched = designer.state.matched;
+    if (!matched || matched.length < 2) return undefined;
+    return matched[matched.length - 2];
   });
-  allAttributes.push({
-    field: 'props.span',
-    label: '栅格占列',
-    props: {
-      min: 1,
-      max: gridCols,
-    },
-    show: parentGridEnabled,
-    type: 'number',
-  });
+  const gridCols = computed(() => parent.value?.props?.gridCols ?? 4);
+  const parentGridEnabled = computed(() => parent.value?.props?.gridEnable === true);
+
+  // 获取组件属性配置
+  const componentAttributes = computed(() => {
+    if (!selectedNode.value || !selectedNode.value.type) {
+      return [];
+    }
+
+    // 上下文面板优先：如果检测到特殊上下文，替换标准属性
+    if (contextAttributes.value) {
+      return contextAttributes.value;
+    }
+
+    const baseAttributes =
+      componentConfigs[selectedNode.value.type]?.config?.attribute ?? [];
+    const allAttributes = [...baseAttributes];
+
+    // 所有组件统一注入公共属性
+    allAttributes.push({
+      field: 'hideLabel',
+      label: '隐藏标签',
+      type: 'switch',
+      description: '隐藏表单项标签并清除标签占位空间',
+    });
+    allAttributes.push({
+      field: 'props.span',
+      label: '栅格占列',
+      props: {
+        min: 1,
+        max: gridCols.value,
+      },
+      show: parentGridEnabled.value,
+      type: 'number',
+    });
 
   if (selectedNode.value.id === pageSchema.schemas[0]?.id) {
     allAttributes.push(
