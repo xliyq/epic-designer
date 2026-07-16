@@ -1,31 +1,62 @@
-import { defineComponent, h } from 'vue';
+import { computed, defineComponent, h } from 'vue';
 
 import { ElOption, ElSelect } from 'element-plus';
+import { useDataSource, useFormData } from '@ies/hooks';
 
 import 'element-plus/es/components/select/style/css';
 
 // 二次封装组件
 export default defineComponent({
+  inheritAttrs: false,
+  props: {
+    dataSource: {
+      type: Object,
+      default: null,
+    },
+    options: {
+      type: Array,
+      default: null,
+    },
+  },
   emits: ['update:modelValue'],
-  setup(_, { attrs, emit }) {
+  setup(props, { attrs, emit }) {
     function handleUpdate(e = null): void {
       emit('update:modelValue', e);
     }
 
+    const formData = useFormData();
+
+    const dataSource = computed(() => {
+      if (props.dataSource) return props.dataSource;
+      return { type: 'static', config: { options: props.options ?? [] } };
+    });
+
+    const isRemote = computed(() => dataSource.value?.type !== 'static');
+
+    const { options: dsOptions, loading } = useDataSource(dataSource, formData);
+
+    const finalOptions = computed(() => dsOptions.value ?? []);
+
     return () => {
-      const props: Record<string, any> = {
-        ...attrs,
+      const { options: _attrsOptions, dataSource: _attrsDataSource, ...restAttrs } = attrs;
+      const selectProps: Record<string, any> = {
+        ...restAttrs,
         key: String(attrs.multiple),
         'onUpdate:modelValue': handleUpdate,
         placeholder: attrs.placeholder ?? '请选择',
       };
 
-      // watch
+      if (isRemote.value) {
+        selectProps.loading = loading.value;
+      }
 
-      return h(ElSelect, props, {
+      return h(ElSelect, selectProps, {
         default: () => [
-          props.options?.map((option: any) =>
-            h(ElOption, { label: option.label, value: option.value }),
+          finalOptions.value?.map((option: any) =>
+            h(ElOption, {
+              label: option.label,
+              value: option.value,
+            }),
           ),
         ],
       });

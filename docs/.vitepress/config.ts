@@ -122,6 +122,10 @@ export default defineConfig({
               text: '活动栏扩展',
             },
             {
+              link: '/guide/extensions/dataSource',
+              text: '数据源扩展',
+            },
+            {
               link: '/guide/extensions/rightSidebar',
               text: '右侧边栏扩展',
             },

@@ -4,6 +4,7 @@ import { ref } from 'vue';
 
 import {
   useComponentManager,
+  useDataSourceManager,
   useFormSchema,
   useGlobal,
   useHookManager,
@@ -33,6 +34,7 @@ export interface PluginManager {
     >['setComponentGroupNameMap'];
     show: ReturnType<typeof useComponentManager>['showComponent'];
   };
+  dataSource: ReturnType<typeof useDataSourceManager>;
   designer: {
     formSchema: ReturnType<typeof useFormSchema>['formSchema'];
     initialized: Ref<boolean>;
@@ -99,6 +101,8 @@ export function createPluginManager(): PluginManager {
   const { addPublicMethod, methodsMap, removePublicMethod } =
     usePublicMethods();
 
+  const dataSourceMgr = useDataSourceManager();
+
   // 全局状态管理
   const { global } = useGlobal({
     // 请求服务基础地址
@@ -162,6 +166,7 @@ export function createPluginManager(): PluginManager {
       showComponent,
       sortedGroups,
     },
+    dataSource: dataSourceMgr,
     designer: {
       formSchema,
       initialized,

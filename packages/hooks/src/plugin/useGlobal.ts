@@ -1,21 +1,11 @@
+import type { Global, InitialGlobal } from '@ies/types';
+
 import { reactive } from 'vue';
 
-// 定义MessageApi 类型
-export interface MessageApi {
-  error: (text: string) => void;
-  info: (text: string) => void;
-  success: (text: string) => void;
-  warning: (text: string) => void;
-}
+// 重新导出，保持向后兼容
+export type { Global, HttpClient, AxiosConfig, MessageApi } from '@ies/types';
 
-export interface InitialGlobal {
-  // 扩展属性
-  [key: string]: any;
-}
-
-export interface Global extends InitialGlobal {
-  $message: MessageApi;
-}
+export type { InitialGlobal } from '@ies/types';
 
 // 创建默认全局对象的函数，避免在模块加载时立即执行
 function createDefaultGlobal(initialGlobal?: InitialGlobal): Global {

@@ -1,6 +1,7 @@
 import type { PluginManager } from '@ies/manager';
 
 import { EpicNode } from '@ies/base-ui';
+import { registerBuiltinProviders } from '@ies/hooks';
 
 import EpField from './EpField';
 import MonacoEditor from './MonacoEditor';
@@ -12,6 +13,8 @@ import Page from './Page';
  * @returns {void}
  */
 export function setupPage(pluginManager: PluginManager): void {
+  // 注册内置数据源提供者（static + http），EBuilder 和 EDesigner 运行时都需要
+  registerBuiltinProviders(pluginManager.dataSource);
   pluginManager.component.register(Page);
 }
 
@@ -48,6 +51,14 @@ export function setupComponent(pluginManager: PluginManager): void {
   pluginManager.component.add(
     'EOptionsEditor',
     async () => await import('./EOptionsEditor/index.vue'),
+  );
+  pluginManager.component.add(
+    'ERemoteConfigEditor',
+    async () => await import('./ERemoteConfigEditor/index.vue'),
+  );
+  pluginManager.component.add(
+    'DataSourceEditor',
+    async () => await import('./DataSourceEditor/index.vue'),
   );
   pluginManager.component.add(
     'ESyncFieldsEditor',

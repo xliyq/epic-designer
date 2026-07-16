@@ -38,6 +38,7 @@ import Textarea from './textarea';
 import UploadFile from './upload-file';
 import UploadImage from './upload-image';
 import AttributeGroup from './attribute-group';
+import IcbGroup from './icb-group';
 import SectionGroup from './section-group';
   import SectionTemplate from './section-template';
   import TextView from './text-view';
@@ -58,6 +59,7 @@ export function setupElementPlus(
     FormItem,
     SubForm,
     AttributeGroup,
+    IcbGroup,
     SectionGroup,
     SectionTemplate,
     TextView,

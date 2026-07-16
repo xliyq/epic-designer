@@ -1,4 +1,5 @@
 ﻿import type { ComponentConfigModel } from '@ies/designer';
+import { createDefaultDataSource } from '@ies/utils';
 
 export default {
   component: () => import('./select'),
@@ -226,11 +227,10 @@ export default {
         type: 'switch',
       },
       {
-        description: '配置选项',
-        field: 'props.options',
-        label: '选项管理',
+        description: '配置数据来源：静态选项或远程 HTTP 请求',
+        field: 'props.dataSource',
         layout: 'vertical',
-        type: 'EOptionsEditor',
+        type: 'DataSourceEditor',
       },
       {
         description: '校验规则需要配合表单使用',
@@ -253,19 +253,10 @@ export default {
     label: '选择框',
     props: {
       effect: 'light',
-      options: [
-        {
-          label: '选项1',
-          value: '选项1',
-        },
-        {
-          label: '选项2',
-          value: '选项2',
-        },
-      ],
       placeholder: '请选择',
       placement: 'bottom-start',
       size: 'default',
+      dataSource: createDefaultDataSource(),
     },
     type: 'select',
   },

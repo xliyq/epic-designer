@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import type { ComponentSchema } from '@ies/designer';
 
-import { computed, inject, provide, ref, watch } from 'vue';
+import { computed, inject, nextTick, provide, ref, watch } from 'vue';
 
 import { ElFormItem } from 'element-plus';
 import { EpicNode } from '@ies/base-ui';
 import {
   SECTION_GROUP_CTX_KEY,
+  SECTION_PARENT_ITEM_KEY,
   useFormItem,
   usePageManager,
 } from '@ies/designer';
@@ -14,6 +15,7 @@ import { pluginManager } from '@ies/manager';
 import { deepEqual, getValueByPath } from '@ies/utils';
 
 import { useContainerValidate } from '../common/useContainerValidate';
+import SectionItemProvider from './section-item-provider.vue';
 
 defineOptions({
   name: 'EpSectionGroup',
@@ -44,6 +46,9 @@ const selectionField = computed(
   () => props.componentSchema?.props?.selectionField ?? '',
 );
 
+// 注入父 section-group 的当前 item 数据（嵌套场景使用）
+const parentSectionItem = inject(SECTION_PARENT_ITEM_KEY, null);
+
 const children = computed(() => props.componentSchema?.children ?? []);
 
 // ========== 容器校验 ==========
@@ -56,6 +61,7 @@ const { childErrors, validateField, validateAll, clearValidate } = useContainerV
  */
 function isContainerChild(child: ComponentSchema): boolean {
   return child.type === 'attribute-group'
+    || child.type === 'icb-group'
     || child.type === 'section-group'
     || child.type === 'card'
     || child.type === 'sub-form';
@@ -115,6 +121,17 @@ async function validate(): Promise<void> {
     const tpl = children.value[i];
     if (!tpl) return;
     (tpl.children ?? []).forEach((tplChild) => {
+      // card 容器：展开子组件进行校验
+      if (tplChild.type === 'card') {
+        (tplChild.children ?? []).forEach((cardChild) => {
+          if (isContainerChild(cardChild)) return;
+          allFields.push({
+            child: cardChild,
+            getValue: () => getChildValue(cardChild, item),
+          });
+        });
+        return;
+      }
       if (isContainerChild(tplChild)) return;
       allFields.push({
         child: tplChild,
@@ -217,11 +234,16 @@ watch(
 );
 
 // 监听选择字段变化 -> 控制显隐
-// selectionField 支持点号嵌套路径（如 "prodordSkus.0.selectedTemplateNums"），
-// 也兼容原来的顶层一级路径（如 "selectedOffers"），getValueByPath 对单段路径等价于直接读取。
+// 1. 嵌套场景：从父 section-group 的 item 上下文读取 selectionField
+// 2. 顶层场景：从 formData 读取（兼容原行为）
 watch(
   () => {
     if (!selectionField.value) return undefined;
+    // 嵌套场景优先：显式读取关键属性以确保响应式依赖被收集
+    if (parentSectionItem?.value) {
+      return parentSectionItem.value[selectionField.value];
+    }
+    // 顶层场景：从 formData 读取
     return getValueByPath(formData, selectionField.value);
   },
   (selected: any) => {
@@ -232,30 +254,66 @@ watch(
       : selected != null && selected !== ''
         ? [String(selected)]
         : [];
+
+    let didChange = false;
+
     children.value.forEach((tpl, i) => {
       const optKey = tpl.optionKey ?? tpl.props?.optionKey ?? '';
       const isSelected = selectedArray.includes(String(optKey));
-      if (isSelected && !internalData.value[i]) {
-        internalData.value[i] = {};
+      const wasNull = internalData.value[i] === null;
+
+      if (isSelected && wasNull) {
+        // 优先从 props.modelValue 查找全量数据，避免时序竞争导致数据覆盖
+        const fullModel = props.modelValue ?? [];
+        const modelMatch = fullModel.length > 0
+          ? fullModel.find(
+              (d: any) => String(d[keyField.value]) === String(optKey),
+            )
+          : undefined;
+        internalData.value[i] = modelMatch
+          ? { ...modelMatch }
+          : { ...(tpl.props?.optionData ?? {}) };
+        didChange = true;
         // 区块变为可见时，清除该区块内子组件的旧校验错误
         (tpl.children ?? []).forEach((tplChild) => {
+          if (tplChild.type === 'card') {
+            (tplChild.children ?? []).forEach((cardChild) => {
+              if (cardChild.id && !isContainerChild(cardChild)) {
+                delete childErrors.value[cardChild.id];
+              }
+            });
+            return;
+          }
           if (tplChild.id && !isContainerChild(tplChild)) {
             delete childErrors.value[tplChild.id];
           }
         });
-      } else if (!isSelected && internalData.value[i]) {
+      } else if (!isSelected && !wasNull) {
         internalData.value[i] = null;
+        didChange = true;
         // 区块隐藏时，清除该区块内子组件的校验错误
         (tpl.children ?? []).forEach((tplChild) => {
+          if (tplChild.type === 'card') {
+            (tplChild.children ?? []).forEach((cardChild) => {
+              if (cardChild.id && !isContainerChild(cardChild)) {
+                delete childErrors.value[cardChild.id];
+              }
+            });
+            return;
+          }
           if (tplChild.id && !isContainerChild(tplChild)) {
             delete childErrors.value[tplChild.id];
           }
         });
       }
     });
-    emitOutput();
+
+    // 仅在显隐状态实际变化时 emit，用 nextTick 让 modelValue watch 优先完成
+    if (didChange) {
+      nextTick(() => emitOutput());
+    }
   },
-  { deep: true },
+  { deep: true, immediate: true },
 );
 
 // 不再 watch(internalData) 自动 emit
@@ -356,13 +414,57 @@ const visibleCount = computed(
     <div v-else v-show="!collapsed" class="ep-section-group__body">
       <template v-for="(item, i) in internalData" :key="i">
         <div v-if="item && rowSchemas[i]" class="ep-section-group__card">
+          <SectionItemProvider :item="item">
           <div class="ep-section-group__card-header">
             {{ getSectionLabel(children[i]) }}
           </div>
           <div class="ep-section-group__card-body">
             <template v-for="entry in rowSchemas[i]" :key="entry.schema.id">
+              <!-- card 视觉容器：展开子组件，数据绑定到 item 而非 formData -->
+              <template v-if="entry.child.type === 'card'">
+                <div
+                  v-if="!entry.child.props?.hidden"
+                  class="ep-section-group__form-card"
+                >
+                  <div
+                    v-if="entry.child.label"
+                    class="ep-section-group__form-card__header"
+                  >
+                    {{ entry.child.label }}
+                  </div>
+                  <div class="ep-section-group__form-card__body">
+                    <template v-for="cardChild in (entry.child.children ?? [])" :key="cardChild.id">
+                      <!-- card 内嵌容器子组件 -->
+                      <template v-if="isContainerChild(cardChild)">
+                        <EpicNode
+                          :component-schema="getRowChildSchema(cardChild)"
+                          :model-value="item[cardChild.field ?? '']"
+                          @update:model-value="(val: any) => { item[cardChild.field ?? ''] = val; emitOutput() }"
+                        />
+                      </template>
+                      <!-- card 内非容器子组件 -->
+                      <ElFormItem
+                        v-else
+                        class="ep-section-group__form-item"
+                        :label="cardChild.hideLabel ? '' : (cardChild.label || '')"
+                        label-width="auto"
+                        :error="childErrors[cardChild.id!]"
+                        :validate-status="childErrors[cardChild.id!] ? 'error' : ''"
+                        :required="isChildRequired(cardChild)"
+                      >
+                        <EpicNode
+                          :component-schema="getRowChildSchema(cardChild)"
+                          :model-value="item[cardChild.field ?? '']"
+                          @update:model-value="(val: any) => handleFieldChange(cardChild, item, cardChild.field ?? '', val)"
+                          @blur="() => handleFieldBlur(cardChild, item)"
+                        />
+                      </ElFormItem>
+                    </template>
+                  </div>
+                </div>
+              </template>
               <!-- 容器子组件（如 attribute-group）：直接渲染，由容器自身管理校验 -->
-              <template v-if="isContainerChild(entry.child)">
+              <template v-else-if="isContainerChild(entry.child)">
                 <EpicNode
                   :component-schema="entry.schema"
                   :model-value="item[entry.fieldKey]"
@@ -388,6 +490,7 @@ const visibleCount = computed(
               </ElFormItem>
             </template>
           </div>
+          </SectionItemProvider>
         </div>
       </template>
     </div>
@@ -471,6 +574,31 @@ const visibleCount = computed(
 
   &__card-body {
     padding: 12px;
+  }
+
+  /* 内嵌 card 视觉容器（纯视觉包装，不参与数据管理） */
+  &__form-card {
+    border: 1px solid var(--el-border-color-lighter, #ebeef5);
+    border-radius: 4px;
+    margin-bottom: 12px;
+    overflow: hidden;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    &__header {
+      padding: 8px 12px;
+      font-weight: 500;
+      font-size: 14px;
+      color: var(--el-text-color-primary, #303133);
+      background: var(--el-fill-color-lighter, #fafafa);
+      border-bottom: 1px solid var(--el-border-color-lighter, #ebeef5);
+    }
+
+    &__body {
+      padding: 12px;
+    }
   }
 
   /* 运行模式：非容器子组件的 ElFormItem 样式 */
