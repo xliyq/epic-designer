@@ -38,7 +38,21 @@ const selectAttrs = computed(() => ({
   persistent: attrs.persistent ?? true,
 }));
 
-defineExpose({ getOptions: () => finalOptions.value, getSelected: () => modelValueRef.value });
+function getOptions() {
+  return finalOptions.value ?? [];
+}
+
+function getSelected() {
+  const val = modelValueRef.value;
+  if (val == null) return null;
+  const opts = finalOptions.value;
+  if (Array.isArray(val)) {
+    return opts.filter((opt: any) => val.includes(opt.value));
+  }
+  return opts.find((opt: any) => opt.value === val) ?? null;
+}
+
+defineExpose({ getOptions, getSelected });
 </script>
 
 <template>
