@@ -78,6 +78,14 @@ export const frameworkRoutes = [
           title: '自定义面板',
         },
       },
+      {
+        path: 'multiView',
+        name: 'multiView',
+        component: () => import('@/views/designer/multiView/index.vue'),
+        meta: {
+          title: '多视图设计器',
+        },
+      },
     ],
   },
   {

@@ -5,8 +5,19 @@
   "private": false,
   "type": "module",
   "main": "extensions/index.ts",
+  "exports": {
+    ".": "./extensions/index.ts",
+    "./multi-view": "./multi-view/index.ts"
+  },
   "dependencies": {
-    "element-plus": "catalog:"
+    "element-plus": "catalog:",
+    "@ies/core": "workspace:*",
+    "@ies/hooks": "workspace:*",
+    "@ies/manager": "workspace:*",
+    "@ies/panel-ui": "workspace:*",
+    "@ies/base-ui": "workspace:*",
+    "@ies/types": "workspace:*",
+    "@ies/utils": "workspace:*"
   },
   "devDependencies": {
     "vue": "catalog:"
