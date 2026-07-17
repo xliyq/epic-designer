@@ -89,6 +89,9 @@ const rowKeyField = computed(() => (attrs.rowKey as string) || 'value');
 const labelField = computed(() => 'label');
 const paginationEnabled = computed(() => attrs.pagination !== false);
 const pageSize = computed(() => Number(attrs.pageSize ?? 10));
+// 响应式 pageSize，支持分页器下拉修改（初始化取 attrs 值）
+const pageSizeReactive = ref(Number(attrs.pageSize ?? 10));
+const pageSizeOptions = computed(() => (attrs.pageSizeOptions as number[]) ?? [10, 20, 50, 100]);
 const disabled = computed(() => !!attrs.disabled);
 const clearable = computed(() => !!attrs.clearable);
 
@@ -154,7 +157,7 @@ async function loadData() {
       const pagedCtx = {
         ...context,
         pageNum: currentPage.value,
-        pageSize: pageSize.value,
+        pageSize: pageSizeReactive.value,
         searchParams: { ...searchForm },
       };
       const result = await provider.pagedLoader!(ds.config, pagedCtx);
@@ -196,8 +199,8 @@ function applyFrontendFilter() {
   }
 
   total.value = filtered.length;
-  const start = (currentPage.value - 1) * pageSize.value;
-  tableData.value = filtered.slice(start, start + pageSize.value);
+  const start = (currentPage.value - 1) * pageSizeReactive.value;
+  tableData.value = filtered.slice(start, start + pageSizeReactive.value);
 }
 
 // 恢复表格选中状态
@@ -258,9 +261,9 @@ function handlePageChange(page: number) {
   }
 }
 
-function handleSizeChange() {
+function handleSizeChange(size: number) {
+  pageSizeReactive.value = size;
   currentPage.value = 1;
-  // pageSize 通过 attrs 控制，这里重新加载当前页
   if (isServerPaged.value) {
     loadData();
   } else {
@@ -334,19 +337,22 @@ function buildTempSelectedFromValue(): any[] {
 // 单选：行点击选中
 function handleRowClick(row: any) {
   if (multiple.value) {
-    // 多选：不手动改 tempSelected，让 handleSelectionChange 接管
-    // row-click 触发时 ElTable 已自动切换了 checkbox 状态
     const tableRef = tableRefInstance.value;
     if (!tableRef) return;
     const rowKey = getItemValue(row);
     const alreadySelected = tempSelected.value.some((item) => getItemValue(item) === rowKey);
-    // 如果该行是新选中且超过限制 → 撤销
-    if (!alreadySelected && multipleLimit.value > 0 && tempSelected.value.length >= multipleLimit.value) {
+    if (alreadySelected) {
+      // 取消选中 → 触发 selection-change 更新 tempSelected
       tableRef.toggleRowSelection(row, false);
-      ElMessage.warning(`最多只能选择 ${multipleLimit.value} 项`);
-      return;
+    } else {
+      // 检查限制
+      if (multipleLimit.value > 0 && tempSelected.value.length >= multipleLimit.value) {
+        ElMessage.warning(`最多只能选择 ${multipleLimit.value} 项`);
+        return;
+      }
+      // 选中 → 触发 selection-change 更新 tempSelected
+      tableRef.toggleRowSelection(row, true);
     }
-    // 否则让 selection-change 事件更新 tempSelected
   } else {
     // 单选：直接选中
     tempSelected.value = [{ ...row }];
@@ -557,11 +563,15 @@ watch(
 <template>
   <div class="ep-modal-picker">
     <!-- 外层触发区域 -->
-    <div class="ep-modal-picker__trigger" @click="openDialog">
+    <div
+      class="ep-modal-picker__trigger"
+      :class="{ 'ep-modal-picker__trigger--has-tags': multiple && displayTags.length > 0 }"
+      @click="openDialog"
+    >
       <!-- 只读输入框 -->
       <ElInput
         :model-value="multiple ? '' : displayText"
-        :placeholder="(attrs.placeholder as string) || '请选择'"
+        :placeholder="(multiple && displayTags.length > 0) ? '' : ((attrs.placeholder as string) || '请选择')"
         readonly
         :disabled="disabled"
       >
@@ -705,9 +715,11 @@ watch(
       <div v-if="paginationEnabled" class="ep-modal-picker__pagination">
         <ElPagination
           :current-page="currentPage"
-          :page-size="pageSize"
+          :page-size="pageSizeReactive"
+          :page-sizes="pageSizeOptions"
           :total="total"
-          layout="total, prev, pager, next, jumper"
+          size="small"
+          layout="total,  prev, pager, next, jumper, sizes"
           @current-change="handlePageChange"
           @size-change="handleSizeChange"
         />

@@ -142,7 +142,7 @@ const defaultSchema = ref<PageSchema>({
             },
           },
         },
-        // 多选 + 数量限制 3
+        // 多选 + 数量限制 10
         {
           id: 'modalPicker_multi',
           field: 'userIds',
@@ -154,7 +154,7 @@ const defaultSchema = ref<PageSchema>({
             clearable: true,
             multiple: true,
             multipleLimit: 3,
-            modalTitle: '批量选择用户（最多3个）',
+            modalTitle: '批量选择用户（最多10个）',
             modalWidth: '800px',
             searchable: true,
             searchFields: [
