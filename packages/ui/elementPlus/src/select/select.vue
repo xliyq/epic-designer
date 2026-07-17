@@ -2,6 +2,7 @@
 import { computed, ref, useAttrs, watch } from 'vue';
 
 import { ElOption, ElSelect } from 'element-plus';
+import { useDataSource, useFormData } from '@ies/hooks';
 
 import 'element-plus/es/components/select/style/css';
 
@@ -16,7 +17,7 @@ const emits = defineEmits(['update:modelValue']);
 
 const attrs = useAttrs();
 
-// 本地同步缓存 modelValue
+// 本地同步缓存 modelValue，handleUpdate 时立即写入，解决 attrs 异步更新导致 getSelected 拿到旧值
 const modelValueRef = ref(attrs.modelValue);
 watch(() => attrs.modelValue, (val) => { modelValueRef.value = val; });
 
@@ -25,32 +26,26 @@ function handleUpdate(e: any = null): void {
   emits('update:modelValue', e);
 }
 
-// 选项数据：优先 props.options，其次 dataSource.config.options
-const finalOptions = computed(() => {
-  if (props.options) return props.options;
-  if (props.dataSource?.config?.options) return props.dataSource.config.options;
-  return [];
+const formData = useFormData();
+
+const dsSchema = computed(() => {
+  if (props.dataSource) return props.dataSource;
+  return { type: 'static', config: { options: props.options ?? [] } };
 });
 
-// 默认启用 persistent，避免 ElSelect 在 watch getter 中调用 slots.default() 触发 Vue 警告
-const selectAttrs = computed(() => ({
-  ...attrs,
-  persistent: attrs.persistent ?? true,
-}));
+const isRemote = computed(() => dsSchema.value?.type !== 'static');
+const { options: dsOptions, loading, getOptions, getSelected } = useDataSource(dsSchema, formData, modelValueRef);
+const finalOptions = computed(() => dsOptions.value ?? []);
 
-function getOptions() {
-  return finalOptions.value ?? [];
-}
-
-function getSelected() {
-  const val = modelValueRef.value;
-  if (val == null) return null;
-  const opts = finalOptions.value;
-  if (Array.isArray(val)) {
-    return opts.filter((opt: any) => val.includes(opt.value));
-  }
-  return opts.find((opt: any) => opt.value === val) ?? null;
-}
+// 剥离 options/dataSource，避免透传给 ElSelect
+const selectAttrs = computed(() => {
+  const { options: _o, dataSource: _d, modelValue: _m, ...restAttrs } = attrs;
+  return {
+    ...restAttrs,
+    persistent: attrs.persistent ?? true,
+    ...(isRemote.value ? { loading: loading.value } : {}),
+  };
+});
 
 defineExpose({ getOptions, getSelected });
 </script>
@@ -60,8 +55,8 @@ defineExpose({ getOptions, getSelected });
     v-bind="selectAttrs"
     :key="String(attrs.multiple)"
     :placeholder="(attrs.placeholder as string) || '请选择'"
-    :model-value="modelValueRef"
-    @update:model-value="handleUpdate"
+    :modelValue="modelValueRef"
+    @update:modelValue="handleUpdate"
   >
     <ElOption
       v-for="option in finalOptions"
