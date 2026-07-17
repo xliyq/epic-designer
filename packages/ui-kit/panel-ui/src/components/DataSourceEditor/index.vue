@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { DataSourceProvider, DataSourceSchema } from '@ies/types';
 
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 
 import { pluginManager } from '@ies/manager';
 import { createDefaultDataSource } from '@ies/utils';
@@ -20,16 +20,16 @@ const emit = defineEmits(['update:modelValue']);
 
 // 当前数据源配置
 const dataSource = computed({
-  get: () => {
-    if (!props.modelValue) {
-      const def = createDefaultDataSource();
-      emit('update:modelValue', def);
-      return def;
-    }
-    return props.modelValue;
-  },
+  get: () => props.modelValue ?? createDefaultDataSource(),
   set: (val) => emit('update:modelValue', val),
 });
+
+// 当 modelValue 为 undefined 时初始化默认值（独立于 computed，避免副作用）
+watch(() => props.modelValue, (val) => {
+  if (!val) {
+    emit('update:modelValue', createDefaultDataSource());
+  }
+}, { immediate: true });
 
 // 数据源模式选项：静态模式始终内置，其他来自注册的 provider
 const modeOptions = computed(() => {
@@ -120,10 +120,10 @@ function handleEditorUpdate(newValue: any) {
       <div class="ep-datasource-editor__field">
         <component
           :is="SelectComponent"
-          :model-value="dataSource.type"
+          :modelValue="dataSource.type"
           :options="modeOptions"
           placeholder="请选择数据来源"
-          @update:model-value="handleTypeChange"
+          @update:modelValue="handleTypeChange"
         />
       </div>
     </div>
