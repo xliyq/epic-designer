@@ -61,16 +61,41 @@ onMounted(() => {
   registerFieldPool()
 })
 
-// 提供字段池上下文（模式 + 数据模型 + 视图字段 ID）
+// 提供字段池上下文（模式 + 数据模型 + 视图字段 ID + 添加到视图）
 const viewFieldIdList = computed(() =>
   currentView.value?.schemas[0]?.children?.map(f => f.id) ?? []
 )
+
+function addFieldToView(fieldId: string) {
+  if (mode.value !== 'view') return
+  // 从数据模型中找到字段
+  const modelField = dataModel.schemas[0]?.children?.find(f => f.id === fieldId)
+  if (!modelField) return
+
+  // 添加到当前视图
+  const view = currentView.value
+  if (!view) return
+  view.schemas[0].children.push(deepClone(modelField))
+
+  // 刷新画布
+  const schema = getDesignerData()
+  if (schema) {
+    setDesignerData({
+      ...schema,
+      schemas: [{
+        ...schema.schemas[0],
+        children: deepClone(view.schemas[0].children ?? []),
+      }],
+    })
+  }
+}
+
 const fieldPoolData = reactive({
   get mode() { return mode.value },
   get modelFields() { return modelFields.value },
   get viewFieldIds() { return viewFieldIdList.value },
+  addFieldToView,
 })
-provide(FIELD_POOL_DATA_KEY, fieldPoolData)
 
 // ════════════════════════════════════════
 //  EDesigner 就绪后注册字段池

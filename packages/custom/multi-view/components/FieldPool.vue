@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import type { ComponentSchema } from '@ies/types'
 import { computed, inject, ref } from 'vue'
+import { EpicIcon, EpicTree } from '@ies/base-ui'
 import { useDesignerContext } from '@ies/hooks'
+import { pluginManager } from '@ies/manager'
 import { FIELD_POOL_DATA_KEY } from '../types'
-import FieldPoolNode from './FieldPoolNode.vue'
 
 const ctx = inject(FIELD_POOL_DATA_KEY)
 if (!ctx) throw new Error('FieldPool 需要 MultiViewDesigner 提供上下文')
@@ -16,6 +17,22 @@ const displayFields = computed(() => {
   }
   return [...ctx.modelFields]
 })
+
+const selectedKeys = ref<string[]>([])
+
+function handleNodeClick({ componentSchema }: { componentSchema: ComponentSchema }) {
+  if (!componentSchema.id) return
+  selectedKeys.value = [componentSchema.id]
+
+  // 视图模式下点击字段添加到画布
+  if (ctx.mode === 'view') {
+    ctx.addFieldToView(componentSchema.id)
+  }
+}
+
+function getFieldIcon(type: string): string {
+  return pluginManager.component.getIcon(type) ?? ''
+}
 
 function isLeafField(schema: ComponentSchema): boolean {
   return !schema.children || schema.children.length === 0 || schema.input === true
@@ -35,11 +52,7 @@ function countLeafFields(schemas: ComponentSchema[]): number {
 
 const leafCount = computed(() => countLeafFields(displayFields.value))
 
-const selectedFieldId = ref<string>('')
-
-function selectField(schema: ComponentSchema) {
-  if (schema.id) selectedFieldId.value = schema.id
-}
+const viewFieldIdSet = computed(() => new Set(ctx.viewFieldIds))
 </script>
 
 <template>
@@ -48,15 +61,37 @@ function selectField(schema: ComponentSchema) {
       字段池
       <span class="ep-field-count">{{ leafCount }} 个字段</span>
     </div>
-    <div class="ep-field-pool-body">
-      <FieldPoolNode
-        :schemas="displayFields"
-        :selected-field-id="selectedFieldId"
-        :draggable="ctx.mode === 'view'"
-        :excluded-ids="ctx.viewFieldIds"
-        @select="selectField"
-      />
-    </div>
+    <EpicTree
+      :options="displayFields"
+      :selected-keys="selectedKeys"
+      @node-click="handleNodeClick"
+    >
+      <template #tree-node="{ schema }">
+        <div
+          class="ep-outline-item ep-text-padding flex items-center"
+          :class="{
+            'is-disabled': ctx.mode === 'view' && schema.id ? viewFieldIdSet.has(schema.id) : false,
+          }"
+        >
+          <EpicIcon
+            class="ep-component-icon"
+            :name="getFieldIcon(schema.type)"
+          />
+          <span class="max-w-full truncate">
+            {{ schema.label ?? pluginManager.component.getLabel(schema.type) }}
+          </span>
+          <span class="ep-node-type-text w-0 flex-1 truncate">
+            {{ schema.id }}
+          </span>
+          <span
+            v-if="ctx.mode === 'view' && schema.id && viewFieldIdSet.has(schema.id)"
+            class="ep-field-check"
+          >
+            ✓
+          </span>
+        </div>
+      </template>
+    </EpicTree>
     <div
       v-if="displayFields.length === 0"
       class="pt-42px text-center text-gray-400"
@@ -88,9 +123,14 @@ function selectField(schema: ComponentSchema) {
   color: var(--ep-text-helper);
   font-weight: normal;
 }
-.ep-field-pool-body {
-  flex: 1;
-  overflow: auto;
-  padding: 4px 0;
+.ep-field-pool :deep(.ep-outline-item.is-disabled) {
+  opacity: 0.5;
+  cursor: default;
+}
+.ep-field-check {
+  font-size: 12px;
+  color: var(--ep-primary);
+  flex-shrink: 0;
+  margin-left: 4px;
 }
 </style>
