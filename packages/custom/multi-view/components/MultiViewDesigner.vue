@@ -60,17 +60,33 @@ onMounted(() => {
   registerFieldPool()
 })
 
+// 从画布同步当前视图状态（画布上的增删操作不会自动同步到 views 状态）
+function syncViewFromCanvas() {
+  if (mode.value !== 'view') return
+  const schema = getDesignerData()
+  if (!schema) return
+  const view = currentView.value
+  if (!view) return
+  view.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
+}
+
 // 通过 pluginManager.global 共享字段池上下文（reactive 对象，直接修改属性）
 function addFieldToView(fieldId: string) {
   if (mode.value !== 'view') return
+  // 同步画布状态到视图，确保操作的是最新数据
+  syncViewFromCanvas()
+
   const modelField = dataModel.schemas[0]?.children?.find(f => f.id === fieldId)
   if (!modelField) return
   const view = currentView.value
   if (!view) return
 
-  // 按数据模型位置插入：在已存在于视图的字段中，找到第一个数据模型索引大于目标字段的
+  // 已存在则跳过
+  if (view.schemas[0].children.some(f => f.id === fieldId)) return
+
+  // 按数据模型位置插入
   const modelIndex = modelFields.value.findIndex(f => f.id === fieldId)
-  const viewChildren = view.schemas[0].children
+  const viewChildren = view.schemas[0].children ?? []
   const insertAt = viewChildren.findIndex(f => {
     const idx = modelFields.value.findIndex(mf => mf.id === f.id)
     return idx > modelIndex

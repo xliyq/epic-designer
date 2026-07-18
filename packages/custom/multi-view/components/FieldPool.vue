@@ -20,6 +20,14 @@ const displayFields = computed(() => {
 const selectedKeys = ref<string[]>([])
 const collapsed = ref(false)
 
+// 当前视图的字段 ID（直接从画布 pageSchema 读取，保证与画布增删操作同步）
+const canvasChildren = computed(() => pageSchema.schemas[0]?.children ?? [])
+const viewFieldIdSet = computed(() => {
+  if (ctx.mode !== 'view') return new Set<string>()
+  return new Set(canvasChildren.value.map(f => f.id).filter(Boolean) as string[])
+})
+const inViewCount = computed(() => viewFieldIdSet.value.size)
+
 function handleNodeClick({ componentSchema }: { componentSchema: ComponentSchema }) {
   if (!componentSchema.id) return
   selectedKeys.value = [componentSchema.id]
@@ -50,8 +58,6 @@ function countLeafFields(schemas: ComponentSchema[]): number {
 }
 
 const totalLeafCount = computed(() => countLeafFields(displayFields.value))
-const viewFieldIdSet = computed(() => new Set(ctx.viewFieldIds))
-const inViewCount = computed(() => ctx.viewFieldIds.length)
 </script>
 
 <template>
