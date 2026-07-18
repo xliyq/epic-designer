@@ -220,19 +220,33 @@ function switchToModel() {
 }
 
 /**
- * 在不同视图间切换
+ * 在不同视图间切换（先保存旧视图，再加载新视图）
+ */
+function handleSwitchView(newViewId: string) {
+  if (mode.value !== 'view' || newViewId === currentViewId.value) return
+
+  // 保存当前视图（此时 currentView 还是旧视图）
+  const schema = getDesignerData()
+  if (schema) {
+    const oldView = currentView.value
+    if (oldView) {
+      oldView.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
+    }
+  }
+
+  // 切换到新视图
+  selectView(newViewId) // 这会触发 watch → switchToAnotherView，但此时 oldView 已保存
+}
+
+/**
+ * 在不同视图间切换（由 watch 调用，此时 currentViewId 已更新）
+ * 只负责加载新视图数据，不负责保存旧视图（由 handleSwitchView 完成）
  */
 function switchToAnotherView(newViewId: string) {
   const schema = getDesignerData()
   if (!schema) return
 
-  // 保存当前视图
-  const oldView = currentView.value
-  if (oldView) {
-    oldView.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
-  }
-
-  // 加载新视图
+  // 加载新视图（旧视图已在 handleSwitchView 中保存）
   const newView = views[newViewId]
   if (newView) {
     setDesignerData({
@@ -363,7 +377,7 @@ defineExpose({
       :global-mode="globalMode"
       :title="title"
       @switch-mode="setMode"
-      @select-view="selectView"
+      @select-view="handleSwitchView"
       @add-view="addViewType"
       @remove-view="removeViewType"
       @rename-view="renameViewType"
