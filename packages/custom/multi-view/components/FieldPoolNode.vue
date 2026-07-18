@@ -49,14 +49,10 @@ function isFiltered(id: string | undefined): boolean {
     :animation="180"
     ghost-class="ep-field-dragging"
     :clone="cloneField"
-    :filter="(el: any) => isFiltered(el?.dataset?.id)"
+    :filter="(el: ComponentSchema) => isFiltered(el.id)"
     item-key="id"
   >
-    <div
-      v-for="element in schemas"
-      :key="element.id"
-      :data-id="element.id"
-    >
+    <div v-for="element in schemas" :key="element.id">
       <div
         class="ep-field-item ep-text-padding"
         :class="{
