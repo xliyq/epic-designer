@@ -1,249 +1,291 @@
 <script lang="ts" setup>
-import type { ComponentSchema } from '@ies/types';
+import type { ComponentSchema, PageSchema } from '@ies/types'
+import { nextTick, onMounted, ref, watch } from 'vue'
+import { EDesigner } from '@ies/core'
+import { pluginManager } from '@ies/manager'
+import { deepClone } from '@ies/utils'
+import { useViewDesigner } from '../composables/useViewDesigner'
+import type { DesignerMode, ViewTypeConfig } from '../types'
+import ViewToolbar from './ViewToolbar.vue'
+import FieldPool from './FieldPool.vue'
 
-import { computed, nextTick, onUnmounted, provide, reactive, ref, watch } from 'vue';
-
-import { EpDesignerLoader } from '@ies/base-ui';
-import { DESIGNER_CONTEXT_KEY, providePageManager } from '@ies/hooks';
-import { createPageManager, pluginManager, useRevoke } from '@ies/manager';
-import { setupPanel } from '@ies/panel-ui';
-import { setupExtensions } from '@ies/custom';
-import { deepClone, deepCompareAndModify } from '@ies/utils';
-
-import { useViewDesigner } from '../composables/useViewDesigner';
-import type { MultiViewPageSchema } from '../types';
-import { MULTI_VIEW_CONTEXT_KEY } from './context';
-
-import ViewToolbar from './ViewToolbar.vue';
-import FieldPool from './FieldPool.vue';
-import ViewCanvas from './ViewCanvas.vue';
-import ViewAttributePanel from './ViewAttributePanel.vue';
-
-// ════════════════════════════════════════
-//  Props / Emits
-// ════════════════════════════════════════
-
-const props = withDefaults(
-  defineProps<{
-    /** 默认 Schema */
-    defaultSchema?: MultiViewPageSchema;
-    /** 画布模式 */
-    canvasMode?: 'desktop' | 'mobile' | 'tablet';
-    /** 标题 */
-    title?: string;
-    /** 表单模式（使用 form 布局） */
-    formMode?: boolean;
-  }>(),
-  {
-    canvasMode: 'desktop',
-    formMode: true,
-    title: '多视图设计器',
-  },
-);
+const props = withDefaults(defineProps<{
+  dataModel?: PageSchema
+  viewTypes?: ViewTypeConfig[]
+  views?: Record<string, PageSchema>
+  title?: string
+}>(), {
+  title: '多视图设计器',
+})
 
 const emit = defineEmits<{
-  save: [schema: MultiViewPageSchema];
-  ready: [];
-}>();
+  save: []
+  ready: []
+}>()
 
-// ════════════════════════════════════════
-//  初始化插件系统
-// ════════════════════════════════════════
-
-setupPanel(pluginManager);
-setupExtensions(pluginManager);
-
-const ready = ref(false);
-
-// ════════════════════════════════════════
-//  创建 pageManager（唯一数据源）
-//  pageManager.pageSchema 是 reactive，所有子组件通过注入共享
-// ════════════════════════════════════════
-
-const pageManager = createPageManager();
-
-// 如果有初始 schema，写入 pageManager
-if (props.defaultSchema) {
-  pageManager.setPageSchema(deepClone(props.defaultSchema) as any);
-}
-
-// 设置画布模式（与 EDesigner 保持一致）
-const canvasConfigs: Record<string, any> = {
-  desktop: {},
-  mobile: { mode: 'mobile', width: '390px' },
-  tablet: { mode: 'tablet', width: '780px' },
-};
-pageManager.pageSchema.canvas = {
-  mode: props.canvasMode,
-  ...canvasConfigs[props.canvasMode],
-  ...pageManager.pageSchema.canvas,
-};
-
-// 表单模式下隐藏 form 组件（避免在组件库中显示）
-if (props.formMode) {
-  pluginManager.component.hide('form');
-}
-
-// 记录默认组件 ID（用于区分初始数据和用户添加的组件）
-pageManager.setDefaultComponentIds(pageManager.pageSchema.schemas);
-
-// 提供影响 pageManager 给子组件（node.vue / form.vue 等依赖它）
-providePageManager(pageManager);
-
-// ════════════════════════════════════════
-//  核心状态（使用 pageManager.pageSchema 作为唯一数据源）
-// ════════════════════════════════════════
-
-// 将 pageManager.pageSchema 包装为 ref，供 useViewDesigner 使用
-// pageManager.pageSchema 是 reactive，直接作为 ref 的 .value
-const pageSchemaRef = ref(pageManager.pageSchema) as any;
+const designerRef = ref<InstanceType<typeof EDesigner> | null>(null)
+const ready = ref(false)
 
 const {
   mode,
-  currentViewId,
+  dataModel,
   viewTypes,
-  viewConfigs,
-  pageSchema,
-  selectedField,
-  allFields,
-  context,
+  views,
+  currentViewId,
+  globalMode,
+  currentView,
+  modelFields,
+  viewFields,
   setMode,
-  switchView,
+  setGlobalMode,
+  selectView,
   addViewType,
   removeViewType,
   renameViewType,
-  toggleFieldInLayout,
-  moveField,
-  setSelectedField,
-  getFieldOverride,
-  setFieldOverride,
-  resetFieldOverride,
-  resetAllOverrides,
-  isFieldInLayout,
-  getCurrentViewFields,
-  setData,
-  getData,
-  onPreview,
-} = useViewDesigner(pageSchemaRef.value);
+  toggleFieldInView,
+  isFieldInView,
+  syncFieldToAll,
+  setAll,
+  getDataModel,
+  getViews,
+  getViewTypes,
+} = useViewDesigner()
+
+// 初始化：加载传入的数据
+onMounted(() => {
+  if (props.dataModel || props.viewTypes || props.views) {
+    setAll(props.dataModel, props.viewTypes, props.views)
+  }
+})
 
 // ════════════════════════════════════════
-//  保存 / 预览
+//  EDesigner 就绪后注册字段池
+// ════════════════════════════════════════
+
+function handleDesignerReady() {
+  ready.value = true
+  registerFieldPool()
+  pluginManager.panel.hideActivitybar('field_pool')
+  nextTick(() => emit('ready'))
+}
+
+let fieldPoolRegistered = false
+
+function registerFieldPool() {
+  if (fieldPoolRegistered) return
+  fieldPoolRegistered = true
+  pluginManager.panel.registerActivitybar({
+    component: () => Promise.resolve({ default: FieldPool }),
+    icon: 'icon--epic--list',
+    id: 'field_pool',
+    sort: 150,
+    title: '字段池',
+    visible: false,
+  })
+}
+
+// ════════════════════════════════════════
+//  模式切换：交换 children
+// ════════════════════════════════════════
+
+function getDesignerData(): PageSchema | null {
+  if (!designerRef.value) return null
+  try {
+    return designerRef.value.getData() as PageSchema
+  } catch {
+    return null
+  }
+}
+
+function setDesignerData(schema: PageSchema) {
+  if (!designerRef.value) return
+  designerRef.value.setData(schema)
+}
+
+/**
+ * 从模型切换到视图：保存模型字段，加载视图字段
+ */
+function switchToView(viewId: string) {
+  const schema = getDesignerData()
+  if (!schema) return
+
+  // 保存当前 children 到数据模型
+  if (dataModel.schemas[0]) {
+    dataModel.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
+  }
+
+  // 加载视图字段
+  const view = views[viewId]
+  if (view) {
+    setDesignerData({
+      ...schema,
+      schemas: [{
+        ...schema.schemas[0],
+        children: deepClone(view.schemas[0]?.children ?? []),
+      }],
+    })
+  }
+
+  pluginManager.panel.showActivitybar('field_pool')
+}
+
+/**
+ * 从视图切换到模型：保存当前视图字段，恢复模型字段
+ */
+function switchToModel() {
+  const schema = getDesignerData()
+  if (!schema) return
+
+  // 保存当前 children 到当前视图
+  const view = currentView.value
+  if (view) {
+    view.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
+  }
+
+  // 恢复数据模型字段
+  setDesignerData({
+    ...schema,
+    schemas: [{
+      ...schema.schemas[0],
+      children: deepClone(dataModel.schemas[0]?.children ?? []),
+    }],
+  })
+
+  pluginManager.panel.hideActivitybar('field_pool')
+}
+
+/**
+ * 在不同视图间切换
+ */
+function switchToAnotherView(newViewId: string) {
+  const schema = getDesignerData()
+  if (!schema) return
+
+  // 保存当前视图
+  const oldView = currentView.value
+  if (oldView) {
+    oldView.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
+  }
+
+  // 加载新视图
+  const newView = views[newViewId]
+  if (newView) {
+    setDesignerData({
+      ...schema,
+      schemas: [{
+        ...schema.schemas[0],
+        children: deepClone(newView.schemas[0]?.children ?? []),
+      }],
+    })
+  }
+}
+
+// 监听模式切换
+watch(mode, (newMode, oldMode) => {
+  if (oldMode === 'model' && newMode === 'view') {
+    switchToView(currentViewId.value)
+  } else if (oldMode === 'view' && newMode === 'model') {
+    switchToModel()
+  }
+})
+
+// 监听视图切换
+watch(currentViewId, (newId, oldId) => {
+  if (mode.value === 'view' && newId && oldId && newId !== oldId) {
+    // 如果全局模式开启，同步变更
+    if (globalMode.value) {
+      syncChangesOnSwitch(oldId)
+    }
+    switchToAnotherView(newId)
+  }
+})
+
+// ════════════════════════════════════════
+//  全局同步
+// ════════════════════════════════════════
+
+// 保存每个视图加载时的字段快照（用于检测变更）
+const fieldSnapshots: Record<string, string> = {}
+
+function takeSnapshot(viewId: string) {
+  const view = views[viewId]
+  if (!view) return
+  fieldSnapshots[viewId] = JSON.stringify(view.schemas[0]?.children ?? [])
+}
+
+function syncChangesOnSwitch(viewId: string) {
+  if (!globalMode.value) return
+  const oldSnapshot = fieldSnapshots[viewId]
+  if (!oldSnapshot) return
+
+  const view = views[viewId]
+  if (!view) return
+  const currentChildren = view.schemas[0]?.children ?? []
+
+  for (const field of currentChildren) {
+    if (!field.id) continue
+    // 在旧快照中查找同 ID 字段
+    const oldFields: ComponentSchema[] = JSON.parse(oldSnapshot)
+    const oldField = oldFields.find(f => f.id === field.id)
+    if (!oldField) continue
+
+    // 比较是否变化
+    if (JSON.stringify(field) !== JSON.stringify(oldField)) {
+      syncFieldToAll(field.id, field)
+    }
+  }
+}
+
+// 视图切换或模式切换时更新快照
+watch([currentViewId, () => currentView.value?.schemas[0]?.children], () => {
+  if (mode.value === 'view' && currentViewId.value) {
+    takeSnapshot(currentViewId.value)
+  }
+}, { immediate: true, deep: true })
+
+// ════════════════════════════════════════
+//  字段池操作
+// ════════════════════════════════════════
+
+const selectedFieldId = ref('')
+
+function handleFieldPoolSelect(fieldId: string) {
+  selectedFieldId.value = fieldId
+}
+
+function handleFieldPoolToggle(fieldId: string) {
+  toggleFieldInView(fieldId)
+  // 刷新画布
+  const schema = getDesignerData()
+  if (schema && currentView.value) {
+    setDesignerData({
+      ...schema,
+      schemas: [{
+        ...schema.schemas[0],
+        children: deepClone(currentView.value.schemas[0]?.children ?? []),
+      }],
+    })
+  }
+  takeSnapshot(currentViewId.value)
+}
+
+// ════════════════════════════════════════
+//  保存
 // ════════════════════════════════════════
 
 function handleSave() {
-  emit('save', getData());
-}
-
-function handlePreview() {
-  // 预览逻辑：将当前视图解析为标准 schema 并触发预览
-  console.log('preview', getData());
-}
-
-// ════════════════════════════════════════
-//  数据模型模式下的设计器上下文
-//  复用 EDesigner 的 DESIGNER_CONTEXT_KEY，让现有的属性面板组件能工作
-// ════════════════════════════════════════
-
-// 使用 reactive 创建设计器状态，与 EDesigner 内部结构一致
-const designerState = reactive({
-  disabledHover: false,
-  hoverNode: null as ComponentSchema | null,
-  matched: [] as ComponentSchema[],
-  selectedNode: null as ComponentSchema | null,
-});
-
-function setHoverNode(schema: ComponentSchema | null = null) {
-  if (!schema || designerState.disabledHover) {
-    designerState.hoverNode = null;
-    return false;
-  }
-  if (schema?.id === designerState.hoverNode?.id) {
-    return false;
-  }
-  designerState.hoverNode = schema;
-}
-
-function setSelectedNode(schema?: ComponentSchema) {
-  if (!schema) {
-    schema = pageManager.pageSchema.schemas[0];
-  }
-  designerState.selectedNode = schema;
-  selectedField.value = schema;
-}
-
-// 使用真实的 useRevoke，让 toolbar 的撤销/重做按钮能正常工作
-const revoke = useRevoke(
-  pageManager.pageSchema as any,
-  designerState,
-  setSelectedNode,
-);
-
-// 设置为设计模式
-pageManager.setDesignMode(true);
-
-// 提供 DESIGNER_CONTEXT_KEY，让现有的属性面板能使用 useDesignerContext
-provide(DESIGNER_CONTEXT_KEY, {
-  handleDelete: () => {},
-  handleDuplicate: () => {},
-  handleImported: () => {},
-  handleToggleDeviceMode: () => {},
-  pageSchema: pageManager.pageSchema,
-  preview: handlePreview,
-  props: {
-    canvasMode: props.canvasMode,
-    canvasPadding: 16,
-    disabledZoom: false,
-    draggable: true,
-    formMode: props.formMode,
-    hiddenHeader: false,
-    lockDefaultSchemaEdit: false,
-    showHiddenItems: true,
-    title: props.title,
-  } as any,
-  reset: () => {},
-  revoke,
-  save: handleSave,
-  setDisabledHover: (v: boolean) => {
-    designerState.disabledHover = v;
-  },
-  setHoverNode,
-  setSelectedNode,
-  state: designerState,
-});
-
-// 提供 MULTI_VIEW_CONTEXT_KEY，给多视图子组件使用
-provide(MULTI_VIEW_CONTEXT_KEY, context);
-
-// ════════════════════════════════════════
-//  初始化：选中根节点，避免 attribute.vue 中 selectedNode 为 null
-// ════════════════════════════════════════
-
-setSelectedNode(pageManager.pageSchema.schemas[0]);
-
-// ════════════════════════════════════════
-//  数据模型模式：选中字段时同步 selectedField
-// ════════════════════════════════════════
-
-watch(
-  () => designerState.selectedNode,
-  (node) => {
-    if (node && node.input) {
-      selectedField.value = node;
+  const schema = getDesignerData()
+  if (schema) {
+    if (mode.value === 'model') {
+      dataModel.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
+    } else {
+      const view = currentView.value
+      if (view) {
+        view.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
+      }
     }
-  },
-);
-
-// ════════════════════════════════════════
-//  组件加载完成
-// ════════════════════════════════════════
-
-const designerRef = ref<HTMLElement | null>(null);
-
-function handleReady() {
-  nextTick(() => {
-    ready.value = true;
-    emit('ready');
-  });
+  }
+  emit('save')
 }
 
 // ════════════════════════════════════════
@@ -251,173 +293,52 @@ function handleReady() {
 // ════════════════════════════════════════
 
 defineExpose({
-  getData,
-  setData,
-});
-
-// 模式切换时：视图模式清除字段选中，数据模型模式切回根节点选中
-watch(mode, (newMode) => {
-  selectedField.value = null;
-  if (newMode === 'model') {
-    // 数据模型模式：选中根节点，让 attribute 面板正常工作
-    setSelectedNode(pageManager.pageSchema.schemas[0]);
-  }
-});
+  getDataModel,
+  getViews,
+  getView(id: string) {
+    return views[id] ? deepClone(views[id]) as PageSchema : undefined
+  },
+  getViewTypes,
+  setView(id: string, schema: PageSchema) {
+    views[id] = deepClone(schema) as PageSchema
+  },
+  setViews(allViews: Record<string, PageSchema>) {
+    for (const key of Object.keys(views)) delete views[key]
+    for (const [key, val] of Object.entries(allViews)) {
+      views[key] = deepClone(val) as PageSchema
+    }
+  },
+})
 </script>
 
 <template>
-  <div v-if="!pluginManager.designer.initialized.value" class="mv-loading">
-    <EpDesignerLoader />
+  <div class="mv-designer">
+    <ViewToolbar
+      :current-mode="mode"
+      :current-view-type-id="currentViewId"
+      :view-types="viewTypes"
+      :global-mode="globalMode"
+      :title="title"
+      @switch-mode="setMode"
+      @select-view="selectView"
+      @add-view="addViewType"
+      @remove-view="removeViewType"
+      @rename-view="renameViewType"
+      @toggle-global-mode="setGlobalMode"
+      @save="handleSave"
+    />
+    <EDesigner
+      ref="designerRef"
+      hidden-header
+      @ready="handleDesignerReady"
+    />
   </div>
-  <Suspense v-else @resolve="handleReady">
-    <template #default>
-      <div class="mv-designer-main">
-        <!-- 顶部工具栏 -->
-        <ViewToolbar
-          :mode="mode"
-          :view-types="viewTypes"
-          :current-view-id="currentViewId"
-          :title="props.title"
-          @set-mode="setMode"
-          @switch-view="switchView"
-          @add-view="addViewType"
-          @remove-view="removeViewType"
-          @rename-view="renameViewType"
-          @save="handleSave"
-          @preview="handlePreview"
-        />
-
-        <!-- 三栏主体 -->
-        <div class="mv-body">
-          <!-- 数据模型模式 -->
-          <template v-if="mode === 'model'">
-            <div class="mv-left-panel">
-              <slot name="model-left">
-                <!-- 组件库（复用 epic-designer 的组件面板） -->
-                <ComponentLibrary />
-              </slot>
-            </div>
-            <div class="mv-center-panel">
-              <slot name="model-center">
-                <!-- 拖拽画布 -->
-                <ModelCanvas
-                  :page-schema="pageSchema"
-                  :form-mode="props.formMode"
-                />
-              </slot>
-            </div>
-            <div class="mv-right-panel">
-              <slot name="model-right">
-                <!-- 属性面板（复用 epic-designer 的属性面板） -->
-                <ModelAttributePanel />
-              </slot>
-            </div>
-          </template>
-
-          <!-- 视图设计模式 -->
-          <template v-else>
-            <div class="mv-left-panel">
-              <slot name="view-left">
-                <FieldPool
-                  :fields="allFields"
-                  :current-view-id="currentViewId"
-                  :view-configs="viewConfigs"
-                  @toggle="toggleFieldInLayout"
-                  @select="setSelectedField"
-                />
-              </slot>
-            </div>
-            <div class="mv-center-panel">
-              <slot name="view-center">
-                <ViewCanvas
-                  :fields="getCurrentViewFields()"
-                  :selected-field="selectedField"
-                  :current-view-id="currentViewId"
-                  :view-types="viewTypes"
-                  @select="setSelectedField"
-                  @move="moveField"
-                />
-              </slot>
-            </div>
-            <div class="mv-right-panel">
-              <slot name="view-right">
-                <ViewAttributePanel
-                  :selected-field="selectedField"
-                  :current-view-id="currentViewId"
-                  :view-configs="viewConfigs"
-                  :all-fields="allFields"
-                  @set-override="setFieldOverride"
-                  @reset-override="resetFieldOverride"
-                  @reset-all-overrides="resetAllOverrides"
-                />
-              </slot>
-            </div>
-          </template>
-        </div>
-      </div>
-    </template>
-    <template #fallback>
-      <div class="mv-loading">
-        <EpDesignerLoader />
-      </div>
-    </template>
-  </Suspense>
 </template>
 
-<script lang="ts">
-// 异步加载子组件（用于 Suspense）
-import { defineAsyncComponent } from 'vue';
-
-const ComponentLibrary = defineAsyncComponent(() => import('./ComponentLibrary.vue'));
-const ModelCanvas = defineAsyncComponent(() => import('./ModelCanvas.vue'));
-const ModelAttributePanel = defineAsyncComponent(() => import('./ModelAttributePanel.vue'));
-
-export default { name: 'MultiViewDesigner' };
-</script>
-
 <style scoped>
-.mv-designer-main {
+.mv-designer {
   display: flex;
   flex-direction: column;
   height: 100%;
-  width: 100%;
-  overflow: hidden;
-  background: var(--ep-background, #f5f5f5);
-}
-
-.mv-body {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-.mv-left-panel {
-  width: 260px;
-  min-width: 260px;
-  border-right: 1px solid var(--ep-border-color, #e0e0e0);
-  overflow-y: auto;
-  background: var(--ep-panel-bg, #fff);
-}
-
-.mv-center-panel {
-  flex: 1;
-  overflow: auto;
-  position: relative;
-}
-
-.mv-right-panel {
-  width: 308px;
-  min-width: 308px;
-  border-left: 1px solid var(--ep-border-color, #e0e0e0);
-  overflow-y: auto;
-  background: var(--ep-panel-bg, #fff);
-}
-
-.mv-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  width: 100%;
 }
 </style>

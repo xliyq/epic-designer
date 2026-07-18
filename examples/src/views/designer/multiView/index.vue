@@ -1,32 +1,19 @@
 <script lang="ts" setup>
-import type { MultiViewPageSchema } from '@ies/custom/multi-view';
+import { ref } from 'vue'
+import { MultiViewDesigner, createDemoDataModel, createDemoViewTypes } from '@ies/custom/multi-view'
 
-import { ref } from 'vue';
+const designerRef = ref<InstanceType<typeof MultiViewDesigner>>()
 
-import { setupElementPlus } from '@ies/element-plus';
-import { MultiViewDesigner, createDemoSchema } from '@ies/custom/multi-view';
+const demoSchema = createDemoDataModel()
+const demoViewTypes = createDemoViewTypes()
 
-// 初始化 Element Plus
-setupElementPlus();
-
-const designerRef = ref<InstanceType<typeof MultiViewDesigner>>();
-
-// 预置演示数据
-const demoSchema = createDemoSchema();
-
-/**
- * 保存回调
- */
-function handleSubmit(schema: MultiViewPageSchema) {
-  console.log('保存的 Schema:', JSON.stringify(schema, null, 2));
-}
-
-/**
- * 获取数据
- */
-function handleGetData() {
-  const data = designerRef.value?.getData();
-  console.log('当前数据:', data);
+function handleSave() {
+  const model = designerRef.value?.getDataModel()
+  const views = designerRef.value?.getViews()
+  const types = designerRef.value?.getViewTypes()
+  console.log('数据模型:', model)
+  console.log('视图列表:', types)
+  console.log('视图数据:', views)
 }
 </script>
 
@@ -34,16 +21,14 @@ function handleGetData() {
   <div class="h-full">
     <MultiViewDesigner
       ref="designerRef"
-      :default-schema="demoSchema"
+      :data-model="demoSchema"
+      :view-types="demoViewTypes"
       title="请假申请 - 多视图设计器"
-      form-mode
-      @save="handleSubmit"
+      @save="handleSave"
     />
   </div>
 </template>
 
 <style scoped>
-.h-full {
-  height: 100vh;
-}
+.h-full { height: 100vh; }
 </style>

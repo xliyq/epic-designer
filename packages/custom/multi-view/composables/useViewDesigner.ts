@@ -1,275 +1,187 @@
-import type { ComponentSchema } from '@ies/types';
-
-import { computed, reactive, ref, watch } from 'vue';
-
-import { deepCompareAndModify, deepClone } from '@ies/utils';
-
-import type {
-  DesignerMode,
-  FieldOverride,
-  MultiViewContext,
-  MultiViewPageSchema,
-  ViewConfig,
-  ViewTypeConfig,
-} from '../types';
-import { hasAnyOverride } from './useViewSchema';
+import type { ComponentSchema, PageSchema } from '@ies/types'
+import { computed, reactive, ref } from 'vue'
+import { deepClone } from '@ies/utils'
+import type { DesignerMode, ViewTypeConfig } from '../types'
 
 /**
  * 默认视图类型预设
  */
 const DEFAULT_VIEW_TYPES: ViewTypeConfig[] = [
   { id: 'create', name: '创建' },
-  { id: 'detail', name: '查看' },
   { id: 'approve', name: '审批' },
-];
+  { id: 'view', name: '查看' },
+]
 
 /**
  * 多视图设计器核心状态管理
  *
- * 管理：模式切换、视图增删切换、字段显隐、覆盖属性读写
- *
- * @param externalPageSchema 外部传入的 pageSchema（通常来自 pageManager.pageSchema）
- * @param initialSchema 初始数据（仅用于初始化 viewTypes/viewConfigs，schemas 由 externalPageSchema 管理）
+ * dataModel 和 views 中的每个视图都是标准 PageSchema，结构完全一致。
+ * 模式切换时通过交换 pageSchema.schemas[0].children 来实现画布内容切换。
  */
-export function useViewDesigner(
-  externalPageSchema: MultiViewPageSchema,
-  initialSchema?: MultiViewPageSchema,
-) {
-  // 使用外部传入的 pageSchema 作为唯一数据源
-  const pageSchema = ref<MultiViewPageSchema>(externalPageSchema);
-
-  // 从 initialSchema 初始化 viewTypes/viewConfigs（如果传入了的话）
-  const schemaForInit = initialSchema ?? externalPageSchema;
-
+export function useViewDesigner() {
   // ── 模式 ──
-  const mode = ref<DesignerMode>('model');
+  const mode = ref<DesignerMode>('model')
+
+  // ── 数据模型（标准 PageSchema） ──
+  const dataModel = reactive<PageSchema>({
+    schemas: [{
+      id: 'root',
+      label: '表单',
+      type: 'form',
+      props: {
+        colon: true,
+        labelAlign: 'right',
+        labelCol: { span: 5 },
+        labelLayout: 'fixed',
+        labelPlacement: 'left',
+        labelWidth: 100,
+        layout: 'horizontal',
+        name: 'default',
+        wrapperCol: { span: 19 },
+      },
+      children: [],
+    }],
+    script: '',
+  })
 
   // ── 视图类型列表 ──
-  const viewTypes = ref<ViewTypeConfig[]>(
-    schemaForInit.viewTypes
-      ? [...schemaForInit.viewTypes]
-      : [...DEFAULT_VIEW_TYPES],
-  );
+  const viewTypes = ref<ViewTypeConfig[]>([...DEFAULT_VIEW_TYPES])
 
-  // ── 当前选中的视图ID ──
-  const currentViewId = ref<string | null>(
-    viewTypes.value[0]?.id ?? null,
-  );
+  // ── 视图集合（Record<string, PageSchema>） ──
+  const views = reactive<Record<string, PageSchema>>({})
 
-  // ── 视图配置映射 ──
-  const viewConfigs = reactive<Record<string, ViewConfig>>({});
-
-  // 初始化视图配置
-  if (schemaForInit.viewConfigs) {
-    for (const [key, val] of Object.entries(schemaForInit.viewConfigs)) {
-      viewConfigs[key] = {
-        layout: [...val.layout],
-        fieldOverrides: val.fieldOverrides
-          ? JSON.parse(JSON.stringify(val.fieldOverrides))
-          : {},
-      };
+  // 初始化默认视图
+  function initDefaultViews() {
+    for (const vt of viewTypes.value) {
+      if (!views[vt.id]) {
+        views[vt.id] = {
+          schemas: [{
+            id: 'root',
+            label: '表单',
+            type: 'form',
+            props: { ...dataModel.schemas[0].props },
+            children: [],
+          }],
+          script: '',
+        }
+      }
     }
   }
+  initDefaultViews()
 
-  // 同步 pageSchema 中的 viewTypes 和 viewConfigs
-  watch(
-    [viewTypes, viewConfigs],
-    () => {
-      pageSchema.value.viewTypes = viewTypes.value.map((v) => ({ ...v }));
-      pageSchema.value.viewConfigs = {};
-      for (const [key, val] of Object.entries(viewConfigs)) {
-        pageSchema.value.viewConfigs[key] = {
-          layout: [...val.layout],
-          fieldOverrides: val.fieldOverrides
-            ? JSON.parse(JSON.stringify(val.fieldOverrides))
-            : undefined,
-        };
-      }
-    },
-    { deep: true },
-  );
+  // ── 当前选中的视图 ID ──
+  const currentViewId = ref<string>(viewTypes.value[0]?.id ?? '')
 
-  // ── 当前选中的字段 ──
-  const selectedField = ref<ComponentSchema | null>(null);
+  // ── 全局编辑模式 ──
+  const globalMode = ref(false)
 
-  // ── 当前视图配置（computed）──
-  const currentViewConfig = computed<ViewConfig | null>(() => {
-    if (!currentViewId.value) return null;
-    return viewConfigs[currentViewId.value] ?? null;
-  });
+  // ── 当前视图的 PageSchema ──
+  const currentView = computed(() => {
+    if (!currentViewId.value) return null
+    return views[currentViewId.value] ?? null
+  })
 
-  // ── 表单的所有字段（数据模型）──
-  const allFields = computed<ComponentSchema[]>(() => {
-    const formNode = pageSchema.value.schemas?.[0];
-    return formNode?.children ?? [];
-  });
+  // ── 字段列表 ──
+  const modelFields = computed(() => dataModel.schemas[0]?.children ?? [])
+  const viewFields = computed(() => currentView.value?.schemas[0]?.children ?? [])
 
   // ════════════════════════════════════════
   //  模式切换
   // ════════════════════════════════════════
 
   function setMode(newMode: DesignerMode) {
-    mode.value = newMode;
+    mode.value = newMode
   }
 
   // ════════════════════════════════════════
-  //  视图类型增删切换
+  //  视图类型 CRUD
   // ════════════════════════════════════════
 
-  function switchView(viewId: string) {
-    currentViewId.value = viewId;
+  function selectView(id: string) {
+    currentViewId.value = id
   }
 
   function addViewType(name: string) {
-    const id = `view_${Date.now()}`;
-    const newType: ViewTypeConfig = { id, name };
-    viewTypes.value.push(newType);
-    // 自动为该视图创建空配置
-    viewConfigs[id] = { layout: [], fieldOverrides: {} };
-    currentViewId.value = id;
+    const id = `view_${Date.now()}`
+    viewTypes.value.push({ id, name })
+    views[id] = {
+      schemas: [{
+        id: 'root',
+        label: '表单',
+        type: 'form',
+        props: { ...dataModel.schemas[0].props },
+        children: [],
+      }],
+      script: '',
+    }
+    currentViewId.value = id
   }
 
   function removeViewType(id: string) {
-    const index = viewTypes.value.findIndex((v) => v.id === id);
-    if (index === -1) return;
-
-    viewTypes.value.splice(index, 1);
-    delete viewConfigs[id];
-
-    // 如果删除的是当前视图，切换到第一个
+    const index = viewTypes.value.findIndex(v => v.id === id)
+    if (index === -1) return
+    viewTypes.value.splice(index, 1)
+    delete views[id]
     if (currentViewId.value === id) {
-      currentViewId.value = viewTypes.value[0]?.id ?? null;
+      currentViewId.value = viewTypes.value[0]?.id ?? ''
     }
   }
 
   function renameViewType(id: string, name: string) {
-    const vt = viewTypes.value.find((v) => v.id === id);
-    if (vt) {
-      vt.name = name;
-    }
+    const vt = viewTypes.value.find(v => v.id === id)
+    if (vt) vt.name = name
   }
 
   // ════════════════════════════════════════
-  //  字段显隐 / 排序
+  //  字段显隐切换
   // ════════════════════════════════════════
 
-  function ensureViewConfig(viewId: string): ViewConfig {
-    if (!viewConfigs[viewId]) {
-      viewConfigs[viewId] = { layout: [], fieldOverrides: {} };
-    }
-    return viewConfigs[viewId];
-  }
+  function toggleFieldInView(fieldId: string) {
+    const view = currentView.value
+    if (!view) return
+    const children = view.schemas[0].children ?? []
+    const index = children.findIndex(f => f.id === fieldId)
 
-  function toggleFieldInLayout(fieldId: string) {
-    if (!currentViewId.value) return;
-    const config = ensureViewConfig(currentViewId.value);
-    const index = config.layout.indexOf(fieldId);
     if (index === -1) {
-      config.layout.push(fieldId);
-    } else {
-      config.layout.splice(index, 1);
-      // 移出视图时清除选中
-      if (selectedField.value?.id === fieldId) {
-        selectedField.value = null;
-      }
-    }
-  }
-
-  function moveField(fieldId: string, direction: 'up' | 'down') {
-    if (!currentViewId.value) return;
-    const config = ensureViewConfig(currentViewId.value);
-    const index = config.layout.indexOf(fieldId);
-    if (index === -1) return;
-
-    if (direction === 'up' && index > 0) {
-      [config.layout[index], config.layout[index - 1]] = [
-        config.layout[index - 1],
-        config.layout[index],
-      ];
-    } else if (direction === 'down' && index < config.layout.length - 1) {
-      [config.layout[index], config.layout[index + 1]] = [
-        config.layout[index + 1],
-        config.layout[index],
-      ];
-    }
-  }
-
-  function isFieldInLayout(fieldId: string): boolean {
-    if (!currentViewId.value) return false;
-    const config = viewConfigs[currentViewId.value];
-    return config?.layout.includes(fieldId) ?? false;
-  }
-
-  function getCurrentViewFields(): ComponentSchema[] {
-    if (!currentViewId.value) return [];
-    const config = viewConfigs[currentViewId.value];
-    if (!config) return [];
-    return config.layout
-      .map((id) => allFields.value.find((f) => f.id === id))
-      .filter((f): f is ComponentSchema => !!f);
-  }
-
-  // ════════════════════════════════════════
-  //  字段选中
-  // ════════════════════════════════════════
-
-  function setSelectedField(field: ComponentSchema | null) {
-    selectedField.value = field;
-  }
-
-  // ════════════════════════════════════════
-  //  字段覆盖属性读写
-  // ════════════════════════════════════════
-
-  function getFieldOverride(fieldId: string): FieldOverride | undefined {
-    if (!currentViewId.value) return undefined;
-    const config = ensureViewConfig(currentViewId.value);
-    return config.fieldOverrides?.[fieldId];
-  }
-
-  function setFieldOverride(
-    fieldId: string,
-    override: Partial<FieldOverride>,
-  ) {
-    if (!currentViewId.value) return;
-    const config = ensureViewConfig(currentViewId.value);
-    if (!config.fieldOverrides) {
-      config.fieldOverrides = {};
-    }
-    const existing = config.fieldOverrides[fieldId] ?? {};
-    config.fieldOverrides[fieldId] = { ...existing, ...override };
-  }
-
-  function resetFieldOverride(fieldId: string, fieldPath: string) {
-    if (!currentViewId.value) return;
-    const config = viewConfigs[currentViewId.value];
-    if (!config?.fieldOverrides?.[fieldId]) return;
-
-    const override = config.fieldOverrides[fieldId];
-
-    if (fieldPath === 'widgetType') {
-      delete override.widgetType;
-    } else if (fieldPath.startsWith('props.')) {
-      const propKey = fieldPath.slice('props.'.length);
-      delete override.props?.[propKey];
-      if (override.props && Object.keys(override.props).length === 0) {
-        delete override.props;
+      // 加入视图：从数据模型复制字段
+      const field = dataModel.schemas[0].children?.find(f => f.id === fieldId)
+      if (field) {
+        children.push(deepClone(field))
       }
     } else {
-      delete (override as any)[fieldPath];
-    }
-
-    // 如果没有覆盖了，清理
-    if (!hasAnyOverride(override)) {
-      delete config.fieldOverrides[fieldId];
+      children.splice(index, 1)
     }
   }
 
-  function resetAllOverrides(fieldId: string) {
-    if (!currentViewId.value) return;
-    const config = viewConfigs[currentViewId.value];
-    if (config?.fieldOverrides) {
-      delete config.fieldOverrides[fieldId];
+  function isFieldInView(fieldId: string): boolean {
+    return currentView.value?.schemas[0]?.children?.some(f => f.id === fieldId) ?? false
+  }
+
+  // ════════════════════════════════════════
+  //  全局编辑同步
+  // ════════════════════════════════════════
+
+  function setGlobalMode(v: boolean) {
+    globalMode.value = v
+  }
+
+  /**
+   * 同步字段变更到数据模型和其他视图
+   */
+  function syncFieldToAll(fieldId: string, changedField: ComponentSchema) {
+    // 同步到数据模型
+    const modelChild = dataModel.schemas[0]?.children?.find(f => f.id === fieldId)
+    if (modelChild) {
+      Object.assign(modelChild, deepClone(changedField))
+    }
+
+    // 同步到其他视图
+    for (const [viewId, view] of Object.entries(views)) {
+      if (viewId === currentViewId.value) continue
+      const viewChild = view.schemas[0]?.children?.find(f => f.id === fieldId)
+      if (viewChild) {
+        Object.assign(viewChild, deepClone(changedField))
+      }
     }
   }
 
@@ -277,132 +189,71 @@ export function useViewDesigner(
   //  数据导入/导出
   // ════════════════════════════════════════
 
-  function setData(schema: MultiViewPageSchema) {
-    // 使用 deepCompareAndModify 保持响应式引用不变
-    // 这样 pageManager.pageSchema 和 pageSchema.value 始终指向同一对象
-    deepCompareAndModify(pageSchema.value as any, deepClone(schema));
-    if (schema.viewTypes) {
-      viewTypes.value = schema.viewTypes.map((v) => ({ ...v }));
+  function setDataModel(schema: PageSchema) {
+    Object.assign(dataModel, deepClone(schema))
+  }
+
+  function setViews(allViews: Record<string, PageSchema>) {
+    for (const key of Object.keys(views)) {
+      delete views[key]
     }
-    if (schema.viewConfigs) {
-      // 清空再写入
-      for (const key of Object.keys(viewConfigs)) {
-        delete viewConfigs[key];
-      }
-      for (const [key, val] of Object.entries(schema.viewConfigs)) {
-        viewConfigs[key] = {
-          layout: [...val.layout],
-          fieldOverrides: val.fieldOverrides
-            ? JSON.parse(JSON.stringify(val.fieldOverrides))
-            : {},
-        };
-      }
+    for (const [key, val] of Object.entries(allViews)) {
+      views[key] = deepClone(val) as PageSchema
     }
-    currentViewId.value = viewTypes.value[0]?.id ?? null;
-    selectedField.value = null;
   }
 
-  function getData(): MultiViewPageSchema {
-    return pageSchema.value;
+  function getDataModel(): PageSchema {
+    return deepClone(dataModel) as PageSchema
   }
 
-  // ════════════════════════════════════════
-  //  保存 / 预览（占位，由外部组件传入回调）
-  // ════════════════════════════════════════
-
-  let saveCallback: (() => void) | null = null;
-  let previewCallback: (() => void) | null = null;
-
-  function onSave(cb: () => void) {
-    saveCallback = cb;
+  function getViews(): Record<string, PageSchema> {
+    return deepClone(views) as Record<string, PageSchema>
   }
 
-  function onPreview(cb: () => void) {
-    previewCallback = cb;
+  function getViewTypes(): ViewTypeConfig[] {
+    return [...viewTypes.value]
   }
 
-  function save() {
-    saveCallback?.();
+  function setAll(dataModel_?: PageSchema, viewTypes_?: ViewTypeConfig[], views_?: Record<string, PageSchema>) {
+    if (dataModel_) setDataModel(dataModel_)
+    if (viewTypes_) {
+      viewTypes.value = viewTypes_.map(v => ({ ...v }))
+    }
+    if (views_) {
+      setViews(views_)
+    } else {
+      initDefaultViews()
+    }
+    if (!currentViewId.value && viewTypes.value.length > 0) {
+      currentViewId.value = viewTypes.value[0].id
+    }
   }
-
-  function preview() {
-    previewCallback?.();
-  }
-
-  // ════════════════════════════════════════
-  //  构建上下文
-  // ════════════════════════════════════════
-
-  const context: MultiViewContext = {
-    mode: mode.value,
-    currentViewId: currentViewId.value,
-    viewTypes: viewTypes.value,
-    viewConfigs,
-    pageSchema: pageSchema.value,
-    selectedField: selectedField.value,
-
-    setMode,
-    switchView,
-    addViewType,
-    removeViewType,
-    renameViewType,
-
-    toggleFieldInLayout,
-    moveField,
-    setSelectedField,
-
-    getFieldOverride,
-    setFieldOverride,
-    resetFieldOverride,
-    resetAllOverrides,
-
-    isFieldInLayout,
-    getCurrentViewFields,
-
-    save,
-    preview,
-  };
-
-  // 保持 context 的属性同步
-  watch([mode, currentViewId, viewTypes, selectedField, pageSchema], () => {
-    context.mode = mode.value;
-    context.currentViewId = currentViewId.value;
-    context.viewTypes = viewTypes.value;
-    context.selectedField = selectedField.value;
-    context.pageSchema = pageSchema.value;
-  });
 
   return {
-    // 状态
     mode,
-    currentViewId,
+    dataModel,
     viewTypes,
-    viewConfigs,
-    currentViewConfig,
-    pageSchema,
-    selectedField,
-    allFields,
-    context,
-    // 操作
+    views,
+    currentViewId,
+    globalMode,
+    currentView,
+    modelFields,
+    viewFields,
+
     setMode,
-    switchView,
+    setGlobalMode,
+    selectView,
     addViewType,
     removeViewType,
     renameViewType,
-    toggleFieldInLayout,
-    moveField,
-    setSelectedField,
-    getFieldOverride,
-    setFieldOverride,
-    resetFieldOverride,
-    resetAllOverrides,
-    isFieldInLayout,
-    getCurrentViewFields,
-    setData,
-    getData,
-    onSave,
-    onPreview,
-    save,
-    preview,
-  };
+    toggleFieldInView,
+    isFieldInView,
+    syncFieldToAll,
+    setDataModel,
+    setViews,
+    getDataModel,
+    getViews,
+    getViewTypes,
+    setAll,
+  }
 }
