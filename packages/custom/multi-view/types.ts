@@ -10,3 +10,9 @@ export interface ViewTypeConfig {
 
 /** 设计器模式 */
 export type DesignerMode = 'model' | 'view'
+
+/** 字段池数据注入 key */
+import type { ComponentSchema } from '@ies/types'
+import type { InjectionKey, Ref } from 'vue'
+
+export const FIELD_POOL_DATA_KEY: InjectionKey<Ref<ComponentSchema[]>> = Symbol('fieldPoolData')
