@@ -14,7 +14,7 @@ const { pageSchema } = useDesignerContext()
 // 数据模型字段
 const modelFields = computed(() => pageSchema.schemas[0]?.children ?? [])
 
-// 当前视图中包含的字段 ID 集合（快速判断）
+// 当前视图中包含的字段 ID 集合
 const viewFieldIdSet = computed(() => new Set(ctx.viewFieldIds))
 
 // EpicTree 选中 key
@@ -39,6 +39,10 @@ function getFieldIcon(type: string): string {
 
 <template>
   <div class="ep-field-pool">
+    <div class="ep-field-pool-header">
+      字段池
+      <span class="ep-field-count">{{ modelFields.length }} 个字段</span>
+    </div>
     <EpicTree
       :options="modelFields"
       :selected-keys="selectedKeys"
@@ -46,28 +50,35 @@ function getFieldIcon(type: string): string {
     >
       <template #tree-node="{ schema }">
         <div
-          class="ep-field-item"
-          :class="{
-            'is-hidden': !viewFieldIdSet.has(schema.id ?? ''),
-          }"
+          class="ep-outline-item ep-text-padding flex"
+          :class="{ hidden: !viewFieldIdSet.has(schema.id ?? '') }"
         >
           <span
-            class="ep-field-eye"
+            class="ep-eye-btn"
             :class="{ visible: viewFieldIdSet.has(schema.id ?? '') }"
-            @click="handleEyeClick(schema.id!, $event)"
+            @click.stop="handleEyeClick(schema.id!, $event)"
           >
             {{ viewFieldIdSet.has(schema.id ?? '') ? '👁' : '🚫' }}
           </span>
           <EpicIcon
-            v-if="getFieldIcon(schema.type)"
+            class="ep-component-icon translate-y-2px"
             :name="getFieldIcon(schema.type)"
-            class="ep-field-icon"
           />
-          <span class="ep-field-label">{{ schema.label ?? schema.type }}</span>
-          <span class="ep-field-type">{{ schema.id }}</span>
+          <span class="max-w-full truncate">
+            {{ schema.label ?? pluginManager.component.getLabel(schema.type) }}
+          </span>
+          <span class="ep-node-type-text w-0 flex-1 truncate">
+            {{ schema.id }}
+          </span>
         </div>
       </template>
     </EpicTree>
+    <div
+      v-if="modelFields.length === 0"
+      class="pt-42px text-center text-gray-400"
+    >
+      暂无字段
+    </div>
   </div>
 </template>
 
@@ -78,41 +89,33 @@ function getFieldIcon(type: string): string {
   height: 100%;
   overflow: hidden;
 }
-.ep-field-item {
+.ep-field-pool-header {
+  padding: 8px 12px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--ep-border);
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  cursor: pointer;
+  gap: 8px;
   font-size: 13px;
-  transition: background 0.15s;
 }
-.ep-field-item:hover {
-  background: var(--ep-muted);
-}
-.ep-field-item.is-hidden {
-  opacity: 0.5;
-}
-.ep-field-eye {
-  cursor: pointer;
-  font-size: 14px;
-  width: 20px;
-  text-align: center;
-  flex-shrink: 0;
-}
-.ep-field-icon {
-  font-size: 14px;
-  flex-shrink: 0;
-}
-.ep-field-label {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.ep-field-type {
+.ep-field-count {
   font-size: 11px;
   color: var(--ep-text-helper);
+  font-weight: normal;
+}
+.ep-eye-btn {
+  cursor: pointer;
+  font-size: 14px;
+  width: 24px;
+  text-align: center;
   flex-shrink: 0;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+.ep-eye-btn.visible {
+  opacity: 1;
+}
+.ep-eye-btn:hover {
+  opacity: 1;
 }
 </style>
