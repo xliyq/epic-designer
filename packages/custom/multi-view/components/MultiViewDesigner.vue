@@ -61,10 +61,14 @@ onMounted(() => {
   registerFieldPool()
 })
 
-// 提供字段池上下文（模式 + 数据模型字段快照，视图模式下使用）
+// 提供字段池上下文（模式 + 数据模型 + 视图字段 ID）
+const viewFieldIdList = computed(() =>
+  currentView.value?.schemas[0]?.children?.map(f => f.id) ?? []
+)
 const fieldPoolData = reactive({
   get mode() { return mode.value },
   get modelFields() { return modelFields.value },
+  get viewFieldIds() { return viewFieldIdList.value },
 })
 provide(FIELD_POOL_DATA_KEY, fieldPoolData)
 

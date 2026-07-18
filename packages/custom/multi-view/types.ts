@@ -20,6 +20,8 @@ export interface FieldPoolData {
   mode: 'model' | 'view'
   /** 数据模型字段快照（视图模式下使用，模型模式下使用 useDesignerContext 实时数据） */
   modelFields: ComponentSchema[]
+  /** 当前视图中已有的字段 ID 列表（视图模式下防重复拖入） */
+  viewFieldIds: string[]
 }
 
 export const FIELD_POOL_DATA_KEY: InjectionKey<FieldPoolData> = Symbol('fieldPoolData')

@@ -52,6 +52,8 @@ function selectField(schema: ComponentSchema) {
       <FieldPoolNode
         :schemas="displayFields"
         :selected-field-id="selectedFieldId"
+        :draggable="ctx.mode === 'view'"
+        :excluded-ids="ctx.viewFieldIds"
         @select="selectField"
       />
     </div>

@@ -11,7 +11,9 @@ const props = withDefaults(defineProps<{
   schemas: ComponentSchema[]
   selectedFieldId: string
   depth?: number
-}>(), { depth: 0 })
+  draggable?: boolean
+  excludedIds?: string[]
+}>(), { depth: 0, draggable: true, excludedIds: () => [] })
 
 const emit = defineEmits<{
   select: [schema: ComponentSchema]
@@ -28,24 +30,68 @@ function isLeaf(field: ComponentSchema): boolean {
 function cloneField(schema: ComponentSchema): ComponentSchema {
   return deepClone(schema)
 }
+
+function isFiltered(id: string | undefined): boolean {
+  if (!id) return true
+  // 模型模式下全部禁止拖拽
+  if (!props.draggable) return true
+  // 视图模式下已存在的字段禁止重复拖入
+  return props.excludedIds.includes(id)
+}
 </script>
 
 <template>
   <VueDraggable
+    v-if="draggable"
     :model-value="schemas"
     :group="{ name: 'edit-draggable', pull: 'clone', put: false }"
     :sort="false"
     :animation="180"
     ghost-class="ep-field-dragging"
     :clone="cloneField"
+    :filter="(el: any) => isFiltered(el?.dataset?.id)"
     item-key="id"
   >
     <div
       v-for="element in schemas"
       :key="element.id"
+      :data-id="element.id"
     >
       <div
         class="ep-field-item ep-text-padding"
+        :class="{
+          selected: element.id === selectedFieldId,
+          'not-draggable': !draggable || (element.id ? excludedIds.includes(element.id) : false),
+        }"
+        :style="{ paddingLeft: `${12 + depth * 16}px` }"
+        @click="emit('select', element)"
+      >
+        <EpicIcon
+          class="ep-component-icon"
+          :name="getFieldIcon(element.type)"
+        />
+        <span class="ep-field-label">{{ element.label ?? element.type }}</span>
+        <span class="ep-field-type-text">{{ element.id }}</span>
+      </div>
+      <FieldPoolNode
+        v-if="!isLeaf(element) && element.children"
+        :schemas="element.children"
+        :selected-field-id="selectedFieldId"
+        :depth="depth + 1"
+        :draggable="draggable"
+        :excluded-ids="excludedIds"
+        @select="(s: ComponentSchema) => emit('select', s)"
+      />
+    </div>
+  </VueDraggable>
+  <!-- 非拖拽模式：纯展示 -->
+  <div v-else>
+    <div
+      v-for="element in schemas"
+      :key="element.id"
+    >
+      <div
+        class="ep-field-item ep-text-padding not-draggable"
         :class="{ selected: element.id === selectedFieldId }"
         :style="{ paddingLeft: `${12 + depth * 16}px` }"
         @click="emit('select', element)"
@@ -62,10 +108,12 @@ function cloneField(schema: ComponentSchema): ComponentSchema {
         :schemas="element.children"
         :selected-field-id="selectedFieldId"
         :depth="depth + 1"
+        :draggable="draggable"
+        :excluded-ids="excludedIds"
         @select="(s: ComponentSchema) => emit('select', s)"
       />
     </div>
-  </VueDraggable>
+  </div>
 </template>
 
 <style scoped>
@@ -85,6 +133,10 @@ function cloneField(schema: ComponentSchema): ComponentSchema {
 }
 .ep-field-item.selected {
   background: var(--ep-primary-faded);
+}
+.ep-field-item.not-draggable {
+  cursor: default;
+  opacity: 0.6;
 }
 .ep-field-label {
   flex: 1;
