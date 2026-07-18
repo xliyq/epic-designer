@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ComponentSchema, PageSchema } from '@ies/types'
-import { nextTick, onMounted, provide, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, provide, reactive, ref, watch } from 'vue'
 import { EDesigner } from '@ies/core'
 import { pluginManager } from '@ies/manager'
 import { deepClone } from '@ies/utils'
@@ -268,9 +268,11 @@ function handleFieldPoolToggle(fieldId: string) {
 }
 
 // 注入字段池上下文（FieldPool 在 EDesigner 内部渲染，通过 inject 获取数据）
+const viewFieldIds = computed(() =>
+  currentView.value?.schemas[0]?.children?.map(f => f.id) ?? []
+)
 const fieldPoolCtx = reactive({
-  get modelFields() { return modelFields.value },
-  get viewFields() { return viewFields.value },
+  viewFieldIds: viewFieldIds.value,
   get selectedFieldId() { return selectedFieldId.value },
   selectField: handleFieldPoolSelect,
   toggleField: handleFieldPoolToggle,

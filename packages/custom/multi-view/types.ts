@@ -12,14 +12,16 @@ export interface ViewTypeConfig {
 export type DesignerMode = 'model' | 'view'
 
 /** 字段池上下文（provide/inject） */
-import type { ComponentSchema } from '@ies/types'
 import type { InjectionKey } from 'vue'
 
 export interface FieldPoolContext {
-  modelFields: ComponentSchema[]
-  viewFields: ComponentSchema[]
+  /** 当前视图中的字段 ID 列表（用于眼睛图标标注） */
+  viewFieldIds: string[]
+  /** 当前选中的字段 ID */
   selectedFieldId: string
+  /** 点击字段行 */
   selectField: (id: string) => void
+  /** 切换字段在当前视图中的显隐 */
   toggleField: (id: string) => void
 }
 
