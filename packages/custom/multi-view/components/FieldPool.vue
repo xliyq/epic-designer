@@ -12,9 +12,9 @@ const { pageSchema } = useDesignerContext()
 
 const displayFields = computed(() => {
   if (ctx.mode === 'model') {
-    return pageSchema.schemas[0]?.children ?? []
+    return [...(pageSchema.schemas[0]?.children ?? [])]
   }
-  return ctx.modelFields
+  return [...ctx.modelFields]
 })
 
 function isLeafField(schema: ComponentSchema): boolean {

@@ -40,31 +40,31 @@ function cloneField(schema: ComponentSchema): ComponentSchema {
     :clone="cloneField"
     item-key="id"
   >
-    <template #item="{ element }: { element: ComponentSchema }">
-      <div>
-        <div
-          class="ep-field-item ep-text-padding"
-          :class="{ selected: element.id === selectedFieldId }"
-          :style="{ paddingLeft: `${12 + depth * 16}px` }"
-          @click="emit('select', element)"
-        >
-          <EpicIcon
-            class="ep-component-icon"
-            :name="getFieldIcon(element.type)"
-          />
-          <span class="ep-field-label">{{ element.label ?? element.type }}</span>
-          <span class="ep-field-type-text">{{ element.id }}</span>
-        </div>
-        <!-- 递归渲染子节点 -->
-        <FieldPoolNode
-          v-if="!isLeaf(element) && element.children"
-          :schemas="element.children"
-          :selected-field-id="selectedFieldId"
-          :depth="depth + 1"
-          @select="(s: ComponentSchema) => emit('select', s)"
+    <div
+      v-for="element in schemas"
+      :key="element.id"
+    >
+      <div
+        class="ep-field-item ep-text-padding"
+        :class="{ selected: element.id === selectedFieldId }"
+        :style="{ paddingLeft: `${12 + depth * 16}px` }"
+        @click="emit('select', element)"
+      >
+        <EpicIcon
+          class="ep-component-icon"
+          :name="getFieldIcon(element.type)"
         />
+        <span class="ep-field-label">{{ element.label ?? element.type }}</span>
+        <span class="ep-field-type-text">{{ element.id }}</span>
       </div>
-    </template>
+      <FieldPoolNode
+        v-if="!isLeaf(element) && element.children"
+        :schemas="element.children"
+        :selected-field-id="selectedFieldId"
+        :depth="depth + 1"
+        @select="(s: ComponentSchema) => emit('select', s)"
+      />
+    </div>
   </VueDraggable>
 </template>
 
