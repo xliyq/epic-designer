@@ -57,9 +57,8 @@ onMounted(() => {
   if (props.dataModel || props.viewTypes || props.views) {
     setAll(props.dataModel, props.viewTypes, props.views)
   }
-  // 提前注册字段池，确保 EDesigner 就绪时它已经存在
+  // 注册字段池（不隐藏，纯验证是否注册成功）
   registerFieldPool()
-  pluginManager.panel.hideActivitybar('field_pool')
 })
 
 // ════════════════════════════════════════
@@ -128,8 +127,7 @@ function switchToView(viewId: string) {
     })
   }
 
-  pluginManager.panel.showActivitybar('field_pool')
-}
+  }
 
 /**
  * 从视图切换到模型：保存当前视图字段，恢复模型字段
@@ -152,8 +150,6 @@ function switchToModel() {
       children: deepClone(dataModel.schemas[0]?.children ?? []),
     }],
   })
-
-  pluginManager.panel.hideActivitybar('field_pool')
 }
 
 /**
