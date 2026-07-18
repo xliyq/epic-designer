@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ComponentSchema, PageSchema } from '@ies/types'
-import { nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { EDesigner } from '@ies/core'
 import { pluginManager } from '@ies/manager'
 import { deepClone } from '@ies/utils'
@@ -58,6 +58,13 @@ onMounted(() => {
   }
   // 注册字段池（不隐藏，纯验证是否注册成功）
   registerFieldPool()
+  // 显示字段池
+  pluginManager.panel.showActivitybar('field_pool')
+})
+
+// 销毁时清理字段池（不影响其他 EDesigner 实例）
+onUnmounted(() => {
+  pluginManager.panel.hideActivitybar('field_pool')
 })
 
 // 从画布同步当前视图状态（画布上的增删操作不会自动同步到 views 状态）
