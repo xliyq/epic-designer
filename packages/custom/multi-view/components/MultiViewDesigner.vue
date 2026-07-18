@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import type { ComponentSchema, PageSchema } from '@ies/types'
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, provide, reactive, ref, watch } from 'vue'
 import { EDesigner } from '@ies/core'
 import { pluginManager } from '@ies/manager'
 import { deepClone } from '@ies/utils'
 import { useViewDesigner } from '../composables/useViewDesigner'
 import type { DesignerMode, ViewTypeConfig } from '../types'
+import { FIELD_POOL_KEY } from '../types'
 import ViewToolbar from './ViewToolbar.vue'
 import FieldPool from './FieldPool.vue'
 
@@ -268,6 +269,16 @@ function handleFieldPoolToggle(fieldId: string) {
   }
   takeSnapshot(currentViewId.value)
 }
+
+// 注入字段池上下文（FieldPool 在 EDesigner 内部渲染，通过 inject 获取数据）
+const fieldPoolCtx = reactive({
+  get modelFields() { return modelFields.value },
+  get viewFields() { return viewFields.value },
+  get selectedFieldId() { return selectedFieldId.value },
+  selectField: handleFieldPoolSelect,
+  toggleField: handleFieldPoolToggle,
+})
+provide(FIELD_POOL_KEY, fieldPoolCtx)
 
 // ════════════════════════════════════════
 //  保存
