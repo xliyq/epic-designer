@@ -18,12 +18,13 @@ const displayFields = computed(() => {
 })
 
 const selectedKeys = ref<string[]>([])
+const collapsed = ref(false)
 
 function handleNodeClick({ componentSchema }: { componentSchema: ComponentSchema }) {
   if (!componentSchema.id) return
   selectedKeys.value = [componentSchema.id]
 
-  if (ctx.mode === 'view') {
+  if (ctx.mode === 'view' && !viewFieldIdSet.value.has(componentSchema.id)) {
     ctx.addFieldToView(componentSchema.id)
   }
 }
@@ -48,52 +49,59 @@ function countLeafFields(schemas: ComponentSchema[]): number {
   return count
 }
 
-const leafCount = computed(() => countLeafFields(displayFields.value))
+const totalLeafCount = computed(() => countLeafFields(displayFields.value))
 const viewFieldIdSet = computed(() => new Set(ctx.viewFieldIds))
+const inViewCount = computed(() => ctx.viewFieldIds.length)
 </script>
 
 <template>
   <div class="ep-field-pool">
-    <div class="ep-field-pool-header">
-      字段池
-      <span class="ep-field-count">{{ leafCount }} 个字段</span>
-    </div>
-    <EpicTree
-      :options="displayFields"
-      :selected-keys="selectedKeys"
-      @node-click="handleNodeClick"
-    >
-      <template #tree-node="{ schema }">
-        <div
-          class="ep-outline-item ep-text-padding flex items-center"
-          :class="{
-            'is-disabled': ctx.mode === 'view' && schema.id ? viewFieldIdSet.has(schema.id) : false,
-          }"
-        >
-          <EpicIcon
-            class="ep-component-icon"
-            :name="getFieldIcon(schema.type)"
-          />
-          <span class="max-w-full truncate">
-            {{ schema.label ?? pluginManager.component.getLabel(schema.type) }}
-          </span>
-          <span class="ep-node-type-text w-0 flex-1 truncate">
-            {{ schema.id }}
-          </span>
-          <span
-            v-if="ctx.mode === 'view' && schema.id && viewFieldIdSet.has(schema.id)"
-            class="ep-field-check"
-          >
-            ✓
-          </span>
-        </div>
-      </template>
-    </EpicTree>
     <div
-      v-if="displayFields.length === 0"
-      class="pt-42px text-center text-gray-400"
+      class="ep-field-pool-header"
+      @click="collapsed = !collapsed"
     >
-      暂无字段
+      <span class="ep-collapse-icon">{{ collapsed ? '▶' : '▼' }}</span>
+      字段池
+      <span class="ep-field-count">{{ inViewCount }}/{{ totalLeafCount }} 个</span>
+    </div>
+    <div v-show="!collapsed" class="ep-field-pool-body">
+      <EpicTree
+        :options="displayFields"
+        :selected-keys="selectedKeys"
+        @node-click="handleNodeClick"
+      >
+        <template #tree-node="{ schema }">
+          <div
+            class="ep-outline-item ep-text-padding flex items-center"
+            :class="{
+              'is-disabled': ctx.mode === 'view' && schema.id ? viewFieldIdSet.has(schema.id) : false,
+            }"
+          >
+            <EpicIcon
+              class="ep-component-icon"
+              :name="getFieldIcon(schema.type)"
+            />
+            <span class="max-w-full truncate">
+              {{ schema.label ?? pluginManager.component.getLabel(schema.type) }}
+            </span>
+            <span class="ep-node-type-text w-0 flex-1 truncate">
+              {{ schema.id }}
+            </span>
+            <span
+              v-if="ctx.mode === 'view' && schema.id && viewFieldIdSet.has(schema.id)"
+              class="ep-field-check"
+            >
+              ✓
+            </span>
+          </div>
+        </template>
+      </EpicTree>
+      <div
+        v-if="displayFields.length === 0"
+        class="pt-42px text-center text-gray-400"
+      >
+        暂无字段
+      </div>
     </div>
   </div>
 </template>
@@ -111,14 +119,30 @@ const viewFieldIdSet = computed(() => new Set(ctx.viewFieldIds))
   border-bottom: 1px solid var(--ep-border);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 13px;
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+}
+.ep-field-pool-header:hover {
+  background: var(--ep-muted);
+}
+.ep-collapse-icon {
+  font-size: 10px;
+  width: 14px;
+  text-align: center;
   flex-shrink: 0;
 }
 .ep-field-count {
   font-size: 11px;
   color: var(--ep-text-helper);
   font-weight: normal;
+  margin-left: auto;
+}
+.ep-field-pool-body {
+  flex: 1;
+  overflow: auto;
 }
 .ep-field-pool :deep(.ep-outline-item.is-disabled) {
   opacity: 0.5;

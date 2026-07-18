@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ComponentSchema, PageSchema } from '@ies/types'
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { EDesigner } from '@ies/core'
 import { pluginManager } from '@ies/manager'
 import { deepClone } from '@ies/utils'
@@ -60,32 +60,57 @@ onMounted(() => {
   registerFieldPool()
 })
 
-// 通过 pluginManager.global 共享字段池上下文（provide/inject 跨 Suspense 不可靠）
+// 通过 pluginManager.global 共享字段池上下文（reactive 对象，直接修改属性）
 function addFieldToView(fieldId: string) {
   if (mode.value !== 'view') return
   const modelField = dataModel.schemas[0]?.children?.find(f => f.id === fieldId)
   if (!modelField) return
   const view = currentView.value
   if (!view) return
-  view.schemas[0].children.push(deepClone(modelField))
+
+  // 按数据模型位置插入：在已存在于视图的字段中，找到第一个数据模型索引大于目标字段的
+  const modelIndex = modelFields.value.findIndex(f => f.id === fieldId)
+  const viewChildren = view.schemas[0].children
+  const insertAt = viewChildren.findIndex(f => {
+    const idx = modelFields.value.findIndex(mf => mf.id === f.id)
+    return idx > modelIndex
+  })
+  if (insertAt === -1) {
+    viewChildren.push(deepClone(modelField))
+  } else {
+    viewChildren.splice(insertAt, 0, deepClone(modelField))
+  }
+
   const schema = getDesignerData()
   if (schema) {
     setDesignerData({
       ...schema,
       schemas: [{
         ...schema.schemas[0],
-        children: deepClone(view.schemas[0].children ?? []),
+        children: deepClone(viewChildren),
       }],
     })
   }
 }
 
-watch([mode, modelFields, () => currentView.value?.schemas[0]?.children], () => {
-  pluginManager.global.__multi_view_pool = {
-    mode: mode.value,
-    modelFields: [...modelFields.value],
-    viewFieldIds: currentView.value?.schemas[0]?.children?.map(f => f.id) ?? [],
+// 初始化响应式上下文（保持引用不变，只更新属性）
+if (!pluginManager.global.__multi_view_pool) {
+  pluginManager.global.__multi_view_pool = reactive({
+    mode: 'model',
+    modelFields: [] as ComponentSchema[],
+    viewFieldIds: [] as string[],
     addFieldToView,
+  })
+}
+
+// 同步上下文到 pluginManager.global（响应式，FieldPool 直接读取）
+watch([mode, modelFields, () => currentView.value?.schemas[0]?.children], () => {
+  const pool = pluginManager.global.__multi_view_pool
+  if (pool) {
+    pool.mode = mode.value
+    pool.modelFields = [...modelFields.value]
+    pool.viewFieldIds = currentView.value?.schemas[0]?.children?.map(f => f.id) ?? []
+    pool.addFieldToView = addFieldToView
   }
 }, { immediate: true, deep: true })
 
