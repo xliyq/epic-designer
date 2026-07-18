@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ComponentSchema, PageSchema } from '@ies/types'
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { EDesigner } from '@ies/core'
 import { pluginManager } from '@ies/manager'
 import { deepClone } from '@ies/utils'
@@ -114,7 +114,6 @@ if (!pluginManager.global.__multi_view_pool) {
   pluginManager.global.__multi_view_pool = reactive({
     mode: 'model',
     modelFields: [] as ComponentSchema[],
-    viewFieldIds: [] as string[],
     addFieldToView,
   })
 }
@@ -125,7 +124,6 @@ watch([mode, modelFields, () => currentView.value?.schemas[0]?.children], () => 
   if (pool) {
     pool.mode = mode.value
     pool.modelFields = [...modelFields.value]
-    pool.viewFieldIds = currentView.value?.schemas[0]?.children?.map(f => f.id) ?? []
     pool.addFieldToView = addFieldToView
   }
 }, { immediate: true, deep: true })
