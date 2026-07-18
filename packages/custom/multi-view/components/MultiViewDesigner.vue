@@ -1,12 +1,11 @@
 <script lang="ts" setup>
 import type { ComponentSchema, PageSchema } from '@ies/types'
-import { computed, nextTick, onMounted, provide, reactive, ref, watch } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import { EDesigner } from '@ies/core'
 import { pluginManager } from '@ies/manager'
 import { deepClone } from '@ies/utils'
 import { useViewDesigner } from '../composables/useViewDesigner'
 import type { DesignerMode, ViewTypeConfig } from '../types'
-import { FIELD_POOL_KEY } from '../types'
 import ViewToolbar from './ViewToolbar.vue'
 import FieldPool from './FieldPool.vue'
 
@@ -244,40 +243,6 @@ watch([currentViewId, () => currentView.value?.schemas[0]?.children], () => {
 // ════════════════════════════════════════
 //  字段池操作
 // ════════════════════════════════════════
-
-const selectedFieldId = ref('')
-
-function handleFieldPoolSelect(fieldId: string) {
-  selectedFieldId.value = fieldId
-}
-
-function handleFieldPoolToggle(fieldId: string) {
-  toggleFieldInView(fieldId)
-  // 刷新画布
-  const schema = getDesignerData()
-  if (schema && currentView.value) {
-    setDesignerData({
-      ...schema,
-      schemas: [{
-        ...schema.schemas[0],
-        children: deepClone(currentView.value.schemas[0]?.children ?? []),
-      }],
-    })
-  }
-  takeSnapshot(currentViewId.value)
-}
-
-// 注入字段池上下文（FieldPool 在 EDesigner 内部渲染，通过 inject 获取数据）
-const viewFieldIds = computed(() =>
-  currentView.value?.schemas[0]?.children?.map(f => f.id) ?? []
-)
-const fieldPoolCtx = reactive({
-  viewFieldIds: viewFieldIds.value,
-  get selectedFieldId() { return selectedFieldId.value },
-  selectField: handleFieldPoolSelect,
-  toggleField: handleFieldPoolToggle,
-})
-provide(FIELD_POOL_KEY, fieldPoolCtx)
 
 // ════════════════════════════════════════
 //  保存
