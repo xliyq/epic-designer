@@ -52,11 +52,14 @@ const {
   getViewTypes,
 } = useViewDesigner()
 
-// 初始化：加载传入的数据
+// 初始化：加载传入的数据，注册字段池
 onMounted(() => {
   if (props.dataModel || props.viewTypes || props.views) {
     setAll(props.dataModel, props.viewTypes, props.views)
   }
+  // 提前注册字段池，确保 EDesigner 就绪时它已经存在
+  registerFieldPool()
+  pluginManager.panel.hideActivitybar('field_pool')
 })
 
 // ════════════════════════════════════════
@@ -65,8 +68,6 @@ onMounted(() => {
 
 function handleDesignerReady() {
   ready.value = true
-  registerFieldPool()
-  pluginManager.panel.hideActivitybar('field_pool')
   nextTick(() => emit('ready'))
 }
 
@@ -76,12 +77,12 @@ function registerFieldPool() {
   if (fieldPoolRegistered) return
   fieldPoolRegistered = true
   pluginManager.panel.registerActivitybar({
-    component: () => Promise.resolve({ default: FieldPool }),
+    component: FieldPool,
     icon: 'icon--epic--list',
     id: 'field_pool',
     sort: 150,
     title: '字段池',
-    visible: false,
+    visible: true,
   })
 }
 
