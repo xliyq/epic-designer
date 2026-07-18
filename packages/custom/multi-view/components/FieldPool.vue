@@ -1,12 +1,27 @@
 <script lang="ts" setup>
 import { computed, inject, ref } from 'vue'
 import { EpicIcon, EpicTree } from '@ies/base-ui'
+import { useDesignerContext } from '@ies/hooks'
 import { pluginManager } from '@ies/manager'
 import type { ComponentSchema } from '@ies/types'
 import { FIELD_POOL_DATA_KEY } from '../types'
 
-const modelFields = inject(FIELD_POOL_DATA_KEY)
-if (!modelFields) throw new Error('FieldPool 需要 MultiViewDesigner 提供数据')
+const ctx = inject(FIELD_POOL_DATA_KEY)
+if (!ctx) throw new Error('FieldPool 需要 MultiViewDesigner 提供上下文')
+
+const { pageSchema } = useDesignerContext()
+
+/**
+ * 展示的字段列表：
+ * - 模型模式：从 useDesignerContext 读取 EDesigner 实时画布数据
+ * - 视图模式：从注入的数据模型快照读取
+ */
+const displayFields = computed(() => {
+  if (ctx.mode === 'model') {
+    return pageSchema.schemas[0]?.children ?? []
+  }
+  return ctx.modelFields
+})
 
 const selectedKeys = ref<string[]>([])
 
@@ -38,7 +53,7 @@ function countLeafFields(schemas: ComponentSchema[]): number {
   return count
 }
 
-const leafCount = computed(() => countLeafFields(modelFields.value))
+const leafCount = computed(() => countLeafFields(displayFields.value))
 </script>
 
 <template>
@@ -48,7 +63,7 @@ const leafCount = computed(() => countLeafFields(modelFields.value))
       <span class="ep-field-count">{{ leafCount }} 个字段</span>
     </div>
     <EpicTree
-      :options="modelFields"
+      :options="displayFields"
       :selected-keys="selectedKeys"
       @node-click="handleNodeClick"
     >
@@ -68,7 +83,7 @@ const leafCount = computed(() => countLeafFields(modelFields.value))
       </template>
     </EpicTree>
     <div
-      v-if="modelFields.length === 0"
+      v-if="displayFields.length === 0"
       class="pt-42px text-center text-gray-400"
     >
       暂无字段

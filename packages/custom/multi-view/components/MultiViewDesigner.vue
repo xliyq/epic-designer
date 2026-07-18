@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ComponentSchema, PageSchema } from '@ies/types'
-import { nextTick, onMounted, provide, ref, watch } from 'vue'
+import { nextTick, onMounted, provide, reactive, ref, watch } from 'vue'
 import { EDesigner } from '@ies/core'
 import { pluginManager } from '@ies/manager'
 import { deepClone } from '@ies/utils'
@@ -61,8 +61,12 @@ onMounted(() => {
   registerFieldPool()
 })
 
-// 提供数据模型字段给 FieldPool（始终是数据模型，不受视图切换影响）
-provide(FIELD_POOL_DATA_KEY, modelFields)
+// 提供字段池上下文（模式 + 数据模型字段快照，视图模式下使用）
+const fieldPoolData = reactive({
+  get mode() { return mode.value },
+  get modelFields() { return modelFields.value },
+})
+provide(FIELD_POOL_DATA_KEY, fieldPoolData)
 
 // ════════════════════════════════════════
 //  EDesigner 就绪后注册字段池
