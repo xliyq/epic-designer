@@ -1,13 +1,12 @@
 <script lang="ts" setup>
 import type { ComponentSchema } from '@ies/types'
-import { computed, inject, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { EpicIcon, EpicTree } from '@ies/base-ui'
 import { useDesignerContext } from '@ies/hooks'
 import { pluginManager } from '@ies/manager'
-import { FIELD_POOL_DATA_KEY } from '../types'
 
-const ctx = inject(FIELD_POOL_DATA_KEY)
-if (!ctx) throw new Error('FieldPool 需要 MultiViewDesigner 提供上下文')
+const ctx = pluginManager.global.__multi_view_pool
+if (!ctx) throw new Error('FieldPool 需要 MultiViewDesigner 提供上下文（pluginManager.global.__multi_view_pool）')
 
 const { pageSchema } = useDesignerContext()
 
@@ -24,7 +23,6 @@ function handleNodeClick({ componentSchema }: { componentSchema: ComponentSchema
   if (!componentSchema.id) return
   selectedKeys.value = [componentSchema.id]
 
-  // 视图模式下点击字段添加到画布
   if (ctx.mode === 'view') {
     ctx.addFieldToView(componentSchema.id)
   }
@@ -51,7 +49,6 @@ function countLeafFields(schemas: ComponentSchema[]): number {
 }
 
 const leafCount = computed(() => countLeafFields(displayFields.value))
-
 const viewFieldIdSet = computed(() => new Set(ctx.viewFieldIds))
 </script>
 

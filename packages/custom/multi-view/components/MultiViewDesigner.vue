@@ -1,12 +1,11 @@
 <script lang="ts" setup>
 import type { ComponentSchema, PageSchema } from '@ies/types'
-import { nextTick, onMounted, provide, reactive, ref, watch,computed } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { EDesigner } from '@ies/core'
 import { pluginManager } from '@ies/manager'
 import { deepClone } from '@ies/utils'
 import { useViewDesigner } from '../composables/useViewDesigner'
 import type { DesignerMode, ViewTypeConfig } from '../types'
-import { FIELD_POOL_DATA_KEY } from '../types'
 import ViewToolbar from './ViewToolbar.vue'
 import FieldPool from './FieldPool.vue'
 
@@ -61,23 +60,14 @@ onMounted(() => {
   registerFieldPool()
 })
 
-// 提供字段池上下文（模式 + 数据模型 + 视图字段 ID + 添加到视图）
-const viewFieldIdList = computed(() =>
-  currentView.value?.schemas[0]?.children?.map(f => f.id) ?? []
-)
-
+// 通过 pluginManager.global 共享字段池上下文（provide/inject 跨 Suspense 不可靠）
 function addFieldToView(fieldId: string) {
   if (mode.value !== 'view') return
-  // 从数据模型中找到字段
   const modelField = dataModel.schemas[0]?.children?.find(f => f.id === fieldId)
   if (!modelField) return
-
-  // 添加到当前视图
   const view = currentView.value
   if (!view) return
   view.schemas[0].children.push(deepClone(modelField))
-
-  // 刷新画布
   const schema = getDesignerData()
   if (schema) {
     setDesignerData({
@@ -90,12 +80,14 @@ function addFieldToView(fieldId: string) {
   }
 }
 
-const fieldPoolData = reactive({
-  get mode() { return mode.value },
-  get modelFields() { return modelFields.value },
-  get viewFieldIds() { return viewFieldIdList.value },
-  addFieldToView,
-})
+watch([mode, modelFields, () => currentView.value?.schemas[0]?.children], () => {
+  pluginManager.global.__multi_view_pool = {
+    mode: mode.value,
+    modelFields: [...modelFields.value],
+    viewFieldIds: currentView.value?.schemas[0]?.children?.map(f => f.id) ?? [],
+    addFieldToView,
+  }
+}, { immediate: true, deep: true })
 
 // ════════════════════════════════════════
 //  EDesigner 就绪后注册字段池
