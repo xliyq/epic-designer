@@ -53,13 +53,14 @@ function getFieldIcon(type: string): string {
           class="ep-outline-item ep-text-padding flex"
           :class="{ hidden: !viewFieldIdSet.has(schema.id ?? '') }"
         >
-          <span
+          <EpicIcon
             class="ep-eye-btn"
             :class="{ visible: viewFieldIdSet.has(schema.id ?? '') }"
+            :name="viewFieldIdSet.has(schema.id ?? '')
+              ? 'icon--epic--visibility-outline-rounded'
+              : 'icon--epic--visibility-off-outline-rounded'"
             @click.stop="handleEyeClick(schema.id!, $event)"
-          >
-            {{ viewFieldIdSet.has(schema.id ?? '') ? '👁' : '🚫' }}
-          </span>
+          />
           <EpicIcon
             class="ep-component-icon translate-y-2px"
             :name="getFieldIcon(schema.type)"
