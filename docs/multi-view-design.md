@@ -403,7 +403,7 @@ packages/custom/multi-view/
 ├── MultiViewDesigner
 │   ├── ViewToolbar（模式/视图切换 + 全局/视图切换）
 │   └── EDesigner (hidden-header)
-│       ├── EActivityBar (+ 字段池)
+│   ├── 字段池面板（EDesigner 外部渲染）
 │       ├── EEditContainer（自动响应 children 切换）
 │       └── ERightSidebar（原生属性面板不变）
 │
