@@ -57,6 +57,11 @@ const ERightSidebar = loadAsyncComponent(
 const epBuilderSlot = pluginManager.component.get('epBuilderSlot');
 
 const previewRef = ref<InstanceType<typeof EpicPreview> | null>(null);
+const collapsedLeft = ref(false);
+
+function onActivityBarCollapse(collapsed: boolean) {
+  collapsedLeft.value = collapsed;
+}
 
 const {
   handleDelete,
@@ -237,8 +242,13 @@ defineExpose({
         <div
           class="ep-split-view-container"
           :class="{ 'hidden-header': hiddenHeader }"
-        >
-          <EActivityBar />
+        > 
+          <div class="ep-left-container" :class="{ collapsed: collapsedLeft }">
+            <EActivityBar @collapse="onActivityBarCollapse" />
+            <div v-show="!collapsedLeft" class="ep-left-extra">
+              <slot name="sidebarAfter" />
+            </div>
+          </div>
           <EEditContainer />
           <ERightSidebar />
         </div>

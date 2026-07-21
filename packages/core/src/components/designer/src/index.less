@@ -51,6 +51,31 @@
     border-bottom: 1px solid var(--ep-border);
   }
 
+  .ep-left-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    transition: width 0.3s;
+
+    &.collapsed {
+      .ep-left-extra {
+        display: none;
+      }
+    }
+  }
+
+  .ep-left-container > .ep-activity-bar {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .ep-left-extra {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+
   ul {
     list-style: none;
     padding: 0;

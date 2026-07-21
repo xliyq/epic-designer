@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import type { ComponentSchema, PageSchema } from '@ies/types'
-import { nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { EDesigner } from '@ies/core'
 import { pluginManager } from '@ies/manager'
 import { deepClone } from '@ies/utils'
 import { useViewDesigner } from '../composables/useViewDesigner'
-import type { DesignerMode, ViewTypeConfig } from '../types'
+import type { ViewTypeConfig } from '../types'
 import ViewToolbar from './ViewToolbar.vue'
 import FieldPool from './FieldPool.vue'
 
@@ -35,15 +35,12 @@ const {
   globalMode,
   currentView,
   modelFields,
-  viewFields,
   setMode,
   setGlobalMode,
   selectView,
   addViewType,
   removeViewType,
   renameViewType,
-  toggleFieldInView,
-  isFieldInView,
   syncFieldToAll,
   setAll,
   getDataModel,
@@ -51,20 +48,11 @@ const {
   getViewTypes,
 } = useViewDesigner()
 
-// 初始化：加载传入的数据，注册字段池
+// 初始化：加载传入的数据
 onMounted(() => {
   if (props.dataModel || props.viewTypes || props.views) {
     setAll(props.dataModel, props.viewTypes, props.views)
   }
-  // 注册字段池（不隐藏，纯验证是否注册成功）
-  registerFieldPool()
-  // 显示字段池
-  pluginManager.panel.showActivitybar('field_pool')
-})
-
-// 销毁时清理字段池（不影响其他 EDesigner 实例）
-onUnmounted(() => {
-  pluginManager.panel.hideActivitybar('field_pool')
 })
 
 // 从画布同步当前视图状态（画布上的增删操作不会自动同步到 views 状态）
@@ -89,7 +77,7 @@ function addFieldToView(fieldId: string) {
   if (!view) return
 
   // 已存在则跳过
-  if (view.schemas[0].children.some(f => f.id === fieldId)) return
+  if (view.schemas[0].children?.some(f => f.id === fieldId)) return
 
   // 按数据模型位置插入
   const modelIndex = modelFields.value.findIndex(f => f.id === fieldId)
@@ -144,20 +132,7 @@ function handleDesignerReady() {
   nextTick(() => emit('ready'))
 }
 
-let fieldPoolRegistered = false
 
-function registerFieldPool() {
-  if (fieldPoolRegistered) return
-  fieldPoolRegistered = true
-  pluginManager.panel.registerActivitybar({
-    component: FieldPool,
-    icon: 'icon--epic--list',
-    id: 'field_pool',
-    sort: 150,
-    title: '字段池',
-    visible: true,
-  })
-}
 
 // ════════════════════════════════════════
 //  模式切换：交换 children
@@ -377,25 +352,30 @@ defineExpose({
 
 <template>
   <div class="mv-designer">
-    <ViewToolbar
-      :current-mode="mode"
-      :current-view-type-id="currentViewId"
-      :view-types="viewTypes"
-      :global-mode="globalMode"
-      :title="title"
-      @switch-mode="setMode"
-      @select-view="handleSwitchView"
-      @add-view="addViewType"
-      @remove-view="removeViewType"
-      @rename-view="renameViewType"
-      @toggle-global-mode="setGlobalMode"
-      @save="handleSave"
-    />
     <EDesigner
       ref="designerRef"
-      hidden-header
       @ready="handleDesignerReady"
-    />
+    >
+      <template #header>
+        <ViewToolbar
+          :current-mode="mode"
+          :current-view-type-id="currentViewId"
+          :view-types="viewTypes"
+          :global-mode="globalMode"
+          :title="title"
+          @switch-mode="setMode"
+          @select-view="handleSwitchView"
+          @add-view="addViewType"
+          @remove-view="removeViewType"
+          @rename-view="renameViewType"
+          @toggle-global-mode="setGlobalMode"
+          @save="handleSave"
+        />
+      </template>
+      <template #sidebarAfter>
+        <FieldPool />
+      </template>
+    </EDesigner>
   </div>
 </template>
 
