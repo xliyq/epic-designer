@@ -177,8 +177,8 @@ function handleImported(data: PageSchema) {
 /**
  * 预览
  */
-function handlePreview() {
-  previewRef.value!.handleOpen();
+function handlePreview(title?: string) {
+  previewRef.value?.handleOpen(title);
 }
 
 function handleWheel(event: WheelEvent) {
@@ -259,7 +259,6 @@ defineExpose({
         <EpicPreview
           ref="previewRef"
           :hide-confirm="props.hidePreviewConfirm"
-          :title="props.previewTitle"
         />
         <component v-if="epBuilderSlot" :is="epBuilderSlot" />
       </div>

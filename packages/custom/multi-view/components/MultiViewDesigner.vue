@@ -15,13 +15,18 @@ const props = withDefaults(defineProps<{
   viewTypes?: ViewTypeConfig[]
   views?: Record<string, PageSchema>
   title?: string
+  canAddView?:boolean
+  canDeleteView?:boolean
 }>(), {
   title: '多视图设计器',
+  canAddView: true,
+  canDeleteView: true,
 })
 
 const emit = defineEmits<{
   save: []
   ready: []
+  addView: []
 }>()
 
 const designerRef = ref<InstanceType<typeof EDesigner> | null>(null)
@@ -53,7 +58,7 @@ const {
 const previewTitle = computed(() => {
   if (mode.value === 'model') return '数据模型'
   const vt = viewTypes.value.find(v => v.id === currentViewId.value)
-  return vt?.name ?? '预览'
+  return vt?.name ? `视图 - ${vt.name}` : '预览'
 })
 
 // 初始化：加载传入的数据
@@ -321,7 +326,7 @@ watch([currentViewId, () => currentView.value?.schemas[0]?.children], () => {
 // ════════════════════════════════════════
 
 function handlePreview() {
-  designerRef.value?.preview()
+  designerRef.value?.preview(previewTitle.value)
 }
 
 function handleSave() {
@@ -346,10 +351,11 @@ function handleSave() {
 defineExpose({
   getDataModel,
   getViews,
+  getViewTypes,
+  addViewType,
   getView(id: string) {
     return views[id] ? deepClone(views[id]) as PageSchema : undefined
   },
-  getViewTypes,
   setView(id: string, schema: PageSchema) {
     views[id] = deepClone(schema) as PageSchema
   },
@@ -366,7 +372,6 @@ defineExpose({
   <div class="mv-designer">
     <EDesigner
       ref="designerRef"
-      :preview-title="previewTitle"
       @ready="handleDesignerReady"
     >
       <template #header>
@@ -375,9 +380,11 @@ defineExpose({
           :current-view-type-id="currentViewId"
           :view-types="viewTypes"
           :title="title"
+          :can-add-view="canAddView"
+          :can-delete-view="canDeleteView"
           @switch-mode="setMode"
           @select-view="handleSwitchView"
-          @add-view="addViewType"
+          @add-view="emit('addView')"
           @remove-view="removeViewType"
           @rename-view="renameViewType"
           @preview="handlePreview"

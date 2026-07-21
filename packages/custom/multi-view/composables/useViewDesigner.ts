@@ -101,8 +101,8 @@ export function useViewDesigner() {
     currentViewId.value = id
   }
 
-  function addViewType(name: string) {
-    const id = `view_${Date.now()}`
+  function addViewType(name: string, id?: string) {
+    id = id ?? `view_${Date.now()}`
     viewTypes.value.push({ id, name })
     views[id] = {
       schemas: [{

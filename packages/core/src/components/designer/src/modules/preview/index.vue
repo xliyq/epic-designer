@@ -27,6 +27,7 @@ const monacoEditorRef = ref<any>(null);
 const visible = ref(false);
 const dataVisible = ref(false);
 const formValues = ref({});
+const modalTitle = ref('');
 
 const { pageSchema, props: designerProps } = useDesignerContext();
 const kb = ref<any>(null);
@@ -54,7 +55,8 @@ function handleClose() {
   visible.value = false;
 }
 
-function handleOpen() {
+function handleOpen(title?: string) {
+  modalTitle.value = title || '预览'
   visible.value = true;
 }
 
@@ -110,7 +112,7 @@ defineExpose({
 <template>
   <Modal
     v-model="visible"
-    :title="title"
+    :title="modalTitle || title"
     :width="width"
     :hide-confirm="props.hideConfirm"
     ok-text="表单数据"

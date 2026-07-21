@@ -1,27 +1,32 @@
 <script lang="ts" setup>
 import type { ViewTypeConfig, DesignerMode } from '../types'
 
-const props = defineProps<{
+import { EpicIcon } from '@ies/base-ui'
+import { pluginManager } from '@ies/manager'
+
+const Button = pluginManager.component.get('button');
+
+const props = withDefaults(defineProps<{
   currentMode: DesignerMode
   currentViewTypeId: string
   viewTypes: ViewTypeConfig[]
   title?: string
-}>()
+  canAddView?:boolean
+  canDeleteView?:boolean
+}>(), {
+  canAddView: true,
+  canDeleteView: true,
+})
 
 const emit = defineEmits<{
   switchMode: [mode: DesignerMode]
   selectView: [id: string]
-  addView: [name: string]
+  addView: []
   removeView: [id: string]
   renameView: [id: string, newName: string]
   save: []
   preview: []
 }>()
-
-function handleAddView() {
-  const name = `视图${props.viewTypes.length + 1}`
-  emit('addView', name)
-}
 
 function handleRenameView(id: string, event: Event) {
   const target = event.target as HTMLElement
@@ -68,21 +73,35 @@ function handleRenameView(id: string, event: Event) {
             {{ vt.name }}
           </span>
           <span
-            v-if="viewTypes.length > 1"
+            v-if="viewTypes.length > 1 && canDeleteView"
             class="mv-view-tab-close"
             @click.stop="emit('removeView', vt.id)"
           >
             ×
           </span>
         </span>
-        <button class="mv-view-add-btn" @click="handleAddView">+</button>
+        <button v-if="canAddView" class="mv-view-add-btn" @click="emit('addView')">+</button>
 
       </div>
     </div>
 
     <div class="mv-header-right">
-      <button class="mv-btn" @click="emit('preview')">预览</button>
-      <button class="mv-btn mv-btn-primary" @click="emit('save')">保存</button>
+      <div>
+        <Button size="small" @click="emit('preview')">
+          <span class="flex! h-full items-center">
+            <EpicIcon name="icon--epic--eye" class="mr-4px" />
+            预览
+          </span>
+        </Button>
+      </div>
+      <div class="ml-2">
+        <Button size="small" @click="emit('save')">
+          <span class="flex! h-full items-center">
+            <EpicIcon name="icon--epic--save-outline-rounded" class="mr-4px" />
+            保存
+          </span>
+        </Button>
+      </div>
     </div>
   </header>
 </template>
@@ -98,7 +117,7 @@ function handleRenameView(id: string, event: Event) {
   border-bottom: 1px solid var(--ep-border);
   font-size: 14px;
   gap: 16px;
-  padding:4px 0;
+  padding:4px 12px;
 }
 .mv-header-left {
   flex-shrink: 0;
@@ -183,22 +202,6 @@ function handleRenameView(id: string, event: Event) {
 .mv-header-right {
   flex-shrink: 0;
   display: flex;
-  gap: 10px;
-}
-.mv-btn {
-  height: 30px;
-  padding: 0 14px;
-  border: 1px solid var(--ep-border);
-  border-radius: var(--ep-radius);
-  cursor: pointer;
-  background: transparent;
-  color: var(--ep-text-main);
-  font-size: 13px;
-  line-height: 1;
-}
-.mv-btn-primary {
-  background: var(--ep-primary);
-  color: var(--ep-primary-foreground);
-  border-color: var(--ep-primary);
+  align-items: center;
 }
 </style>
