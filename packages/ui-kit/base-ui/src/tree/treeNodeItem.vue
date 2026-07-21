@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { ComponentSchema } from '@ies/types';
 
-import { computed, defineComponent, h } from 'vue';
+import { computed, defineComponent, h, watch, ref } from 'vue';
 
 import { EpicIcon } from '@ies/base-ui';
 import { useDesignerContext } from '@ies/hooks';
@@ -71,22 +71,26 @@ function handleExpanded() {
   }
 
   if (treeContext!.expandedKeys.value.includes(id)) {
+    userCollapsed.value = true;
     treeContext!.expandedKeys.value = treeContext!.expandedKeys.value.filter(
       (item) => item !== id,
     );
   } else {
+    userCollapsed.value = false;
     treeContext!.expandedKeys.value.push(id);
   }
 }
 
-function init() {
-  const id = props.schema.id;
-  if (!id || !props.schema.children?.length) {
-    return false;
+const userCollapsed = ref(false);
+
+// 响应式自动展开：当 children 数据到达时展开节点
+watch(() => props.schema.children?.length, (hasChildren) => {
+  if (hasChildren && props.schema.id && !userCollapsed.value) {
+    if (!treeContext!.expandedKeys.value.includes(props.schema.id)) {
+      treeContext!.expandedKeys.value.push(props.schema.id);
+    }
   }
-  treeContext!.expandedKeys.value.push(id);
-}
-init();
+});
 </script>
 <template>
   <li
