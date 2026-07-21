@@ -313,6 +313,10 @@ watch([currentViewId, () => currentView.value?.schemas[0]?.children], () => {
 //  保存
 // ════════════════════════════════════════
 
+function handlePreview() {
+  designerRef.value?.preview()
+}
+
 function handleSave() {
   const schema = getDesignerData()
   if (schema) {
@@ -368,6 +372,7 @@ defineExpose({
           @add-view="addViewType"
           @remove-view="removeViewType"
           @rename-view="renameViewType"
+          @preview="handlePreview"
           @save="handleSave"
         />
       </template>
