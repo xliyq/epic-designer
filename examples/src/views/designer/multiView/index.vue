@@ -23,7 +23,7 @@ function handleSave() {
       ref="designerRef"
       :data-model="demoSchema"
       :view-types="demoViewTypes"
-      title="请假申请 - 多视图设计器"
+      title="多视图设计器"
       @save="handleSave"
     />
   </div>

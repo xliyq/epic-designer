@@ -2,6 +2,7 @@
 import type { ComponentSchema, PageSchema } from '@ies/types'
 import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { EDesigner } from '@ies/core'
+import { EpSwitch } from '@ies/base-ui'
 import { pluginManager } from '@ies/manager'
 import { deepClone } from '@ies/utils'
 import { useViewDesigner } from '../composables/useViewDesigner'
@@ -361,19 +362,29 @@ defineExpose({
           :current-mode="mode"
           :current-view-type-id="currentViewId"
           :view-types="viewTypes"
-          :global-mode="globalMode"
           :title="title"
           @switch-mode="setMode"
           @select-view="handleSwitchView"
           @add-view="addViewType"
           @remove-view="removeViewType"
           @rename-view="renameViewType"
-          @toggle-global-mode="setGlobalMode"
           @save="handleSave"
         />
       </template>
       <template #sidebarAfter>
         <FieldPool />
+      </template>
+      <template #sidebarRightTop>
+        <div v-if="mode === 'view'" class="mv-global-switch">
+          <EpSwitch
+            v-model="globalMode"
+              class="ml-2"
+              inline-prompt
+              style="--ep-switch-on-color: #ff4949; --ep-switch-off-color: #13ce66"
+              active-text="全局"
+              inactive-text="当前"
+          />
+        </div>
       </template>
     </EDesigner>
   </div>
@@ -384,5 +395,14 @@ defineExpose({
   display: flex;
   flex-direction: column;
   height: 100%;
+}
+
+.mv-global-switch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--ep-border);
+  flex-shrink: 0;
 }
 </style>

@@ -50,6 +50,7 @@ function handleClick(item: RightSidebarModel, index: number) {
     <!-- 折叠按钮 end -->
 
     <div class="ep-right-sidebar w-308px" :class="{ hide: hideRightMain }">
+      <slot name="sidebarRightTop" />
       <EpicBreadcrumb />
       <ul class="ep-actions-container">
         <li

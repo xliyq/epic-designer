@@ -5,7 +5,6 @@ const props = defineProps<{
   currentMode: DesignerMode
   currentViewTypeId: string
   viewTypes: ViewTypeConfig[]
-  globalMode: boolean
   title?: string
 }>()
 
@@ -15,7 +14,6 @@ const emit = defineEmits<{
   addView: [name: string]
   removeView: [id: string]
   renameView: [id: string, newName: string]
-  toggleGlobalMode: [v: boolean]
   save: []
   preview: []
 }>()
@@ -79,15 +77,6 @@ function handleRenameView(id: string, event: Event) {
         </span>
         <button class="mv-view-add-btn" @click="handleAddView">+</button>
 
-        <span class="mv-divider" />
-        <label class="mv-global-toggle">
-          <input
-            type="checkbox"
-            :checked="globalMode"
-            @change="emit('toggleGlobalMode', ($event.target as HTMLInputElement).checked)"
-          />
-          <span>全局</span>
-        </label>
       </div>
     </div>
 
@@ -102,24 +91,27 @@ function handleRenameView(id: string, event: Event) {
 .mv-header {
   display: flex;
   align-items: center;
-  height: 42px;
+  min-height: 60px;
   background: var(--ep-designer-background);
-  padding: 0 12px;
+  padding: 0 16px;
   color: var(--ep-text-main);
   border-bottom: 1px solid var(--ep-border);
-  font-size: 13px;
-  gap: 12px;
+  font-size: 14px;
+  gap: 16px;
+  padding:4px 0;
 }
 .mv-header-left {
   flex-shrink: 0;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 15px;
 }
 .mv-header-center {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  padding-bottom: 8px;
 }
 .mv-mode-switch {
   display: flex;
@@ -128,8 +120,8 @@ function handleRenameView(id: string, event: Event) {
   overflow: hidden;
 }
 .mv-mode-switch button {
-  padding: 2px 12px;
-  font-size: 12px;
+  padding: 4px 16px;
+  font-size: 13px;
   border: none;
   cursor: pointer;
   background: transparent;
@@ -143,14 +135,14 @@ function handleRenameView(id: string, event: Event) {
 .mv-view-tabs {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
+  gap: 6px;
+  font-size: 13px;
 }
 .mv-view-tab {
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 2px 8px;
+  gap: 4px;
+  padding: 4px 12px;
   border-radius: var(--ep-radius);
   cursor: pointer;
   background: var(--ep-muted);
@@ -162,10 +154,10 @@ function handleRenameView(id: string, event: Event) {
 }
 .mv-view-tab-name {
   outline: none;
-  min-width: 20px;
+  min-width: 24px;
 }
 .mv-view-tab-close {
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1;
   opacity: 0.6;
   cursor: pointer;
@@ -174,43 +166,35 @@ function handleRenameView(id: string, event: Event) {
   opacity: 1;
 }
 .mv-view-add-btn {
-  padding: 2px 8px;
+  padding: 4px 12px;
   border: 1px dashed var(--ep-border);
   border-radius: var(--ep-radius);
   cursor: pointer;
   background: transparent;
   color: var(--ep-text-secondary);
+  font-size: 14px;
 }
 .mv-divider {
   width: 1px;
-  height: 16px;
+  height: 20px;
   background: var(--ep-border);
-  margin: 0 4px;
-}
-.mv-global-toggle {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  user-select: none;
-}
-.mv-global-toggle input {
-  margin: 0;
+  margin: 0 8px;
 }
 .mv-header-right {
   flex-shrink: 0;
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 .mv-btn {
-  height: 24px;
-  padding: 0 8px;
+  height: 30px;
+  padding: 0 14px;
   border: 1px solid var(--ep-border);
   border-radius: var(--ep-radius);
   cursor: pointer;
   background: transparent;
   color: var(--ep-text-main);
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 1;
 }
 .mv-btn-primary {
   background: var(--ep-primary);

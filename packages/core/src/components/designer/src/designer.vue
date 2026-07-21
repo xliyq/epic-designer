@@ -250,7 +250,11 @@ defineExpose({
             </div>
           </div>
           <EEditContainer />
-          <ERightSidebar />
+          <ERightSidebar>
+            <template #sidebarRightTop>
+              <slot name="sidebarRightTop" />
+            </template>
+          </ERightSidebar>
         </div>
         <EpicPreview
           ref="previewRef"
