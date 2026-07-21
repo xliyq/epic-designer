@@ -259,6 +259,7 @@ defineExpose({
         <EpicPreview
           ref="previewRef"
           :hide-confirm="props.hidePreviewConfirm"
+          :title="props.previewTitle"
         />
         <component v-if="epBuilderSlot" :is="epBuilderSlot" />
       </div>

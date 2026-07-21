@@ -13,9 +13,11 @@ const props = withDefaults(
   defineProps<{
     hideConfirm?: boolean;
     width?: string;
+    title?: string;
   }>(),
   {
     width: '900px',
+    title: '预览',
   },
 );
 const MonacoEditor = pluginManager.component.get('monacoEditor');
@@ -108,7 +110,7 @@ defineExpose({
 <template>
   <Modal
     v-model="visible"
-    title="预览"
+    :title="title"
     :width="width"
     :hide-confirm="props.hideConfirm"
     ok-text="表单数据"

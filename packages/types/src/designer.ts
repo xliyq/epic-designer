@@ -25,4 +25,5 @@ export interface DesignerProps {
   sourceCodeReadOnly?: boolean;
   tableJson?: TableMeta[];
   title?: string;
+  previewTitle?: string;
 }

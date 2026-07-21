@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ComponentSchema, PageSchema } from '@ies/types'
-import { nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { EDesigner } from '@ies/core'
 import { EpSwitch } from '@ies/base-ui'
 import { pluginManager } from '@ies/manager'
@@ -48,6 +48,13 @@ const {
   getViews,
   getViewTypes,
 } = useViewDesigner()
+
+// 预览标题：数据模型模式下显示"数据模型"，视图模式下显示当前视图名称
+const previewTitle = computed(() => {
+  if (mode.value === 'model') return '数据模型'
+  const vt = viewTypes.value.find(v => v.id === currentViewId.value)
+  return vt?.name ?? '预览'
+})
 
 // 初始化：加载传入的数据
 onMounted(() => {
@@ -359,6 +366,7 @@ defineExpose({
   <div class="mv-designer">
     <EDesigner
       ref="designerRef"
+      :preview-title="previewTitle"
       @ready="handleDesignerReady"
     >
       <template #header>
