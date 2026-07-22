@@ -1,11 +1,5 @@
 import type { ComputedRef, InjectionKey } from 'vue';
-
-/**
- * attribute-group 运行时需要的 API 属性定义数据。
- * key = attribute-group 的 field 名（如 "poordCharacters"）
- * value = 该属性组的 API 定义数组
- */
-export type AttributeMeta = Record<string, any[]>;
+import type { AttributeMeta } from '@ies/types';
 
 export const ATTRIBUTE_META_KEY: InjectionKey<ComputedRef<AttributeMeta>> =
   Symbol('attributeMeta');

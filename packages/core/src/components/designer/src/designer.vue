@@ -245,7 +245,7 @@ defineExpose({
         > 
           <div class="ep-left-container" :class="{ collapsed: collapsedLeft }">
             <EActivityBar @collapse="onActivityBarCollapse" />
-            <div v-show="!collapsedLeft" class="ep-left-extra">
+            <div v-show="!collapsedLeft" v-if="$slots.sidebarAfter" class="ep-left-extra">
               <slot name="sidebarAfter" />
             </div>
           </div>

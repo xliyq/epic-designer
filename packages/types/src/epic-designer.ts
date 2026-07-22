@@ -5,6 +5,7 @@ import type { FormItemRule } from './rules';
 
 export interface RenderCallbackParams {
   tableMeta?: TableMeta;
+  parent?: Record<string, any>;
   values: Record<string, any>;
 }
 
