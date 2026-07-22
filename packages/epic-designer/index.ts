@@ -12,5 +12,4 @@ export * from '@ies/types';
 
 export * from '@ies/utils';
 
-export { EMultiViewDesigner, useViewDesigner } from '../custom/multi-view/index';
-export type { ViewTypeConfig, DesignerMode } from '../custom/multi-view/types';
+export * from '@ies/custom';

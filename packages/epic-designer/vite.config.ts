@@ -95,6 +95,7 @@ export default defineConfig({
       '@ies/types': path.resolve(__dirname, '../types/src/index'),
       // '@ies/ui': path.resolve(__dirname, '../ui/'),
       '@ies/utils': path.resolve(__dirname, '../utils/src/index'),
+      '@ies/custom': path.resolve(__dirname, '../custom/index'),
     },
   },
 });
