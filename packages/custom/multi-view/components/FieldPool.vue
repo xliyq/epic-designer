@@ -6,7 +6,7 @@ import { useDesignerContext } from '@ies/hooks'
 import { pluginManager } from '@ies/manager'
 
 const ctx = pluginManager.global.__multi_view_pool
-if (!ctx) throw new Error('FieldPool 需要 MultiViewDesigner 提供上下文（pluginManager.global.__multi_view_pool）')
+if (!ctx) throw new Error('FieldPool 需要 EMultiViewDesigner 提供上下文（pluginManager.global.__multi_view_pool）')
 
 const { pageSchema } = useDesignerContext()
 

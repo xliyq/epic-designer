@@ -1,4 +1,4 @@
-export { default as MultiViewDesigner } from './components/MultiViewDesigner.vue'
+export { default as EMultiViewDesigner } from './components/MultiViewDesigner.vue'
 export { useViewDesigner } from './composables/useViewDesigner'
 export { createDemoDataModel, createDemoViewTypes } from './presets/defaultData'
 
