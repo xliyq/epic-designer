@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import type { ComponentSchema, PageSchema } from '@ies/types'
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { EDesigner } from '@ies/core'
 import { EpSwitch } from '@ies/base-ui'
-import { pluginManager } from '@ies/manager'
 import { deepClone } from '@ies/utils'
 import { useViewDesigner } from '../composables/useViewDesigner'
 import type { ViewTypeConfig } from '../types'
@@ -81,31 +80,108 @@ function syncViewFromCanvas() {
   view.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
 }
 
-// 将数据模型字段按顺序插入到当前视图中
+/** ════════════════════════════════════════
+ *  字段树工具函数
+ *  ════════════════════════════════════════ */
+
+/** 在字段树中递归查找字段 */
+function findFieldInTree(fields: ComponentSchema[], fieldId: string): ComponentSchema | null {
+  for (const f of fields) {
+    if (f.id === fieldId) return f
+    if (f.children?.length) {
+      const found = findFieldInTree(f.children, fieldId)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+/** 在字段树中递归查找字段的直属父级 */
+function findParentFieldInTree(fields: ComponentSchema[], childId: string): ComponentSchema | null {
+  for (const f of fields) {
+    if (f.children?.length) {
+      if (f.children.some(c => c.id === childId)) return f
+      const found = findParentFieldInTree(f.children, childId)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+/** 在字段树中递归检查字段是否存在于任意层级 */
+function fieldExistsInTree(fields: ComponentSchema[], fieldId: string): boolean {
+  for (const f of fields) {
+    if (f.id === fieldId) return true
+    if (f.children?.length && fieldExistsInTree(f.children, fieldId)) return true
+  }
+  return false
+}
+
+/** 在字段树中按 id 查找容器引用（用于直接修改其 children） */
+function findContainerRef(fields: ComponentSchema[], containerId: string): ComponentSchema | null {
+  for (const f of fields) {
+    if (f.id === containerId) return f
+    if (f.children?.length) {
+      const found = findContainerRef(f.children, containerId)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+/** ════════════════════════════════════════
+ *  添加字段到视图
+ *  ════════════════════════════════════════ */
+
 function addFieldToView(fieldId: string) {
   if (mode.value !== 'view') return
   // 同步画布状态到视图，确保操作的是最新数据
   syncViewFromCanvas()
 
-  const modelField = dataModel.schemas[0]?.children?.find(f => f.id === fieldId)
+  const modelField = findFieldInTree(dataModel.schemas[0]?.children ?? [], fieldId)
   if (!modelField) return
   const view = currentView.value
   if (!view) return
 
-  // 已存在则跳过
-  if (view.schemas[0].children?.some(f => f.id === fieldId)) return
-
-  // 按数据模型位置插入
-  const modelIndex = modelFields.value.findIndex(f => f.id === fieldId)
   const viewChildren = view.schemas[0].children ?? []
-  const insertAt = viewChildren.findIndex(f => {
-    const idx = modelFields.value.findIndex(mf => mf.id === f.id)
-    return idx > modelIndex
-  })
-  if (insertAt === -1) {
-    viewChildren.push(deepClone(modelField))
+
+  // 已存在于视图中（任意层级）则跳过
+  if (fieldExistsInTree(viewChildren, fieldId)) return
+
+  const isTopLevel = (dataModel.schemas[0]?.children ?? []).some(f => f.id === fieldId)
+
+  if (isTopLevel) {
+    // 第一层字段：按数据模型顺序位置插入
+    const modelIndex = modelFields.value.findIndex(f => f.id === fieldId)
+    const insertAt = viewChildren.findIndex(f => {
+      const idx = modelFields.value.findIndex(mf => mf.id === f.id)
+      return idx > modelIndex
+    })
+    if (insertAt === -1) {
+      viewChildren.push(deepClone(modelField))
+    } else {
+      viewChildren.splice(insertAt, 0, deepClone(modelField))
+    }
   } else {
-    viewChildren.splice(insertAt, 0, deepClone(modelField))
+    // 嵌套子字段：找到视图中同 id 的父级容器，按数据模型顺序插入
+    const parentInModel = findParentFieldInTree(dataModel.schemas[0]?.children ?? [], fieldId)
+    if (parentInModel) {
+      const container = findContainerRef(viewChildren, parentInModel.id!)
+      if (container) {
+        if (!container.children) container.children = []
+        const modelChildren = parentInModel.children ?? []
+        const modelIndex = modelChildren.findIndex(c => c.id === fieldId)
+        const insertAt = container.children.findIndex(c => {
+          const idx = modelChildren.findIndex(mc => mc.id === c.id)
+          return idx > modelIndex
+        })
+        if (insertAt === -1) {
+          container.children.push(deepClone(modelField))
+        } else {
+          container.children.splice(insertAt, 0, deepClone(modelField))
+        }
+      }
+    }
   }
 
   const schema = getDesignerData()
@@ -119,26 +195,6 @@ function addFieldToView(fieldId: string) {
     })
   }
 }
-
-// 通过 pluginManager.global 共享字段池上下文（reactive 对象，直接修改属性）
-// 初始化响应式上下文（保持引用不变，只更新属性）
-if (!pluginManager.global.__multi_view_pool) {
-  pluginManager.global.__multi_view_pool = reactive({
-    mode: 'model',
-    modelFields: [] as ComponentSchema[],
-    addFieldToView,
-  })
-}
-
-// 同步上下文到 pluginManager.global（响应式，FieldPool 直接读取）
-watch([mode, modelFields, () => currentView.value?.schemas[0]?.children], () => {
-  const pool = pluginManager.global.__multi_view_pool
-  if (pool) {
-    pool.mode = mode.value
-    pool.modelFields = [...modelFields.value]
-    pool.addFieldToView = addFieldToView
-  }
-}, { immediate: true, deep: true })
 
 // ════════════════════════════════════════
 //  EDesigner 就绪
@@ -419,7 +475,11 @@ defineExpose({
       <!-- sidebarAfter：用户提供则替换 FieldPool -->
       <template #sidebarAfter>
         <slot name="sidebarAfter">
-          <FieldPool />
+          <FieldPool
+            :mode="mode"
+            :modelFields="modelFields"
+            :addFieldToView="addFieldToView"
+          />
         </slot>
       </template>
 

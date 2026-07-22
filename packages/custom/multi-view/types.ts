@@ -11,4 +11,3 @@ export interface ViewTypeConfig {
 /** 设计器模式 */
 export type DesignerMode = 'model' | 'view'
 
-/** 字段池上下文（通过 pluginManager.global.__multi_view_pool 共享） */
