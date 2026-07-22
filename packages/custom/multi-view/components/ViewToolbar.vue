@@ -38,7 +38,10 @@ function handleRenameView(id: string, event: Event) {
 <template>
   <header class="mv-header">
     <div class="mv-header-left">
-      {{ title ?? '多视图设计器' }}
+      <slot name="prefix" />
+      <slot name="title">
+        {{ title ?? '多视图设计器' }}
+      </slot>
     </div>
 
     <div class="mv-header-center">
@@ -86,22 +89,26 @@ function handleRenameView(id: string, event: Event) {
     </div>
 
     <div class="mv-header-right">
-      <div>
-        <Button size="small" @click="emit('preview')">
-          <span class="flex! h-full items-center">
-            <EpicIcon name="icon--epic--eye" class="mr-4px" />
-            预览
-          </span>
-        </Button>
-      </div>
-      <div class="ml-2">
-        <Button size="small" @click="emit('save')">
-          <span class="flex! h-full items-center">
-            <EpicIcon name="icon--epic--save-outline-rounded" class="mr-4px" />
-            保存
-          </span>
-        </Button>
-      </div>
+      <slot name="right-prefix" />
+      <slot name="right-action">
+        <div>
+          <Button size="small" @click="emit('preview')">
+            <span class="flex! h-full items-center">
+              <EpicIcon name="icon--epic--eye" class="mr-4px" />
+              预览
+            </span>
+          </Button>
+        </div>
+        <div class="ml-2">
+          <Button size="small" @click="emit('save')">
+            <span class="flex! h-full items-center">
+              <EpicIcon name="icon--epic--save-outline-rounded" class="mr-4px" />
+              保存
+            </span>
+          </Button>
+        </div>
+      </slot>
+      <slot name="right-suffix" />
     </div>
   </header>
 </template>
@@ -112,12 +119,11 @@ function handleRenameView(id: string, event: Event) {
   align-items: center;
   min-height: 60px;
   background: var(--ep-designer-background);
-  padding: 0 16px;
   color: var(--ep-text-main);
   border-bottom: 1px solid var(--ep-border);
   font-size: 14px;
   gap: 16px;
-  padding:4px 12px;
+  padding: 4px 12px;
 }
 .mv-header-left {
   flex-shrink: 0;
@@ -192,12 +198,6 @@ function handleRenameView(id: string, event: Event) {
   background: transparent;
   color: var(--ep-text-secondary);
   font-size: 14px;
-}
-.mv-divider {
-  width: 1px;
-  height: 20px;
-  background: var(--ep-border);
-  margin: 0 8px;
 }
 .mv-header-right {
   flex-shrink: 0;

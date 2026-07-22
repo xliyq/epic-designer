@@ -10,15 +10,14 @@ import type { ViewTypeConfig } from '../types'
 import ViewToolbar from './ViewToolbar.vue'
 import FieldPool from './FieldPool.vue'
 
+// 只声明多视图专有 props；DesignerProps 由 $attrs 透传至内部 EDesigner
 const props = withDefaults(defineProps<{
   dataModel?: PageSchema
   viewTypes?: ViewTypeConfig[]
   views?: Record<string, PageSchema>
-  title?: string
-  canAddView?:boolean
-  canDeleteView?:boolean
+  canAddView?: boolean
+  canDeleteView?: boolean
 }>(), {
-  title: '多视图设计器',
   canAddView: true,
   canDeleteView: true,
 })
@@ -29,8 +28,11 @@ const emit = defineEmits<{
   addView: []
 }>()
 
+defineOptions({
+  inheritAttrs: false,
+})
+
 const designerRef = ref<InstanceType<typeof EDesigner> | null>(null)
-const ready = ref(false)
 
 const {
   mode,
@@ -49,6 +51,7 @@ const {
   renameViewType,
   syncFieldToAll,
   setAll,
+  setViews,
   getDataModel,
   getViews,
   getViewTypes,
@@ -78,7 +81,7 @@ function syncViewFromCanvas() {
   view.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
 }
 
-// 通过 pluginManager.global 共享字段池上下文（reactive 对象，直接修改属性）
+// 将数据模型字段按顺序插入到当前视图中
 function addFieldToView(fieldId: string) {
   if (mode.value !== 'view') return
   // 同步画布状态到视图，确保操作的是最新数据
@@ -117,6 +120,7 @@ function addFieldToView(fieldId: string) {
   }
 }
 
+// 通过 pluginManager.global 共享字段池上下文（reactive 对象，直接修改属性）
 // 初始化响应式上下文（保持引用不变，只更新属性）
 if (!pluginManager.global.__multi_view_pool) {
   pluginManager.global.__multi_view_pool = reactive({
@@ -137,15 +141,12 @@ watch([mode, modelFields, () => currentView.value?.schemas[0]?.children], () => 
 }, { immediate: true, deep: true })
 
 // ════════════════════════════════════════
-//  EDesigner 就绪后注册字段池
+//  EDesigner 就绪
 // ════════════════════════════════════════
 
 function handleDesignerReady() {
-  ready.value = true
   nextTick(() => emit('ready'))
 }
-
-
 
 // ════════════════════════════════════════
 //  模式切换：交换 children
@@ -318,10 +319,6 @@ watch([currentViewId, () => currentView.value?.schemas[0]?.children], () => {
 }, { immediate: true, deep: true })
 
 // ════════════════════════════════════════
-//  字段池操作
-// ════════════════════════════════════════
-
-// ════════════════════════════════════════
 //  保存
 // ════════════════════════════════════════
 
@@ -349,6 +346,17 @@ function handleSave() {
 // ════════════════════════════════════════
 
 defineExpose({
+  // ── EDesigner 兼容方法 ──
+  exportHistory: (...args: any[]) => (designerRef.value as any)?.exportHistory?.(...args),
+  getData: () => designerRef.value?.getData(),
+  importHistory: (...args: any[]) => (designerRef.value as any)?.importHistory?.(...args),
+  preview: (title?: string) => designerRef.value?.preview(title ?? previewTitle.value),
+  reset: () => designerRef.value?.reset(),
+  get revoke() { return designerRef.value?.revoke },
+  save: () => designerRef.value?.save(),
+  setData: (schema: PageSchema) => designerRef.value?.setData(schema),
+
+  // ── 多视图专用方法 ──
   getDataModel,
   getViews,
   getViewTypes,
@@ -359,12 +367,7 @@ defineExpose({
   setView(id: string, schema: PageSchema) {
     views[id] = deepClone(schema) as PageSchema
   },
-  setViews(allViews: Record<string, PageSchema>) {
-    for (const key of Object.keys(views)) delete views[key]
-    for (const [key, val] of Object.entries(allViews)) {
-      views[key] = deepClone(val) as PageSchema
-    }
-  },
+  setViews,
 })
 </script>
 
@@ -372,39 +375,68 @@ defineExpose({
   <div class="mv-designer">
     <EDesigner
       ref="designerRef"
+      v-bind="$attrs"
       @ready="handleDesignerReady"
+      @save="handleSave"
     >
+      <!-- header 插槽：用户提供则替换 ViewToolbar -->
       <template #header>
-        <ViewToolbar
-          :current-mode="mode"
-          :current-view-type-id="currentViewId"
-          :view-types="viewTypes"
-          :title="title"
-          :can-add-view="canAddView"
-          :can-delete-view="canDeleteView"
-          @switch-mode="setMode"
-          @select-view="handleSwitchView"
-          @add-view="emit('addView')"
-          @remove-view="removeViewType"
-          @rename-view="renameViewType"
-          @preview="handlePreview"
-          @save="handleSave"
-        />
+        <slot name="header">
+          <ViewToolbar
+            :current-mode="mode"
+            :current-view-type-id="currentViewId"
+            :view-types="viewTypes"
+            :title="($attrs.title as string) ?? '多视图设计器'"
+            :can-add-view="canAddView"
+            :can-delete-view="canDeleteView"
+            @switch-mode="setMode"
+            @select-view="handleSwitchView"
+            @add-view="emit('addView')"
+            @remove-view="removeViewType"
+            @rename-view="renameViewType"
+            @preview="handlePreview"
+            @save="handleSave"
+          >
+            <template #prefix>
+              <slot name="header-prefix" />
+            </template>
+            <template #title>
+              <slot name="header-title" />
+            </template>
+            <template #right-prefix>
+              <slot name="header-right-prefix" />
+            </template>
+            <template #right-action>
+              <slot name="header-right-action" />
+            </template>
+            <template #right-suffix>
+              <slot name="header-right-suffix" />
+            </template>
+          </ViewToolbar>
+        </slot>
       </template>
+
+      <!-- sidebarAfter：用户提供则替换 FieldPool -->
       <template #sidebarAfter>
-        <FieldPool />
+        <slot name="sidebarAfter">
+          <FieldPool />
+        </slot>
       </template>
+
+      <!-- sidebarRightTop：用户提供则替换全局开关 -->
       <template #sidebarRightTop>
-        <div v-if="mode === 'view'" class="mv-global-switch">
-          <EpSwitch
-            v-model="globalMode"
+        <slot name="sidebarRightTop">
+          <div v-if="mode === 'view'" class="mv-global-switch">
+            <EpSwitch
+              v-model="globalMode"
               class="ml-2"
               inline-prompt
               style="--ep-switch-on-color: #ff4949; --ep-switch-off-color: #13ce66"
               active-text="全局"
               inactive-text="当前"
-          />
-        </div>
+            />
+          </div>
+        </slot>
       </template>
     </EDesigner>
   </div>

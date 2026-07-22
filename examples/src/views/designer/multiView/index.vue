@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { EMultiViewDesigner, createDemoDataModel, createDemoViewTypes } from '@ies/custom/multi-view'
+import { EMultiViewDesigner, createDemoDataModel, createDemoViewTypes } from '@ies/designer'
 import ViewCreateDialog from './ViewCreateDialog.vue'
 
 const designerRef = ref<InstanceType<typeof EMultiViewDesigner>>()
@@ -29,7 +29,7 @@ function handleCreateViewConfirm(data: { name: string; code: string }) {
 
 <template>
   <div class="h-full">
-    <EEMultiViewDesigner
+    <EMultiViewDesigner
       ref="designerRef"
       :data-model="demoSchema"
       :view-types="demoViewTypes"

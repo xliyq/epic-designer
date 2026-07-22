@@ -83,7 +83,6 @@ export function useViewDesigner() {
 
   // ── 字段列表 ──
   const modelFields = computed(() => dataModel.schemas[0]?.children ?? [])
-  const viewFields = computed(() => currentView.value?.schemas[0]?.children ?? [])
 
   // ════════════════════════════════════════
   //  模式切换
@@ -130,31 +129,6 @@ export function useViewDesigner() {
   function renameViewType(id: string, name: string) {
     const vt = viewTypes.value.find(v => v.id === id)
     if (vt) vt.name = name
-  }
-
-  // ════════════════════════════════════════
-  //  字段显隐切换
-  // ════════════════════════════════════════
-
-  function toggleFieldInView(fieldId: string) {
-    const view = currentView.value
-    if (!view) return
-    const children = view.schemas[0].children ?? []
-    const index = children.findIndex(f => f.id === fieldId)
-
-    if (index === -1) {
-      // 加入视图：从数据模型复制字段
-      const field = dataModel.schemas[0].children?.find(f => f.id === fieldId)
-      if (field) {
-        children.push(deepClone(field))
-      }
-    } else {
-      children.splice(index, 1)
-    }
-  }
-
-  function isFieldInView(fieldId: string): boolean {
-    return currentView.value?.schemas[0]?.children?.some(f => f.id === fieldId) ?? false
   }
 
   // ════════════════════════════════════════
@@ -238,7 +212,6 @@ export function useViewDesigner() {
     globalMode,
     currentView,
     modelFields,
-    viewFields,
 
     setMode,
     setGlobalMode,
@@ -246,10 +219,7 @@ export function useViewDesigner() {
     addViewType,
     removeViewType,
     renameViewType,
-    toggleFieldInView,
-    isFieldInView,
     syncFieldToAll,
-    setDataModel,
     setViews,
     getDataModel,
     getViews,
