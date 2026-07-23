@@ -37,10 +37,7 @@ const viewFieldIdSet = computed(() => {
   walk(pageSchema.schemas[0]?.children ?? [])
   return ids
 })
-const inViewCount = computed({
-  get: () => viewFieldIdSet.value.size,
-  // 叶子总数只统计 displayFields 中的叶子字段
-})
+const inViewCount = computed(() => viewFieldIdSet.value.size)
 
 /** 在字段树中递归查找某个字段的直属父级 */
 function findParentField(fields: ComponentSchema[], childId: string): ComponentSchema | null {

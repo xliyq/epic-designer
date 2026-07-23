@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ComponentSchema, PageSchema } from '@ies/types'
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { EDesigner } from '@ies/core'
 import { EpSwitch } from '@ies/base-ui'
 import { deepClone } from '@ies/utils'
@@ -63,12 +63,10 @@ const previewTitle = computed(() => {
   return vt?.name ? `视图 - ${vt.name}` : '预览'
 })
 
-// 初始化：加载传入的数据
-onMounted(() => {
-  if (props.dataModel || props.viewTypes || props.views) {
-    setAll(props.dataModel, props.viewTypes, props.views)
-  }
-})
+// 初始化：同步加载传入数据（必须在 Suspense resolve 之前执行，否则 EDesigner 就绪时 dataModel 还是空的）
+if (props.dataModel || props.viewTypes || props.views) {
+  setAll(props.dataModel, props.viewTypes, props.views)
+}
 
 // 从画布同步当前视图状态（画布上的增删操作不会自动同步到 views 状态）
 function syncViewFromCanvas() {
@@ -201,6 +199,19 @@ function addFieldToView(fieldId: string) {
 // ════════════════════════════════════════
 
 function handleDesignerReady() {
+  // 根据当前模式决定是否将数据推送到画布
+  if (mode.value === 'model' && dataModel.schemas[0]?.children?.length) {
+    const schema = getDesignerData()
+    if (schema) {
+      setDesignerData({
+        ...schema,
+        schemas: [{
+          ...schema.schemas[0],
+          children: deepClone(dataModel.schemas[0]?.children ?? []),
+        }],
+      })
+    }
+  }
   nextTick(() => emit('ready'))
 }
 

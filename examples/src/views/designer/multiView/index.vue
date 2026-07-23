@@ -1,12 +1,19 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { EMultiViewDesigner, createDemoDataModel, createDemoViewTypes } from '@ies/designer'
+import type { PageSchema, ComponentSchema } from '@ies/types'
+import { EMultiViewDesigner, createDemoViewTypes } from '@ies/designer'
 import ViewCreateDialog from './ViewCreateDialog.vue'
+import jsonSchema from './test.json'
 
 const designerRef = ref<InstanceType<typeof EMultiViewDesigner>>()
 const viewCreateRef = ref<InstanceType<typeof ViewCreateDialog> | null>(null)
 
-const demoSchema = createDemoDataModel()
+  console.log(jsonSchema);
+const demoSchema: PageSchema = {
+  schemas: [jsonSchema as ComponentSchema],
+  script: '',
+}
+console.log(demoSchema,123)
 const demoViewTypes = createDemoViewTypes()
 
 function handleSave() {
