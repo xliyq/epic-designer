@@ -1,40 +1,102 @@
 <script lang="ts" setup>
 import type { ComponentSchema } from '@ies/types'
 import { computed, ref } from 'vue'
+import { ElMessage } from 'element-plus'
 import { EpicIcon, EpicTree, EpTooltip } from '@ies/base-ui'
 import { useDesignerContext } from '@ies/hooks'
 import { pluginManager } from '@ies/manager'
 
-const ctx = pluginManager.global.__multi_view_pool
-if (!ctx) throw new Error('FieldPool 需要 EMultiViewDesigner 提供上下文（pluginManager.global.__multi_view_pool）')
+const props = withDefaults(defineProps<{
+  mode: 'model' | 'view'
+  modelFields: ComponentSchema[]
+  addFieldToView: (fieldId: string) => void
+}>(), {})
 
 const { pageSchema } = useDesignerContext()
 
 const displayFields = computed(() => {
-  if (ctx.mode === 'model') {
+  if (props.mode === 'model') {
     return [...(pageSchema.schemas[0]?.children ?? [])]
   }
-  return [...ctx.modelFields]
+  return [...props.modelFields]
 })
 
 const selectedKeys = ref<string[]>([])
 const folded = ref(false)
 
-// 当前视图的字段 ID（直接从画布 pageSchema 读取，保证与画布增删操作同步）
-const canvasChildren = computed(() => pageSchema.schemas[0]?.children ?? [])
+// 递归收集视图所有层级的字段 ID（保证嵌套字段也能正确标识 ✓）
 const viewFieldIdSet = computed(() => {
-  if (ctx.mode !== 'view') return new Set<string>()
-  return new Set(canvasChildren.value.map(f => f.id).filter(Boolean) as string[])
+  if (props.mode !== 'view') return new Set<string>()
+  const ids = new Set<string>()
+  function walk(fields: ComponentSchema[]) {
+    for (const f of fields) {
+      if (f.id) ids.add(f.id)
+      if (f.children?.length) walk(f.children)
+    }
+  }
+  walk(pageSchema.schemas[0]?.children ?? [])
+  return ids
 })
-const inViewCount = computed(() => viewFieldIdSet.value.size)
+const inViewCount = computed({
+  get: () => viewFieldIdSet.value.size,
+  // 叶子总数只统计 displayFields 中的叶子字段
+})
+
+/** 在字段树中递归查找某个字段的直属父级 */
+function findParentField(fields: ComponentSchema[], childId: string): ComponentSchema | null {
+  for (const field of fields) {
+    if (field.children?.length) {
+      if (field.children.some(c => c.id === childId)) {
+        return field
+      }
+      const found = findParentField(field.children, childId)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+/** 判断是否为第一层字段 */
+function isTopLevelField(id: string): boolean {
+  return props.modelFields.some(f => f.id === id)
+}
 
 function handleNodeClick({ componentSchema }: { componentSchema: ComponentSchema }) {
   if (!componentSchema.id) return
   selectedKeys.value = [componentSchema.id]
 
-  if (ctx.mode === 'view' && !viewFieldIdSet.value.has(componentSchema.id)) {
-    ctx.addFieldToView(componentSchema.id)
+  if (props.mode !== 'view') return
+
+  const topLevel = isTopLevelField(componentSchema.id)
+
+  if (topLevel) {
+    // 第一层：单字段或容器，直接添加（容器字段会连带子字段一起 deepClone）
+    if (viewFieldIdSet.value.has(componentSchema.id)) {
+      ElMessage.info('该字段已添加')
+      return
+    }
+    props.addFieldToView(componentSchema.id)
+    return
   }
+
+  // 嵌套子字段
+  const parent = findParentField(props.modelFields, componentSchema.id)
+  if (!parent) return
+
+  if (!viewFieldIdSet.value.has(parent.id!)) {
+    // 父级未添加 → 提示先加父级
+    ElMessage.info(`请先添加父级字段「${parent.label || parent.type}」`)
+    return
+  }
+
+  // 父级已添加
+  if (viewFieldIdSet.value.has(componentSchema.id)) {
+    ElMessage.info('该字段已添加')
+    return
+  }
+
+  // 父级已添加 + 自己未添加 → 直接添加到视图顶层
+  props.addFieldToView(componentSchema.id)
 }
 
 function getFieldIcon(type: string): string {
@@ -93,7 +155,7 @@ const totalLeafCount = computed(() => countLeafFields(displayFields.value))
               <div
                 class="ep-outline-item ep-text-padding flex items-center"
                 :class="{
-                  'is-disabled': ctx.mode === 'view' && schema.id ? viewFieldIdSet.has(schema.id) : false,
+                  'is-disabled': props.mode === 'view' && schema.id ? isTopLevelField(schema.id) && viewFieldIdSet.has(schema.id) : false,
                 }"
               >
                 <EpicIcon
@@ -107,7 +169,7 @@ const totalLeafCount = computed(() => countLeafFields(displayFields.value))
                   {{ schema.id }}
                 </span>
                 <span
-                  v-if="ctx.mode === 'view' && schema.id && viewFieldIdSet.has(schema.id)"
+                  v-if="props.mode === 'view' && schema.id && viewFieldIdSet.has(schema.id)"
                   class="ep-field-check"
                 >
                   ✓
