@@ -22,12 +22,7 @@ export function createDemoDataModel(): PageSchema {
           name: 'default',
           wrapperCol: { span: 19 },
         },
-        children: [
-          { id: 'f1', label: '申请人', type: 'input', field: 'applicant', input: true, props: { placeholder: '请输入姓名' } },
-          { id: 'f2', label: '请假事由', type: 'textarea', field: 'reason', input: true, props: { placeholder: '请输入事由' } },
-          { id: 'f3', label: '请假天数', type: 'number', field: 'days', input: true, props: {} },
-          { id: 'f4', label: '请假类型', type: 'select', field: 'type', input: true, props: { options: [{ label: '年假', value: 'annual' }, { label: '事假', value: 'personal' }, { label: '病假', value: 'sick' }] } },
-        ],
+        children: [],
       },
     ],
     script: '',

@@ -6,7 +6,7 @@
   "type": "module",
   "main": "extensions/index.ts",
   "exports": {
-    ".": "./extensions/index.ts",
+    ".": "./index.ts",
     "./multi-view": "./multi-view/index.ts"
   },
   "dependencies": {
