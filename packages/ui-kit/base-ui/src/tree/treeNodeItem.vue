@@ -90,7 +90,7 @@ watch(() => props.schema.children?.length, (hasChildren) => {
       treeContext!.expandedKeys.value.push(props.schema.id);
     }
   }
-});
+}, { immediate: true });
 </script>
 <template>
   <li

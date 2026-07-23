@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { DesignerProps, PageSchema } from '@ies/types';
+import type { ComponentSchema, DesignerProps, PageSchema } from '@ies/types';
 
 import { nextTick, onUnmounted, provide, ref, watchEffect } from 'vue';
 
@@ -148,6 +148,17 @@ function setData(schema: PageSchema) {
 }
 
 /**
+ * 只替换画布子组件列表，不替换整个 schemas 数组（保持引用稳定，大纲/事件弹窗可正常响应）
+ */
+function setCanvasChildren(children: ComponentSchema[]) {
+  if (pageSchema.schemas[0]) {
+    pageSchema.schemas[0].children = children;
+  }
+  setSelectedNode();
+  revoke.push('加载数据');
+}
+
+/**
  * 返回当前页面数据的 PageSchema 对象，包含页面当前的 schemas 和 script 数据。
  */
 function getData(): PageSchema {
@@ -200,6 +211,7 @@ defineExpose({
   reset,
   revoke,
   save: handleSave,
+  setCanvasChildren,
   setData,
 });
 </script>

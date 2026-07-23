@@ -182,16 +182,7 @@ function addFieldToView(fieldId: string) {
     }
   }
 
-  const schema = getDesignerData()
-  if (schema) {
-    setDesignerData({
-      ...schema,
-      schemas: [{
-        ...schema.schemas[0],
-        children: deepClone(viewChildren),
-      }],
-    })
-  }
+  designerRef.value?.setCanvasChildren(deepClone(viewChildren))
 }
 
 // ════════════════════════════════════════
@@ -201,16 +192,7 @@ function addFieldToView(fieldId: string) {
 function handleDesignerReady() {
   // 根据当前模式决定是否将数据推送到画布
   if (mode.value === 'model' && dataModel.schemas[0]?.children?.length) {
-    const schema = getDesignerData()
-    if (schema) {
-      setDesignerData({
-        ...schema,
-        schemas: [{
-          ...schema.schemas[0],
-          children: deepClone(dataModel.schemas[0]?.children ?? []),
-        }],
-      })
-    }
+    designerRef.value?.setCanvasChildren(deepClone(dataModel.schemas[0]?.children ?? []))
   }
   nextTick(() => emit('ready'))
 }
@@ -228,11 +210,6 @@ function getDesignerData(): PageSchema | null {
   }
 }
 
-function setDesignerData(schema: PageSchema) {
-  if (!designerRef.value) return
-  designerRef.value.setData(schema)
-}
-
 /**
  * 从模型切换到视图：保存模型字段，加载视图字段
  */
@@ -248,13 +225,7 @@ function switchToView(viewId: string) {
   // 加载视图字段
   const view = views[viewId]
   if (view) {
-    setDesignerData({
-      ...schema,
-      schemas: [{
-        ...schema.schemas[0],
-        children: deepClone(view.schemas[0]?.children ?? []),
-      }],
-    })
+    designerRef.value?.setCanvasChildren(deepClone(view.schemas[0]?.children ?? []))
   }
 
   }
@@ -273,13 +244,7 @@ function switchToModel() {
   }
 
   // 恢复数据模型字段
-  setDesignerData({
-    ...schema,
-    schemas: [{
-      ...schema.schemas[0],
-      children: deepClone(dataModel.schemas[0]?.children ?? []),
-    }],
-  })
+  designerRef.value?.setCanvasChildren(deepClone(dataModel.schemas[0]?.children ?? []))
 }
 
 /**
@@ -306,19 +271,10 @@ function handleSwitchView(newViewId: string) {
  * 只负责加载新视图数据，不负责保存旧视图（由 handleSwitchView 完成）
  */
 function switchToAnotherView(newViewId: string) {
-  const schema = getDesignerData()
-  if (!schema) return
-
   // 加载新视图（旧视图已在 handleSwitchView 中保存）
   const newView = views[newViewId]
   if (newView) {
-    setDesignerData({
-      ...schema,
-      schemas: [{
-        ...schema.schemas[0],
-        children: deepClone(newView.schemas[0]?.children ?? []),
-      }],
-    })
+    designerRef.value?.setCanvasChildren(deepClone(newView.schemas[0]?.children ?? []))
   }
 }
 

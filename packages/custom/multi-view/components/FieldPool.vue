@@ -104,19 +104,18 @@ function isLeafField(schema: ComponentSchema): boolean {
   return !schema.children || schema.children.length === 0 || schema.input === true
 }
 
-function countLeafFields(schemas: ComponentSchema[]): number {
+function countAllFields(schemas: ComponentSchema[]): number {
   let count = 0
   for (const s of schemas) {
-    if (isLeafField(s)) {
-      count++
-    } else if (s.children) {
-      count += countLeafFields(s.children)
+    count++  // 当前节点（容器或叶子都算）
+    if (s.children?.length) {
+      count += countAllFields(s.children)
     }
   }
   return count
 }
 
-const totalLeafCount = computed(() => countLeafFields(displayFields.value))
+const totalFieldCount = computed(() => countAllFields(displayFields.value))
 </script>
 
 <template>
@@ -139,7 +138,7 @@ const totalLeafCount = computed(() => countLeafFields(displayFields.value))
       <div class="ep-field-sidebar-container">
         <div class="ep-field-header">
           <span>字段池</span>
-          <span class="ep-field-count">{{ inViewCount }}/{{ totalLeafCount }} 个</span>
+          <span class="ep-field-count">{{ inViewCount }}/{{ totalFieldCount }} 个</span>
         </div>
         <div class="ep-field-body">
           <EpicTree
