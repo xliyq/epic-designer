@@ -4,15 +4,6 @@ import { deepClone } from '@ies/utils'
 import type { DesignerMode, ViewTypeConfig } from '../types'
 
 /**
- * 默认视图类型预设
- */
-const DEFAULT_VIEW_TYPES: ViewTypeConfig[] = [
-  { id: 'create', name: '创建' },
-  { id: 'approve', name: '审批' },
-  { id: 'view', name: '查看' },
-]
-
-/**
  * 多视图设计器核心状态管理
  *
  * dataModel 和 views 中的每个视图都是标准 PageSchema，结构完全一致。
@@ -45,12 +36,12 @@ export function useViewDesigner() {
   })
 
   // ── 视图类型列表 ──
-  const viewTypes = ref<ViewTypeConfig[]>([...DEFAULT_VIEW_TYPES])
+  const viewTypes = ref<ViewTypeConfig[]>([])
 
   // ── 视图集合（Record<string, PageSchema>） ──
   const views = reactive<Record<string, PageSchema>>({})
 
-  // 初始化默认视图
+  // 为当前 viewTypes 中尚未创建视图的项创建默认视图
   function initDefaultViews() {
     for (const vt of viewTypes.value) {
       if (!views[vt.id]) {
@@ -67,10 +58,9 @@ export function useViewDesigner() {
       }
     }
   }
-  initDefaultViews()
 
   // ── 当前选中的视图 ID ──
-  const currentViewId = ref<string>(viewTypes.value[0]?.id ?? '')
+  const currentViewId = ref<string>('')
 
   // ── 全局编辑模式 ──
   const globalMode = ref(false)
@@ -192,6 +182,8 @@ export function useViewDesigner() {
     if (dataModel_) setDataModel(dataModel_)
     if (viewTypes_) {
       viewTypes.value = viewTypes_.map(v => ({ ...v }))
+    } else {
+      viewTypes.value = []
     }
     if (views_) {
       setViews(views_)
