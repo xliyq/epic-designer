@@ -41,6 +41,25 @@ export function useViewDesigner() {
   // ── 视图集合（Record<string, PageSchema>） ──
   const views = reactive<Record<string, PageSchema>>({})
 
+  // ── 视图历史记录（每个视图独立的撤销/重做栈） ──
+  // key: 'model' 存数据模型的历史，key: viewId 存各视图的历史
+  const viewHistories = reactive<Record<string, any>>({})
+
+  /** 保存某个上下文（model 或 viewId）的历史记录 */
+  function saveHistory(key: string, history: any) {
+    viewHistories[key] = history
+  }
+
+  /** 获取某个上下文的历史记录 */
+  function getHistory(key: string): any {
+    return viewHistories[key] ?? null
+  }
+
+  /** 删除某个视图的历史记录 */
+  function removeHistory(key: string) {
+    delete viewHistories[key]
+  }
+
   // 为当前 viewTypes 中尚未创建视图的项创建默认视图
   function initDefaultViews() {
     for (const vt of viewTypes.value) {
@@ -111,6 +130,7 @@ export function useViewDesigner() {
     if (index === -1) return
     viewTypes.value.splice(index, 1)
     delete views[id]
+    removeHistory(id)
     if (currentViewId.value === id) {
       currentViewId.value = viewTypes.value[0]?.id ?? ''
     }
@@ -212,10 +232,14 @@ export function useViewDesigner() {
     removeViewType,
     renameViewType,
     syncFieldToAll,
+    setDataModel,
     setViews,
     getDataModel,
     getViews,
     getViewTypes,
     setAll,
+    saveHistory,
+    getHistory,
+    removeHistory,
   }
 }

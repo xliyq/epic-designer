@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { ViewTypeConfig, DesignerMode } from '../types'
+import type { ViewTypeConfig, DesignerMode, MultiViewLabels } from '../types'
 
 import { EpicIcon } from '@ies/base-ui'
 import { pluginManager } from '@ies/manager'
@@ -13,9 +13,14 @@ const props = withDefaults(defineProps<{
   title?: string
   canAddView?:boolean
   canDeleteView?:boolean
+  labels?: Partial<MultiViewLabels>
 }>(), {
   canAddView: true,
   canDeleteView: true,
+  labels: () => ({
+    model: '数据模型',
+    view: '视图设计',
+  }),
 })
 
 const emit = defineEmits<{
@@ -50,13 +55,13 @@ function handleRenameView(id: string, event: Event) {
           :class="{ active: currentMode === 'model' }"
           @click="emit('switchMode', 'model')"
         >
-          数据模型
+          {{ labels.model }}
         </button>
         <button
           :class="{ active: currentMode === 'view' }"
           @click="emit('switchMode', 'view')"
         >
-          视图设计
+          {{ labels.view }}
         </button>
       </div>
 

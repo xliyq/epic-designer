@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import type { ComponentSchema, PageSchema } from '@ies/types'
 import { computed, nextTick, ref, watch } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { EDesigner } from '@ies/core'
 import { EpSwitch } from '@ies/base-ui'
 import { deepClone } from '@ies/utils'
 import { useViewDesigner } from '../composables/useViewDesigner'
-import type { ViewTypeConfig } from '../types'
+import type { MultiViewLabels, RemoveViewContext, RemoveViewResult, ViewTypeConfig } from '../types'
 import ViewToolbar from './ViewToolbar.vue'
 import FieldPool from './FieldPool.vue'
 
@@ -16,15 +17,27 @@ const props = withDefaults(defineProps<{
   views?: Record<string, PageSchema>
   canAddView?: boolean
   canDeleteView?: boolean
+  /** 删除视图前的校验回调，返回 false 或 { canDelete: false, message } 阻止删除 */
+  beforeRemoveView?: (ctx: RemoveViewContext) => Promise<RemoveViewResult> | RemoveViewResult
+  /** 文案配置，传入部分字段即可覆盖默认值 */
+  labels?: Partial<MultiViewLabels>
 }>(), {
   canAddView: true,
   canDeleteView: true,
+  labels: () => ({
+    model: '数据模型',
+    view: '视图设计',
+    fieldPool: '字段池',
+    previewModel: '数据模型',
+    previewView: '视图',
+  }),
 })
 
 const emit = defineEmits<{
   save: []
   ready: []
   addView: []
+  removeView: [id: string]
 }>()
 
 defineOptions({
@@ -50,23 +63,49 @@ const {
   renameViewType,
   syncFieldToAll,
   setAll,
+  setDataModel,
   setViews,
   getDataModel,
   getViews,
   getViewTypes,
+  saveHistory,
+  getHistory,
+  removeHistory,
 } = useViewDesigner()
 
-// 预览标题：数据模型模式下显示"数据模型"，视图模式下显示当前视图名称
+// 预览标题：模型模式下显示模型标签，视图模式下显示视图名
 const previewTitle = computed(() => {
-  if (mode.value === 'model') return '数据模型'
+  if (mode.value === 'model') return props.labels.previewModel ?? '数据模型'
   const vt = viewTypes.value.find(v => v.id === currentViewId.value)
-  return vt?.name ? `视图 - ${vt.name}` : '预览'
+  const prefix = props.labels.previewView ?? '视图'
+  return vt?.name ? `${prefix} - ${vt.name}` : '预览'
 })
 
 // 初始化：同步加载传入数据（必须在 Suspense resolve 之前执行，否则 EDesigner 就绪时 dataModel 还是空的）
 if (props.dataModel || props.viewTypes || props.views) {
   setAll(props.dataModel, props.viewTypes, props.views)
 }
+
+// 监听 props 变化，动态同步外部数据
+watch(() => props.dataModel, (newModel) => {
+  if (!newModel) return
+  setDataModel(newModel)
+  // 数据模型模式下，实时更新画布
+  if (mode.value === 'model') {
+    designerRef.value?.setCanvasChildren(deepClone(newModel.schemas[0]?.children ?? []))
+  }
+}, { deep: true })
+
+watch(() => props.viewTypes, (newTypes) => {
+  viewTypes.value = newTypes ? newTypes.map(v => ({ ...v })) : []
+  if (!currentViewId.value && viewTypes.value.length > 0) {
+    currentViewId.value = viewTypes.value[0].id
+  }
+}, { deep: true })
+
+watch(() => props.views, (newViews) => {
+  if (newViews) setViews(newViews)
+}, { deep: true })
 
 // 从画布同步当前视图状态（画布上的增删操作不会自动同步到 views 状态）
 function syncViewFromCanvas() {
@@ -197,8 +236,72 @@ function handleDesignerReady() {
 }
 
 // ════════════════════════════════════════
-//  模式切换：交换 children
+//  删除视图（校验 -> 确认 -> 删除 -> 通知）
 // ════════════════════════════════════════
+
+async function handleRemoveView(viewId: string) {
+  const view = views[viewId]
+  if (!view) return
+
+  const viewType = viewTypes.value.find(v => v.id === viewId)
+  const viewIndex = viewTypes.value.findIndex(v => v.id === viewId)
+
+  // 1. 业务校验（若父组件传了 beforeRemoveView）
+  if (props.beforeRemoveView) {
+    const ctx: RemoveViewContext = {
+      id: viewId,
+      name: viewType?.name ?? '',
+      view: deepClone(view),
+      viewIndex,
+      totalViews: viewTypes.value.length,
+    }
+    const result = await props.beforeRemoveView(ctx)
+    if (result !== true && !(typeof result === 'object' && result.canDelete)) {
+      const message = typeof result === 'object' && result.message
+        ? result.message
+        : '该视图不允许删除'
+      ElMessage.warning(message)
+      return
+    }
+  }
+
+  // 2. 确认弹窗
+  try {
+    await ElMessageBox.confirm(
+      `确定删除视图「${viewType?.name ?? viewId}」吗？`,
+      '删除确认',
+      { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' },
+    )
+  } catch {
+    return // 用户取消
+  }
+
+  // 3. 执行删除
+  removeViewType(viewId)
+
+  // 4. 通知父组件
+  emit('removeView', viewId)
+}
+
+// ════════════════════════════════════════
+//  模式切换：交换 children + 历史记录隔离
+// ════════════════════════════════════════
+
+/** 保存当前画布的历史记录到指定 key */
+function saveCurrentHistory(key: string) {
+  const history = designerRef.value?.exportHistory?.()
+  if (history) saveHistory(key, history)
+}
+
+/** 恢复指定 key 的历史记录到画布 */
+function restoreHistory(key: string) {
+  const history = getHistory(key)
+  if (history) {
+    designerRef.value?.importHistory?.(history)
+  } else {
+    designerRef.value?.revoke?.reset()
+  }
+}
 
 function getDesignerData(): PageSchema | null {
   if (!designerRef.value) return null
@@ -210,7 +313,7 @@ function getDesignerData(): PageSchema | null {
 }
 
 /**
- * 从模型切换到视图：保存模型字段，加载视图字段
+ * 从模型切换到视图：保存模型字段和历史，加载视图字段和历史
  */
 function switchToView(viewId: string) {
   const schema = getDesignerData()
@@ -221,29 +324,40 @@ function switchToView(viewId: string) {
     dataModel.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
   }
 
-  // 加载视图字段
+  // 保存数据模型的历史记录
+  saveCurrentHistory('model')
+
+  // 加载视图字段，没有视图时清空画布
   const view = views[viewId]
   if (view) {
     designerRef.value?.setCanvasChildren(deepClone(view.schemas[0]?.children ?? []))
+  } else {
+    designerRef.value?.setCanvasChildren([])
   }
 
-  }
+  // 恢复视图的历史记录
+  restoreHistory(viewId)
+}
 
 /**
- * 从视图切换到模型：保存当前视图字段，恢复模型字段
+ * 从视图切换到模型：保存当前视图字段和历史，恢复模型字段和历史
  */
 function switchToModel() {
   const schema = getDesignerData()
   if (!schema) return
 
-  // 保存当前 children 到当前视图
+  // 保存当前 children 和历史记录到当前视图
   const view = currentView.value
   if (view) {
     view.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
+    saveCurrentHistory(currentViewId.value)
   }
 
   // 恢复数据模型字段
   designerRef.value?.setCanvasChildren(deepClone(dataModel.schemas[0]?.children ?? []))
+
+  // 恢复数据模型的历史记录
+  restoreHistory('model')
 }
 
 /**
@@ -252,12 +366,13 @@ function switchToModel() {
 function handleSwitchView(newViewId: string) {
   if (mode.value !== 'view' || newViewId === currentViewId.value) return
 
-  // 保存当前视图（此时 currentView 还是旧视图）
+  // 保存当前视图的 children 和历史记录（此时 currentView 还是旧视图）
   const schema = getDesignerData()
   if (schema) {
     const oldView = currentView.value
     if (oldView) {
       oldView.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
+      saveCurrentHistory(currentViewId.value)
     }
   }
 
@@ -275,6 +390,9 @@ function switchToAnotherView(newViewId: string) {
   if (newView) {
     designerRef.value?.setCanvasChildren(deepClone(newView.schemas[0]?.children ?? []))
   }
+
+  // 恢复新视图的历史记录
+  restoreHistory(newViewId)
 }
 
 // 监听模式切换
@@ -288,7 +406,16 @@ watch(mode, (newMode, oldMode) => {
 
 // 监听视图切换
 watch(currentViewId, (newId, oldId) => {
-  if (mode.value === 'view' && newId && oldId && newId !== oldId) {
+  if (mode.value !== 'view') return
+  if (newId === oldId) return
+
+  // 视图被删除导致 currentViewId 变空，清空画布
+  if (!newId) {
+    designerRef.value?.setCanvasChildren([])
+    return
+  }
+
+  if (oldId) {
     // 如果全局模式开启，同步变更
     if (globalMode.value) {
       syncChangesOnSwitch(oldId)
@@ -411,10 +538,11 @@ defineExpose({
             :title="($attrs.title as string) ?? '多视图设计器'"
             :can-add-view="canAddView"
             :can-delete-view="canDeleteView"
+            :labels="labels"
             @switch-mode="setMode"
             @select-view="handleSwitchView"
             @add-view="emit('addView')"
-            @remove-view="removeViewType"
+            @remove-view="handleRemoveView"
             @rename-view="renameViewType"
             @preview="handlePreview"
             @save="handleSave"
@@ -445,6 +573,7 @@ defineExpose({
             :mode="mode"
             :modelFields="modelFields"
             :addFieldToView="addFieldToView"
+            :field-pool-label="labels.fieldPool"
           />
         </slot>
       </template>

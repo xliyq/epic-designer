@@ -10,7 +10,10 @@ const props = withDefaults(defineProps<{
   mode: 'model' | 'view'
   modelFields: ComponentSchema[]
   addFieldToView: (fieldId: string) => void
-}>(), {})
+  fieldPoolLabel?: string
+}>(), {
+  fieldPoolLabel: '字段池',
+})
 
 const { pageSchema } = useDesignerContext()
 
@@ -125,7 +128,7 @@ const totalFieldCount = computed(() => countAllFields(displayFields.value))
   <div class="ep-field-pool-section">
     <!-- 48px 图标栏 -->
     <div class="ep-field-bar">
-      <EpTooltip placement="right" content="字段池">
+      <EpTooltip placement="right" :content="fieldPoolLabel">
         <div
           class="ep-field-bar-item"
           :class="{ checked: !folded }"
@@ -140,7 +143,7 @@ const totalFieldCount = computed(() => countAllFields(displayFields.value))
     <div v-show="!folded" class="ep-field-sidebar">
       <div class="ep-field-sidebar-container">
         <div class="ep-field-header">
-          <span>字段池</span>
+          <span>{{ fieldPoolLabel }}</span>
           <span class="ep-field-count">{{ inViewCount }}/{{ totalFieldCount }} 个</span>
         </div>
         <div class="ep-field-body">
