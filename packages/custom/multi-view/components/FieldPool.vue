@@ -61,25 +61,6 @@ function isTopLevelField(id: string): boolean {
   return props.modelFields.some(f => f.id === id)
 }
 
-/** 在字段树中递归查找某个字段的直属父级 */
-function findParentField(fields: ComponentSchema[], childId: string): ComponentSchema | null {
-  for (const field of fields) {
-    if (field.children?.length) {
-      if (field.children.some(c => c.id === childId)) {
-        return field
-      }
-      const found = findParentField(field.children, childId)
-      if (found) return found
-    }
-  }
-  return null
-}
-
-/** 判断是否为第一层字段 */
-function isTopLevelField(id: string): boolean {
-  return props.modelFields.some(f => f.id === id)
-}
-
 function handleNodeClick({ componentSchema }: { componentSchema: ComponentSchema }) {
   if (!componentSchema.id) return
   selectedKeys.value = [componentSchema.id]
