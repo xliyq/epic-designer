@@ -184,7 +184,6 @@ function addFieldToView(fieldId: string) {
 
   designerRef.value?.setCanvasChildren(deepClone(viewChildren))
 }
-
 // ════════════════════════════════════════
 //  EDesigner 就绪
 // ════════════════════════════════════════
