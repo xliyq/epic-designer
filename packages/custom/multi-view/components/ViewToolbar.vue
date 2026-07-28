@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { computed } from 'vue'
 import type { ViewTypeConfig, DesignerMode, MultiViewLabels } from '../types'
 
 import { EpicIcon } from '@ies/base-ui'
@@ -22,6 +23,13 @@ const props = withDefaults(defineProps<{
     view: '视图设计',
   }),
 })
+
+// 合并默认值（与父组件一致，防止外部直接使用 ViewToolbar 时无 labels）
+const mergedLabels = computed(() => ({
+  model: '数据模型',
+  view: '视图设计',
+  ...props.labels,
+}))
 
 const emit = defineEmits<{
   switchMode: [mode: DesignerMode]
@@ -55,13 +63,13 @@ function handleRenameView(id: string, event: Event) {
           :class="{ active: currentMode === 'model' }"
           @click="emit('switchMode', 'model')"
         >
-          {{ labels.model }}
+          {{ mergedLabels.model }}
         </button>
         <button
           :class="{ active: currentMode === 'view' }"
           @click="emit('switchMode', 'view')"
         >
-          {{ labels.view }}
+          {{ mergedLabels.view }}
         </button>
       </div>
 

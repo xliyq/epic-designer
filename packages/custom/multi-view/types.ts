@@ -41,15 +41,11 @@ export type RemoveViewResult = boolean | { canDelete: boolean; message?: string 
  * 多视图设计器文案配置
  */
 export interface MultiViewLabels {
-  /** 数据模型模式标签 */
+  /** 数据模型模式标签（同时用于模式切换按钮和预览标题） */
   model: string
-  /** 视图设计模式标签 */
+  /** 视图设计模式标签（同时用于模式切换按钮和预览标题前缀） */
   view: string
   /** 字段池标题 */
   fieldPool: string
-  /** 模型模式预览标题 */
-  previewModel: string
-  /** 视图模式预览标题前缀（显示为 `${previewView} - ${视图名}`） */
-  previewView: string
 }
 

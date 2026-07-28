@@ -24,14 +24,15 @@ const props = withDefaults(defineProps<{
 }>(), {
   canAddView: true,
   canDeleteView: true,
-  labels: () => ({
-    model: '数据模型',
-    view: '视图设计',
-    fieldPool: '字段池',
-    previewModel: '数据模型',
-    previewView: '视图',
-  }),
 })
+
+// 合并默认文案与用户传入的 labels（withDefaults 对对象类型不会逐字段合并）
+const mergedLabels = computed<MultiViewLabels>(() => ({
+  model: '数据模型',
+  view: '视图设计',
+  fieldPool: '字段池',
+  ...props.labels,
+}))
 
 const emit = defineEmits<{
   save: []
@@ -75,10 +76,9 @@ const {
 
 // 预览标题：模型模式下显示模型标签，视图模式下显示视图名
 const previewTitle = computed(() => {
-  if (mode.value === 'model') return props.labels.previewModel ?? '数据模型'
+  if (mode.value === 'model') return mergedLabels.value.model
   const vt = viewTypes.value.find(v => v.id === currentViewId.value)
-  const prefix = props.labels.previewView ?? '视图'
-  return vt?.name ? `${prefix} - ${vt.name}` : '预览'
+  return vt?.name ? `${mergedLabels.value.view} - ${vt.name}` : '预览'
 })
 
 // 初始化：同步加载传入数据（必须在 Suspense resolve 之前执行，否则 EDesigner 就绪时 dataModel 还是空的）
@@ -538,7 +538,7 @@ defineExpose({
             :title="($attrs.title as string) ?? '多视图设计器'"
             :can-add-view="canAddView"
             :can-delete-view="canDeleteView"
-            :labels="labels"
+            :labels="mergedLabels"
             @switch-mode="setMode"
             @select-view="handleSwitchView"
             @add-view="emit('addView')"
@@ -573,7 +573,7 @@ defineExpose({
             :mode="mode"
             :modelFields="modelFields"
             :addFieldToView="addFieldToView"
-            :field-pool-label="labels.fieldPool"
+            :field-pool-label="mergedLabels.fieldPool"
           />
         </slot>
       </template>
