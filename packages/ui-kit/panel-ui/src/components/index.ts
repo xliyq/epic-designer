@@ -23,7 +23,12 @@ export function setupPage(pluginManager: PluginManager): void {
  * @param pluginManager
  * @returns {void}
  */
+let componentSetupDone = false;
+
 export function setupComponent(pluginManager: PluginManager): void {
+  if (componentSetupDone) return;
+  componentSetupDone = true;
+
   pluginManager.component.add(
     'EInputSize',
     async () => await import('./EInputSize/index.vue'),

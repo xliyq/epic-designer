@@ -3,6 +3,7 @@ import './index.less';
 
 export { EBuilder } from './components/builder/';
 export { EDesigner } from './components/designer/';
+export { setupComponent } from '@ies/panel-ui';
 // 初始化设计器
 
 // const components = [EBuilder, EDesigner]

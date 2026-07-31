@@ -1,6 +1,6 @@
 {
   "name": "@ies/designer",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A low-code drag-and-drop form designer based on Vue 3",
   "private": false,
   "keywords": [
@@ -52,9 +52,9 @@
     "vue-draggable-plus": "^0.6.1"
   },
   "optionalDependencies": {
-    "@ies/antd": ">=0.0.2",
-    "@ies/element-plus": ">=0.0.2",
-    "@ies/naive-ui": ">=0.0.2"
+    "@ies/antd": ">=0.0.4",
+    "@ies/element-plus": ">=0.0.4",
+    "@ies/naive-ui": ">=0.0.4"
   },
   "devDependencies": {
     "@types/node": "^22.10.6",
