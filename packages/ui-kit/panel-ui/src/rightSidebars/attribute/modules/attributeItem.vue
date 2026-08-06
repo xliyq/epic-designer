@@ -1,15 +1,16 @@
 <script lang="ts" setup>
-import type { ComponentSchema } from '@epic-designer/types';
+import type { ComponentSchema } from '@ies/types';
 
 import { computed, nextTick, ref, watchEffect } from 'vue';
 
-import { EpicNode } from '@epic-designer/base-ui';
-import { useDesignerContext, useTableMeta } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
-import { getValueByPath, setValueByPath } from '@epic-designer/utils';
+import { EpicNode } from '@ies/base-ui';
+import { useDesignerContext, useTableMeta } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
+import { getValueByPath, setValueByPath } from '@ies/utils';
 
 const props = defineProps<{
   schema: ComponentSchema;
+  parent?: any;
 }>();
 const designer = useDesignerContext();
 const pageSchema = designer.pageSchema;
@@ -30,6 +31,7 @@ function isShow(item: ComponentSchema) {
   if (typeof item.show === 'function') {
     return item.show?.({
       tableMeta: tableMeta.value,
+      parent: props.parent,
       values: selectedNode.value!,
     });
   }

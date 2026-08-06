@@ -37,6 +37,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
+      // 开发模式直接指向源码，避免使用过期的 dist 产物
+      '@ies/designer': resolve(__dirname, '../packages/epic-designer/index.ts'),
+      '@ies/element-plus': resolve(__dirname, '../packages/ui/elementPlus/src/index.ts'),
     },
   },
   server: {

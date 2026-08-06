@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
-import { useDesignerContext } from '@epic-designer/hooks';
+import { useDesignerContext } from '@ies/hooks';
 
 import EpicEditScreenContainer from './editScreenContainer.vue';
 import EpicNodeItem from './nodeItem.vue';

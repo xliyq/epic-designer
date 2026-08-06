@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { PageSchema } from '@epic-designer/types';
+import type { PageSchema } from '@ies/types';
 
 import {
   onActivated,
@@ -9,7 +9,7 @@ import {
   ref,
 } from 'vue';
 
-import { EDesigner } from '@epic-designer/core';
+import { EDesigner } from '@ies/core';
 
 import {
   hideCustomValidateComponent,

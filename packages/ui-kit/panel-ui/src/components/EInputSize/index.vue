@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { nextTick, ref, watch } from 'vue';
 
-import { pluginManager } from '@epic-designer/manager';
+import { pluginManager } from '@ies/manager';
 
 const props = defineProps<{
   modelValue?: number | string;

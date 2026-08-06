@@ -2,16 +2,16 @@ import type {
   ComponentSchema,
   DesignerState,
   PageSchema,
-} from '@epic-designer/types';
+} from '@ies/types';
 
 import { reactive, ref, watchEffect } from 'vue';
 
-import { useClipboard } from '@epic-designer/hooks';
+import { useClipboard } from '@ies/hooks';
 import {
   createPageManager,
   pluginManager,
   useRevoke,
-} from '@epic-designer/manager';
+} from '@ies/manager';
 import {
   deepClone,
   deepCompareAndModify,
@@ -20,7 +20,7 @@ import {
   findSchemaInfoById,
   findSchemas,
   getMatchedById,
-} from '@epic-designer/utils';
+} from '@ies/utils';
 
 // 内部默认页面数据
 let innerDefaultSchema: PageSchema = {

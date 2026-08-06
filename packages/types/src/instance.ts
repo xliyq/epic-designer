@@ -4,6 +4,8 @@ import type { ComponentSchema } from './epic-designer';
 
 export interface ExtendedExposed {
   getAttr?: (key: string) => any;
+  getOptions?: () => any[];
+  getSelected?: () => any;
   getValue?: () => any;
   schema?: ComponentSchema;
   setAttr?: (key: string, value: any) => any;

@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import type { FormItemRule } from '@epic-designer/types';
+import type { FormItemRule } from '@ies/types';
 
 import type { PropType } from 'vue';
 
 import { ref, watch } from 'vue';
 
-import { EpicNode } from '@epic-designer/base-ui';
-import { pluginManager } from '@epic-designer/manager';
-import { deepClone, deepEqual } from '@epic-designer/utils';
+import { EpicNode } from '@ies/base-ui';
+import { pluginManager } from '@ies/manager';
+import { deepClone, deepEqual } from '@ies/utils';
 import { useVModel } from '@vueuse/core';
 
 import { triggerOptions, typeOptions } from './data';

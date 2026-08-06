@@ -1,11 +1,12 @@
 <script lang="ts" setup>
-import type { PageManager } from '@epic-designer/manager';
+import type { PageManager } from '@ies/manager';
 import type {
+  AttributeMeta,
   EpNodeInstance,
   FieldStates,
   FormDataModel,
   PageSchema,
-} from '@epic-designer/types';
+} from '@ies/types';
 
 import {
   computed,
@@ -16,29 +17,35 @@ import {
   watch,
 } from 'vue';
 
-import { EpBaseLoader, EpicNode } from '@epic-designer/base-ui';
+import { EpBaseLoader, EpicNode } from '@ies/base-ui';
 import {
+  ATTRIBUTE_META_KEY,
   BUILDER_KEY,
   createEventBus,
+  FORM_DATA_KEY,
   FORM_INSTANCES_KEY,
   provideBuilderDisabled,
   provideBuilderReadonly,
+  provideFormData,
   providePageManager,
-} from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
-import { setupPage } from '@epic-designer/panel-ui';
+} from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
+import { setupPage } from '@ies/panel-ui';
+import { setupExtensions } from '@ies/custom';
 import {
   deepClone,
   deepCompareAndModify,
   findSchemas,
   migrateComponentProps,
   reorganizeSchemasForTableView,
-} from '@epic-designer/utils';
+} from '@ies/utils';
 
 import { useBuilder } from '../hooks/useBuilder';
 
 // 定义组件的 props 类型
 const props = defineProps<{
+  /** 属性组 API 定义数据，供 attribute-group 组件运行时使用 */
+  attributeMeta?: AttributeMeta;
   /** 禁用表单 */
   disabled?: boolean;
   /** 字段状态规则 */
@@ -64,6 +71,7 @@ const emit = defineEmits<{
 }>();
 
 setupPage(pluginManager);
+setupExtensions(pluginManager);
 
 const epBuilderSlot = pluginManager.component.get('epBuilderSlot');
 // 使用 hooks 获取表单相关方法和状态
@@ -125,6 +133,19 @@ createEventBus();
 // 提供依赖注入的上下文
 provideBuilderDisabled(computed(() => props.disabled));
 provideBuilderReadonly(computed(() => props.readonly));
+
+// 提供表单数据给子组件（远程选项加载等场景使用）
+const formDataRef = computed(() => {
+  // 合并所有表单的数据
+  const allForms = pageManager.forms;
+  const result: Record<string, any> = {};
+  for (const formName in allForms) {
+    Object.assign(result, allForms[formName]);
+  }
+  return result;
+});
+provideFormData(formDataRef);
+
 provide(BUILDER_KEY, {
   fieldStateMap: computed(() => {
     //  将fieldStates转换对象类型
@@ -139,6 +160,11 @@ provide(BUILDER_KEY, {
 providePageManager(pageManager);
 
 provide(FORM_INSTANCES_KEY, formInstances);
+
+provide(
+  ATTRIBUTE_META_KEY,
+  computed(() => props.attributeMeta ?? {}),
+);
 
 /**
  * 组件加载完成后的处理函数，注: pageSchema更新会触发组件重新加载

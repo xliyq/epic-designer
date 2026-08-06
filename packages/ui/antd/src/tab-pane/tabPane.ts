@@ -1,10 +1,10 @@
-import type { ComponentSchema } from '@epic-designer/types';
+import type { ComponentSchema } from '@ies/types';
 
 import type { PropType } from 'vue';
 
 import { defineComponent, h, renderSlot } from 'vue';
 
-import { useNodeAttrs } from '@epic-designer/hooks';
+import { useNodeAttrs } from '@ies/hooks';
 import { TabPane } from 'ant-design-vue';
 
 export default defineComponent({

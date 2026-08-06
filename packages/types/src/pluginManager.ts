@@ -4,6 +4,21 @@ import type { ComponentSchema } from './epic-designer';
 // 定义 ComponentType 类型
 export type ComponentType = AsyncComponentLoader | Component | string;
 
+/**
+ * attribute-group 内子组件的字段映射声明。
+ * 每个条目描述：数组项的哪个字段，从组件的什么值推导，以及可读的来源说明。
+ */
+export interface AttributeSyncEntry {
+  /** 从组件原始值推导出数组项字段值 */
+  write: (rawValue: any, extra?: { option?: any; options?: any[] }) => any;
+  /** 从数组项字段值还原为组件原始值 */
+  read?: (fieldValue: any) => any;
+  /** 取值来源的中文描述，显示在面板中让设计人员理解 */
+  source?: string;
+}
+
+export type AttributeSyncMap = Record<string, AttributeSyncEntry>;
+
 export interface ActivitybarModel {
   component: ComponentType;
   icon: string;
@@ -82,6 +97,14 @@ export interface ComponentConfigModel {
   icon?: string;
   // 是否为子表组件
   isSubTable?: boolean;
+  // 是否为子表单组件（对象型嵌套表单，数据结构为 formData.field.xxx）
+  isSubForm?: boolean;
+  // 是否为属性组组件（数组型嵌套，数据结构为 formData.field[{charValue,...}]）
+  isAttributeGroup?: boolean;
+  // 是否为区块组组件（预编排区块，数据结构为 formData.field[{...},{...}]）
+  isSectionGroup?: boolean;
+  // attribute-group 内的数据产出规则，声明该组件在属性组中如何写入数组项字段
+  attributeSync?: AttributeSyncMap;
   // 组件优先级, 默认值99,数字越大, 优先级越高, 优先使用高优先级组件
   priority?: number;
   // 用于组件排序，可选 默认值1000, 值越小，组件越靠前
@@ -91,6 +114,7 @@ export interface ComponentConfigModel {
 export type ComponentConfigModelRecords = Record<string, ComponentConfigModel>;
 
 export interface PublicMethodModel {
+  argsConfigs?: ComponentSchema[];
   /**
    * @deprecated 此属性用于兼容旧版，后期可能会移除，请使用description属性代替。
    */

@@ -54,7 +54,7 @@
 ## 使用方式
 
 ```ts
-import { pluginManager } from 'epic-designer';
+import { pluginManager } from '@ies/designer';
 ```
 
 ## API 文档
@@ -197,7 +197,7 @@ const customComponent = pluginManager.component.get('custom-component');
 示例：
 
 ```tsx
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 // 获取input组件的注册配置
 const componentConfig = pluginManager.component.getConfigByType('input');
@@ -225,7 +225,7 @@ console.log(allConfigs);
 示例：
 
 ```tsx
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 const components = pluginManager.component.getComponents();
 ```
@@ -304,7 +304,7 @@ pluginManager.component.hideComponents(['input', 'button', 'textarea']);
 示例：
 
 ```ts
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 // 设置分组名称为"我是表单组件"的映射名称为"form"
 pluginManager.component.setGroupNameMap('我是表单组件', 'form')
@@ -319,7 +319,7 @@ pluginManager.component.setGroupNameMap('我是表单组件', 'form')
 示例：
 
 ```ts
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 // 清空所有组件分组名称映射
 pluginManager.component.clearGroupNameMap()
@@ -333,7 +333,7 @@ pluginManager.component.clearGroupNameMap()
 
 示例：
 ```ts
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 // 设置分组显示顺序：布局组件在前，表单组件在后
 pluginManager.component.setSortedGroups(['布局组件', '表单组件'])
@@ -347,7 +347,7 @@ pluginManager.component.setSortedGroups(['布局组件', '表单组件'])
 
 示例：
 ```ts
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 pluginManager.component.clearSortedGroups()
 ```
@@ -364,7 +364,7 @@ pluginManager.component.clearSortedGroups()
 
 示例：
 ```ts
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 // 推荐方式 - 使用 panel 对象
 pluginManager.panel.registerActivitybar({
@@ -391,7 +391,7 @@ pluginManager.panel.registerActivitybar({
 
 示例：
 ```ts
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 // 隐藏组件面板
 pluginManager.panel.hideActivitybar('component_view');
@@ -405,7 +405,7 @@ pluginManager.panel.hideActivitybar('component_view');
 
 示例：
 ```ts
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 // 显示指定ID的活动栏
 pluginManager.panel.showActivitybar('component_view');
@@ -419,7 +419,7 @@ pluginManager.panel.showActivitybar('component_view');
 
 示例：
 ```ts
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 // 使用 panel 对象
 pluginManager.panel.registerRightSidebar({
@@ -444,7 +444,7 @@ pluginManager.panel.registerRightSidebar({
 
 示例：
 ```ts
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 // 隐藏指定ID的右侧栏，隐藏事件面板
 pluginManager.panel.hideRightSidebar('event_view');
@@ -458,7 +458,7 @@ pluginManager.panel.hideRightSidebar('event_view');
 
 示例：
 ```ts
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 // 推荐方式 - 显示指定ID的右侧栏
 pluginManager.panel.showRightSidebar('event_view');
@@ -472,7 +472,7 @@ pluginManager.panel.showRightSidebar('event_view');
 
 示例：
 ```ts
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 // 推荐方式 - 获取响应式的活动栏数组
 const activityBars = pluginManager.panel.activityBars;
@@ -486,7 +486,7 @@ const activityBars = pluginManager.panel.activityBars;
 
 示例：
 ```ts
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 // 推荐方式 - 获取响应式的右侧栏数组
 const rightSidebars = pluginManager.panel.rightSidebars;
@@ -502,7 +502,7 @@ const rightSidebars = pluginManager.panel.rightSidebars;
 
 示例：
 ```ts
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 // 基础公共方法示例
 pluginManager.publicMethods.add({
@@ -610,7 +610,7 @@ const addMultipleMethods = () => {
 
 示例：
 ```ts
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 // 移除单个公共方法
 pluginManager.publicMethods.remove('showAlert')
@@ -624,7 +624,7 @@ pluginManager.publicMethods.remove('showAlert')
 
 示例：
 ```ts
-import { pluginManager } from 'epic-designer'
+import { pluginManager } from '@ies/designer'
 
 // 获取响应式的公共方法映射表
 const methodsMap = pluginManager.publicMethods.methodsMap;

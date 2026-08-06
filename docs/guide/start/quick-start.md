@@ -3,10 +3,10 @@
 ## 安装 epic-designer
 
 ```bash
-npm i epic-designer
+npm i @ies/designer
 ```
 
-epic-designer 目标是支持多 UI 兼容,目前支持以下 UI
+@ies/designer 目标是支持多 UI 兼容,目前支持以下 UI
 
 - element-plus
 - ant-design-vue
@@ -20,19 +20,19 @@ epic-designer 目标是支持多 UI 兼容,目前支持以下 UI
 安装ui框架依赖
 
 ```bash
-npm i element-plus @epic-designer/element-plus
+npm i element-plus @ies/element-plus
 ```
 
 main.ts 或者 main.js 引入注册组件
 
 ```javascript
 // 引入epic-designer样式
-import "epic-designer/dist/style.css";
+
 
 // 引入Element plus样式
 import "element-plus/dist/index.css";
 
-import { setupElementPlus } from "@epic-designer/element-plus";
+import { setupElementPlus } from "@ies/element-plus";
 // 注册Element UI
 setupElementPlus();
 ```
@@ -42,19 +42,19 @@ setupElementPlus();
 安装ui框架依赖
 
 ```bash
-npm i ant-design-vue @epic-designer/antd
+npm i ant-design-vue @ies/antd
 ```
 
 main.ts 或者 main.js 引入注册组件
 
 ```javascript
 // 引入epic-designer样式
-import "epic-designer/dist/style.css";
+
 
 // 引入antd UI 重置样式
 import "ant-design-vue/dist/reset.css";
 
-import { setupAntd } from "@epic-designer/antd";
+import { setupAntd } from "@ies/antd";
 // 使用Antd UI
 setupAntd();
 ```
@@ -65,12 +65,12 @@ setupAntd();
 
 ```javascript
 // 引入epic-designer样式
-import "epic-designer/dist/style.css";
+
 
 // 引入antd UI样式
 import "ant-design-vue/dist/antd.css";
 
-import { setupAntd } from "@epic-designer/antd";
+import { setupAntd } from "@ies/antd";
 // 使用Antd UI
 setupAntd();
 ```
@@ -80,16 +80,16 @@ setupAntd();
 安装ui框架依赖
 
 ```bash
-npm i -D naive-ui @epic-designer/naive-ui
+npm i -D naive-ui @ies/naive-ui
 ```
 
 main.ts 或者 main.js 引入注册组件
 
 ```javascript
 // 引入epic-designer样式
-import "epic-designer/dist/style.css";
 
-import { setupNaiveUi } from "@epic-designer/naive-ui";
+
+import { setupNaiveUi } from "@ies/naive-ui";
 // 注册Naive Ui
 setupNaiveUi();
 ```
@@ -103,7 +103,7 @@ setupNaiveUi();
   </div>
 </template>
 <script setup lang="ts">
-import { EDesigner } from "epic-designer";
+import { EDesigner } from "@ies/designer";
 </script>
 <style>
 .h-full {
@@ -121,7 +121,8 @@ import { EDesigner } from "epic-designer";
   </div>
 </template>
 <script setup>
-import { EBuilder } from "epic-designer";
+import "@ies/designer/dist/designer.css";
+import { EBuilder } from "@ies/designer";
 
 const pageSchema = {
   schemas: [

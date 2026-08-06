@@ -1,4 +1,4 @@
-import type { ComponentConfigModel } from '@epic-designer/types';
+﻿import type { ComponentConfigModel } from '@ies/designer';
 
 export default {
   component: () => import('./date-picker.vue'),
@@ -213,4 +213,11 @@ export default {
   groupName: '表单',
   icon: 'icon--epic--calendar-month-outline-rounded',
   sort: 910,
+  attributeSync: {
+    charValue: {
+      write: (rawValue) => (rawValue ? String(rawValue) : null),
+      read: (fieldValue) => fieldValue ?? null,
+      source: '日期值',
+    },
+  },
 } as ComponentConfigModel;

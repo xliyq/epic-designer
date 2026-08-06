@@ -1,22 +1,23 @@
 <script lang="ts" setup>
-import type { DesignerProps, PageSchema } from '@epic-designer/types';
+import type { ComponentSchema, DesignerProps, PageSchema } from '@ies/types';
 
 import { nextTick, onUnmounted, provide, ref, watchEffect } from 'vue';
 
-import { EpDesignerLoader } from '@epic-designer/base-ui';
+import { EpDesignerLoader } from '@ies/base-ui';
 import {
   createEventBus,
   DESIGNER_CONTEXT_KEY,
   providePageManager,
   useStore,
-} from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
-import { setupPanel } from '@epic-designer/panel-ui';
+} from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
+import { setupPanel } from '@ies/panel-ui';
+import { setupExtensions } from '@ies/custom';
 import {
   deepClone,
   loadAsyncComponent,
   migrateComponentProps,
-} from '@epic-designer/utils';
+} from '@ies/utils';
 
 import { useDesigner } from '../hooks/useDesigner';
 import { useHotkeys } from '../hooks/useHotkeys';
@@ -42,6 +43,7 @@ const emit = defineEmits([
 ]);
 
 setupPanel(pluginManager);
+setupExtensions(pluginManager);
 const EHeader = loadAsyncComponent(() => import('./modules/header/index.vue'));
 const EActivityBar = loadAsyncComponent(
   () => import('./modules/activityBar/index.vue'),
@@ -55,6 +57,11 @@ const ERightSidebar = loadAsyncComponent(
 const epBuilderSlot = pluginManager.component.get('epBuilderSlot');
 
 const previewRef = ref<InstanceType<typeof EpicPreview> | null>(null);
+const collapsedLeft = ref(false);
+
+function onActivityBarCollapse(collapsed: boolean) {
+  collapsedLeft.value = collapsed;
+}
 
 const {
   handleDelete,
@@ -141,6 +148,24 @@ function setData(schema: PageSchema) {
 }
 
 /**
+ * 只替换画布子组件列表，不替换整个 schemas 数组（保持引用稳定，大纲/事件弹窗可正常响应）
+ */
+function setCanvasChildren(children: ComponentSchema[]) {
+  if (pageSchema.schemas[0]) {
+    pageSchema.schemas[0].children = children;
+  }
+  setSelectedNode();
+  revoke.push('加载数据');
+}
+
+/**
+ * 设置页面脚本（script 为页面级共享字段，不随视图切换而交换）
+ */
+function setScript(script: string) {
+  pageSchema.script = script;
+}
+
+/**
  * 返回当前页面数据的 PageSchema 对象，包含页面当前的 schemas 和 script 数据。
  */
 function getData(): PageSchema {
@@ -170,8 +195,8 @@ function handleImported(data: PageSchema) {
 /**
  * 预览
  */
-function handlePreview() {
-  previewRef.value!.handleOpen();
+function handlePreview(title?: string) {
+  previewRef.value?.handleOpen(title);
 }
 
 function handleWheel(event: WheelEvent) {
@@ -193,7 +218,9 @@ defineExpose({
   reset,
   revoke,
   save: handleSave,
+  setCanvasChildren,
   setData,
+  setScript,
 });
 </script>
 <template>
@@ -235,10 +262,19 @@ defineExpose({
         <div
           class="ep-split-view-container"
           :class="{ 'hidden-header': hiddenHeader }"
-        >
-          <EActivityBar />
+        > 
+          <div class="ep-left-container" :class="{ collapsed: collapsedLeft }">
+            <EActivityBar @collapse="onActivityBarCollapse" />
+            <div v-show="!collapsedLeft" v-if="$slots.sidebarAfter" class="ep-left-extra">
+              <slot name="sidebarAfter" />
+            </div>
+          </div>
           <EEditContainer />
-          <ERightSidebar />
+          <ERightSidebar>
+            <template #sidebarRightTop>
+              <slot name="sidebarRightTop" />
+            </template>
+          </ERightSidebar>
         </div>
         <EpicPreview
           ref="previewRef"

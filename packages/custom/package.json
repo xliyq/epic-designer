@@ -1,0 +1,26 @@
+{
+  "name": "@ies/custom",
+  "version": "0.0.4",
+  "description": "Custom extensions for epic-designer",
+  "private": false,
+  "type": "module",
+  "main": "extensions/index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./multi-view": "./multi-view/index.ts"
+  },
+  "dependencies": {
+    "element-plus": "catalog:",
+    "vue-draggable-plus": "catalog:",
+    "@ies/core": "workspace:*",
+    "@ies/hooks": "workspace:*",
+    "@ies/manager": "workspace:*",
+    "@ies/panel-ui": "workspace:*",
+    "@ies/base-ui": "workspace:*",
+    "@ies/types": "workspace:*",
+    "@ies/utils": "workspace:*"
+  },
+  "devDependencies": {
+    "vue": "catalog:"
+  }
+}

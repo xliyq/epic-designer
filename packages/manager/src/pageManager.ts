@@ -1,4 +1,4 @@
-import type { ComponentSchema, EpNodeInstance } from '@epic-designer/types';
+import type { ComponentSchema, EpNodeInstance } from '@ies/types';
 
 import { reactive, ref, watchEffect } from 'vue';
 
@@ -6,12 +6,13 @@ import {
   useHookManager,
   useMountMonitor,
   usePageSchema,
-} from '@epic-designer/hooks';
+} from '@ies/hooks';
 import {
+  deepCompareAndModify,
   findSchemas,
   FormulaEngine,
   getValueByPath,
-} from '@epic-designer/utils';
+} from '@ies/utils';
 
 import { pluginManager } from './pluginManager';
 
@@ -87,7 +88,13 @@ export function createPageManager() {
   ): EpNodeInstance | null {
     // 如果查询字段是 id，直接在组件实例映射中查找
     if (queryField === 'id') {
-      return componentInstances.value[queryValue]?.[scopeName] ?? null;
+      const scopedMap = componentInstances.value[queryValue];
+      if (!scopedMap) return null;
+      // 优先命中指定 scope
+      if (scopedMap[scopeName]) return scopedMap[scopeName];
+      // 未命中时兜底：遍历所有 scope（覆盖 SubForm / 子表单等改变了 scopeName 的场景）
+      const scopes = Object.keys(scopedMap);
+      return scopes.length > 0 ? scopedMap[scopes[0]] : null;
     }
 
     // 通过递归查询所有组件 schema，找到第一个与指定字段和值匹配的 schema
@@ -103,7 +110,11 @@ export function createPageManager() {
     }
 
     // 返回组件实例
-    return componentInstances.value[matchingSchema.id]?.[scopeName] ?? null;
+    const scopedMap = componentInstances.value[matchingSchema.id];
+    if (!scopedMap) return null;
+    if (scopedMap[scopeName]) return scopedMap[scopeName];
+    const scopes = Object.keys(scopedMap);
+    return scopes.length > 0 ? scopedMap[scopes[0]] : null;
   }
 
   /**
@@ -257,8 +268,10 @@ export function createPageManager() {
       let methodArgs = action.args ? JSON.parse(action.args) : args;
 
       // 处理数据参数
+      const flatFormData = Object.assign({}, ...Object.values(forms));
       const context = {
         event: args,
+        formData: flatFormData,
       };
       methodArgs = methodArgs.map((arg: any) => {
         // 如果是对象且标记为表达式，调用 jsep 计算
@@ -306,9 +319,10 @@ export function createPageManager() {
   function executePublicMethod(action: ActionsModel, args: unknown[]): void {
     try {
       // 尝试调用公共方法处理程序
-      pluginManager.publicMethods.methodsMap[action.methodName]?.handler(
-        ...args,
-      );
+      const handler = pluginManager.publicMethods.methodsMap[action.methodName]?.handler
+      if(typeof handler ==='function'){
+        handler.call({_componentId:action.componentId},...args);
+      }
     } catch (error) {
       // 如果调用失败，打印错误信息
       console.error(`[Epic：公共函数(${action.methodName})]执行异常:`, error);
@@ -323,7 +337,10 @@ export function createPageManager() {
   function executeCustomMethod(action: ActionsModel, args: unknown[]): void {
     try {
       // 尝试调用自定义方法
-      funcs.value[action.methodName]?.(...args);
+      const fn = funcs.value[action.methodName]
+      if(typeof fn ==='function'){
+        fn.call({_componentId:action.componentId},...args);
+      }
     } catch (error) {
       // 如果调用失败，打印错误信息
       console.error(`[Epic：自定义函数(${action.methodName})]执行异常:`, error);
@@ -394,12 +411,9 @@ export function createPageManager() {
     formName: string = 'default',
   ) {
     if (forms[formName]) {
-      // 存在表单数据，合并到旧数据
+      // 存在表单数据，深合并到旧数据（保留响应式引用，不覆盖未传入字段）
       const reactiveFormData = forms[formName] as Record<string, unknown>;
-
-      Object.keys(formData).forEach((key) => {
-        reactiveFormData[key] = formData[key];
-      });
+      deepCompareAndModify(reactiveFormData, formData, false);
       return reactiveFormData; // 返回已存在的响应式数据
     }
     // 没有表单数据时，创建响应式数据

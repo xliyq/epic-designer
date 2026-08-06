@@ -1,4 +1,4 @@
-import type { ComponentSchema } from '@epic-designer/types';
+﻿import type { ComponentSchema } from '@ies/designer';
 
 import type { PropType } from 'vue';
 
@@ -22,7 +22,13 @@ export default defineComponent({
       } as ComponentSchema;
       const children = componentSchema.children ?? [];
       delete componentSchema.children;
+      const isGrid = componentSchema.props?.gridEnable;
+      const gridCols = componentSchema.props?.gridCols ?? 2;
 
+      const gridAttrs = isGrid
+        ? { class: 'grid-content', style: { display: 'grid', gridTemplateColumns: `repeat(${gridCols}, 1fr)`, gap: '16px' } }
+        : {};     
+      
       let vNodeClildren: any = null;
       vNodeClildren =
         children.length > 0
@@ -32,9 +38,10 @@ export default defineComponent({
               )
           : () => [renderSlot(slots, 'default')];
       return h(ElCard, componentSchema, {
-        default: () => renderSlot(slots, 'edit-node', {}, vNodeClildren),
+        default: () =>
+          h('div', gridAttrs, renderSlot(slots, 'edit-node', {}, vNodeClildren)),
         header: () => renderSlot(slots, 'header'),
       });
     };
-  },
+    },
 });

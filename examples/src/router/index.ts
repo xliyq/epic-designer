@@ -62,6 +62,30 @@ export const frameworkRoutes = [
           title: '自定义校验组件',
         },
       },
+      {
+        path: 'modalPicker',
+        name: 'modalPicker',
+        component: () => import('@/views/designer/modalPicker/index.vue'),
+        meta: {
+          title: '弹窗选择组件',
+        },
+      },
+      {
+        path: 'panel',
+        name: 'panel',
+        component: () => import('@/views/designer/panel/index.vue'),
+        meta: {
+          title: '自定义面板',
+        },
+      },
+      {
+        path: 'multiView',
+        name: 'multiView',
+        component: () => import('@/views/designer/multiView/index.vue'),
+        meta: {
+          title: '多视图设计器',
+        },
+      },
     ],
   },
   {
@@ -120,7 +144,50 @@ export const frameworkRoutes = [
           title: '字段状态',
         },
       },
+      {
+        path: 'exposeMethods',
+        name: 'exposeMethods',
+        component: () => import('@/views/builder/exposeMethods/index.vue'),
+        meta: {
+          title: '选项数据访问',
+        },
+      },
+      {
+        path: 'modalPicker',
+        name: 'builderModalPicker',
+        component: () => import('@/views/builder/modalPicker/index.vue'),
+        meta: {
+          title: '弹窗选择组件',
+        },
+      },
     ],
+  },
+  {
+    component:BaseLayout,
+    meta:{
+      title:'demo',
+    },
+    name:'demo',
+    path:'/:ui/demo',
+    children:[
+      {
+        path: 'formList',
+        name: 'formList',
+        component: () => import('@/views/demo/formList.vue'),
+        meta: {
+          title: '表单列表',
+        },
+      },
+      {
+        path: 'formPreview',
+        name: 'formPreview',
+        component: () => import('@/views/demo/preview.vue'),
+        meta: {
+          title: '表单预览',
+          hidden:true
+        },
+      },
+    ]
   },
 ];
 
@@ -129,7 +196,7 @@ const routes = [
     component: Layout,
     name: 'uiFrameworks',
     path: '/',
-    redirect: '/ant-designe-vue/designer/basic',
+    redirect: '/element-plus/designer/basic',
     children: frameworkRoutes,
   },
   // Resolve refresh page, route warnings

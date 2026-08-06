@@ -1,4 +1,4 @@
-import type { ComponentSchema } from '@epic-designer/types';
+import type { ComponentSchema } from '@ies/types';
 
 import { ref } from 'vue';
 
@@ -6,7 +6,7 @@ import {
   deepClone,
   findSchemaInfoById,
   generateNewSchema,
-} from '@epic-designer/utils';
+} from '@ies/utils';
 
 /**
  * 提供组件复制粘贴功能的Hook

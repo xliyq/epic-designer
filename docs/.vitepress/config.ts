@@ -2,33 +2,28 @@ import { defineConfig } from 'vitepress';
 
 export default defineConfig({
   base: '/',
-  // 网站描述
   description: '低代码可视化设计器及生成器',
-  // 打包目录
   head: [
-    // 添加图标
     ['link', { href: '/favicon.ico', rel: 'epic-icon', type: 'image/x-icon' }],
   ],
   lang: 'zh-CN',
   sitemap: {
-    hostname: 'https://docs.epicjs.cn',
+    hostname: 'https://github.com/xliyq/epic-designer',
   },
-  // 主题配置
   themeConfig: {
-    algolia: {
-      apiKey: '99ba99d14a34ec161f62dec1d1f303df',
-      appId: 'D2HVZWN04E',
-      indexName: 'epicjs',
+    outline: {
+      level: [2, 3],
+      label: '目录',
     },
     editLink: {
-      pattern: 'https://github.com/Kchengz/epic-designer/issues',
+      pattern: 'https://github.com/xliyq/epic-designer/issues',
       text: '为此页提供修改建议',
     },
     footer: {
-      copyright: `本文档内容版权为 EpicDesigner 作者所有，保留所有权利。<a class="beian-link" href="https://beian.miit.gov.cn/">桂ICP备17005529号-4</a>`,
+      copyright: `基于 MIT 协议开源`,
     },
 
-    logo: 'https://examples.epicjs.cn/static/logo.png',
+    logo: '/logo.png',
     nav: [
       {
         activeMatch: '/guide/start/index',
@@ -36,16 +31,6 @@ export default defineConfig({
         text: '文档',
       },
       { activeMatch: '/updateLog', link: '/updateLog', text: '更新日志' },
-      {
-        activeMatch: '/copyright',
-        link: '/guide/copyright/copyright',
-        text: '权益声明',
-      },
-      {
-        activeMatch: '/about',
-        link: '/guide/about/about',
-        text: '赞助 | 支持',
-      },
       {
         text: '相关链接',
         items: [
@@ -90,8 +75,16 @@ export default defineConfig({
               text: '暗黑模式',
             },
             {
+              link: '/guide/start/layoutGuide',
+              text: '布局指南',
+            },
+            {
               link: '/guide/other/hotkeys',
               text: '快捷键',
+            },
+            {
+              link: '/guide/other/schema',
+              text: 'Schema 参考',
             },
           ],
         },
@@ -106,11 +99,19 @@ export default defineConfig({
               link: '/guide/components/EBuilder',
               text: 'Builder 生成器',
             },
+            {
+              link: '/guide/components/EMultiViewDesigner',
+              text: 'MultiViewDesigner 多视图设计器',
+            },
           ],
         },
         {
           text: '事件动作',
           items: [
+            {
+              link: '/guide/action/presetActions',
+              text: '预制动作',
+            },
             {
               link: '/guide/action/customFunctions',
               text: '自定义函数',
@@ -131,6 +132,10 @@ export default defineConfig({
             {
               link: '/guide/extensions/activityBar',
               text: '活动栏扩展',
+            },
+            {
+              link: '/guide/extensions/dataSource',
+              text: '数据源扩展',
             },
             {
               link: '/guide/extensions/rightSidebar',
@@ -171,7 +176,7 @@ export default defineConfig({
       ],
     },
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/Kchengz/epic-designer' },
+      { icon: 'github', link: 'https://github.com/xliyq/epic-designer' },
     ],
   },
   // 网站标题

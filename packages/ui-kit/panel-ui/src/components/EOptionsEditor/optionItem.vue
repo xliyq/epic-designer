@@ -2,8 +2,8 @@
 import { inject } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
 
-import { EpicIcon } from '@epic-designer/base-ui';
-import { pluginManager } from '@epic-designer/manager';
+import { EpicIcon } from '@ies/base-ui';
+import { pluginManager } from '@ies/manager';
 import { useVModel } from '@vueuse/core';
 
 import { OPTIONS_EDITOR_TREE_KEY } from './optionsEditorContext';

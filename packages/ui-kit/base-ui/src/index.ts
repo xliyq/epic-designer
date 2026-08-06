@@ -4,5 +4,6 @@ export * from './asyncLoader';
 export * from './collapse';
 export * from './icon';
 export * from './node';
+export * from './switch';
 export * from './tooltip';
 export * from './tree';

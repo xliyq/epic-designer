@@ -1,10 +1,11 @@
-import type { ActionsModel } from '@epic-designer/manager';
+import type { ActionsModel } from '@ies/manager';
 
 import type { TableMeta } from './designer';
 import type { FormItemRule } from './rules';
 
 export interface RenderCallbackParams {
   tableMeta?: TableMeta;
+  parent?: Record<string, any>;
   values: Record<string, any>;
 }
 
@@ -23,6 +24,8 @@ export interface ComponentSchema {
   id?: string;
   // 是否为表单输入组件，可选
   input?: boolean;
+  // 是否隐藏表单项标签，可选（隐藏标签同时清除标签占位空间，保留表单校验）
+  hideLabel?: boolean;
   // 节点标签，可选
   label?: string;
   // 是否无需表单项，可选

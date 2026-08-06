@@ -1,6 +1,7 @@
-import type { PluginManager } from '@epic-designer/manager';
+import type { PluginManager } from '@ies/manager';
 
-import { EpicNode } from '@epic-designer/base-ui';
+import { EpicNode } from '@ies/base-ui';
+import { registerBuiltinProviders } from '@ies/hooks';
 
 import EpField from './EpField';
 import MonacoEditor from './MonacoEditor';
@@ -12,6 +13,8 @@ import Page from './Page';
  * @returns {void}
  */
 export function setupPage(pluginManager: PluginManager): void {
+  // 注册内置数据源提供者（static + http），EBuilder 和 EDesigner 运行时都需要
+  registerBuiltinProviders(pluginManager.dataSource);
   pluginManager.component.register(Page);
 }
 
@@ -20,7 +23,12 @@ export function setupPage(pluginManager: PluginManager): void {
  * @param pluginManager
  * @returns {void}
  */
+let componentSetupDone = false;
+
 export function setupComponent(pluginManager: PluginManager): void {
+  if (componentSetupDone) return;
+  componentSetupDone = true;
+
   pluginManager.component.add(
     'EInputSize',
     async () => await import('./EInputSize/index.vue'),
@@ -48,6 +56,30 @@ export function setupComponent(pluginManager: PluginManager): void {
   pluginManager.component.add(
     'EOptionsEditor',
     async () => await import('./EOptionsEditor/index.vue'),
+  );
+  pluginManager.component.add(
+    'ERemoteConfigEditor',
+    async () => await import('./ERemoteConfigEditor/index.vue'),
+  );
+  pluginManager.component.add(
+    'DataSourceEditor',
+    async () => await import('./DataSourceEditor/index.vue'),
+  );
+  pluginManager.component.add(
+    'ESyncFieldsEditor',
+    async () => await import('./ESyncFieldsEditor/index.vue'),
+  );
+  pluginManager.component.add(
+    'EJsonEditor',
+    async () => await import('./EJsonEditor/index.vue'),
+  );
+  pluginManager.component.add(
+    'TableColumnsEditor',
+    async () => await import('./TableColumnsEditor/index.vue'),
+  );
+  pluginManager.component.add(
+    'SearchFieldsEditor',
+    async () => await import('./SearchFieldsEditor/index.vue'),
   );
 
   pluginManager.component.add('EpicNode', EpicNode);

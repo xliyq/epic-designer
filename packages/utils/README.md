@@ -1,15 +1,15 @@
-# @epic-designer/utils
+# @ies/utils
 
 Epic Designer 核心工具库，提供通用工具函数、页面管理器、插件管理器等核心功能模块。
 
 ## 📦 安装
 
 ```bash
-npm install @epic-designer/utils
+npm install @ies/utils
 # 或
-yarn add @epic-designer/utils
+yarn add @ies/utils
 # 或
-pnpm add @epic-designer/utils
+pnpm add @ies/utils
 ```
 
 ## 🚀 快速开始
@@ -21,7 +21,7 @@ import {
   getUUID, 
   usePageManager, 
   useRevoke 
-} from '@epic-designer/utils';
+} from '@ies/utils';
 ```
 
 ## 📚 API 文档
@@ -30,7 +30,7 @@ import {
 
 #### 防抖函数
 ```typescript
-import { debounce } from '@epic-designer/utils';
+import { debounce } from '@ies/utils';
 
 const debouncedHandler = debounce(() => {
   console.log('执行防抖函数');
@@ -39,7 +39,7 @@ const debouncedHandler = debounce(() => {
 
 #### 深拷贝
 ```typescript
-import { deepClone } from '@epic-designer/utils';
+import { deepClone } from '@ies/utils';
 
 const originalData = { name: 'test', items: [1, 2, 3] };
 const clonedData = deepClone(originalData);
@@ -47,7 +47,7 @@ const clonedData = deepClone(originalData);
 
 #### UUID 生成
 ```typescript
-import { getUUID } from '@epic-designer/utils';
+import { getUUID } from '@ies/utils';
 
 // 生成字符串类型 UUID（默认长度 6）
 const stringId = getUUID();
@@ -58,7 +58,7 @@ const numberId = getUUID(8, 'number');
 
 #### 字符串工具
 ```typescript
-import { capitalizeFirstLetter, getFileNameByUrl } from '@epic-designer/utils';
+import { capitalizeFirstLetter, getFileNameByUrl } from '@ies/utils';
 
 // 首字母大写
 const capitalized = capitalizeFirstLetter('hello'); // 'Hello'
@@ -69,7 +69,7 @@ const fileName = getFileNameByUrl('https://example.com/path/file.jpg'); // 'file
 
 #### 异步组件加载
 ```typescript
-import { loadAsyncComponent } from '@epic-designer/utils';
+import { loadAsyncComponent } from '@ies/utils';
 
 const AsyncComponent = loadAsyncComponent(
   () => import('./MyComponent.vue')
@@ -82,7 +82,7 @@ const AsyncComponent = loadAsyncComponent(
 用于管理页面组件实例、表单数据和组件交互。
 
 ```typescript
-import { usePageManager } from '@epic-designer/utils';
+import { usePageManager } from '@ies/utils';
 
 const pageManager = usePageManager();
 
@@ -105,7 +105,7 @@ pageManager.setFormData('formId', { name: 'value' });
 用于管理组件插件的注册、配置和生命周期。
 
 ```typescript
-import { pluginManager } from '@epic-designer/utils';
+import { pluginManager } from '@ies/utils';
 
 // 注册组件
 pluginManager.component.register({
@@ -124,7 +124,7 @@ const config = pluginManager.component.getConfig('MyComponent');
 提供页面编辑的撤销和重做功能。
 
 ```typescript
-import { useRevoke } from '@epic-designer/utils';
+import { useRevoke } from '@ies/utils';
 
 const revoke = useRevoke(pageSchema, state, setSelectedNode);
 
@@ -147,7 +147,7 @@ import {
   findSchemas, 
   mapSchemas,
   findSchemaById 
-} from '@epic-designer/utils';
+} from '@ies/utils';
 
 // 生成新的 schema（深拷贝 + 生成新 ID）
 const newSchema = generateNewSchema(originalSchema);

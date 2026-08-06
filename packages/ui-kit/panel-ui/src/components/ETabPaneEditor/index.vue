@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import type { ComponentSchema } from '@epic-designer/types';
+import type { ComponentSchema } from '@ies/types';
 
 import { computed, PropType } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
 
-import { EpicIcon } from '@epic-designer/base-ui';
-import { pluginManager } from '@epic-designer/manager';
-import { getUUID } from '@epic-designer/utils';
+import { EpicIcon } from '@ies/base-ui';
+import { pluginManager } from '@ies/manager';
+import { getUUID } from '@ies/utils';
 
 defineOptions({
   inheritAttrs: false,

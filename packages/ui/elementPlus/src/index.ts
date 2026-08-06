@@ -1,10 +1,10 @@
-import type { PluginManager } from '@epic-designer/manager';
-import type { SetupConfig } from '@epic-designer/types';
+﻿import type { PluginManager } from '@ies/designer';
+import type { SetupConfig } from '@ies/designer';
 
 import { watchEffect } from 'vue';
 
 // 注册element-plus ui
-import { pluginManager as pManager } from '@epic-designer/manager';
+import { pluginManager as pManager } from '@ies/designer';
 import {
   ElCollapse,
   ElCollapseItem,
@@ -26,16 +26,23 @@ import FormItem from './formItem';
 import Input from './input';
 import InputNumber from './input-number';
 import Modal from './modal';
+import ModalPicker from './modal-picker';
 import Radio from './radio';
 import Row from './row';
 import Select from './select';
 import Slider from './slider';
+import SubForm from './sub-form';
 import Switch from './switch';
 import TabsPane from './tab-pane';
 import Tabs from './tabs';
 import Textarea from './textarea';
 import UploadFile from './upload-file';
 import UploadImage from './upload-image';
+import AttributeGroup from './attribute-group';
+import IcbGroup from './icb-group';
+import SectionGroup from './section-group';
+  import SectionTemplate from './section-template';
+  import TextView from './text-view';
 
 // 引入样式
 import './index.less';
@@ -51,6 +58,12 @@ export function setupElementPlus(
   const componentArray = [
     Form,
     FormItem,
+    SubForm,
+    AttributeGroup,
+    IcbGroup,
+    SectionGroup,
+    SectionTemplate,
+    TextView,
     Input,
     Textarea,
     InputNumber,
@@ -71,6 +84,7 @@ export function setupElementPlus(
     Collapse,
     CollapseItem,
     Modal,
+    ModalPicker,
     Tabs,
     TabsPane,
   ];

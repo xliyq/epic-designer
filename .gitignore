@@ -35,6 +35,10 @@ yarn-error.log*
 # vercel
 .vercel
 .cursor
+.opencode
 
 /docs/.vitepress/cache
 dist
+
+# build artifacts
+*.tgz

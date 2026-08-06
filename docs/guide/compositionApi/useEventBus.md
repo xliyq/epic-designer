@@ -12,7 +12,7 @@
 
 ```vue
 <script lang="ts" setup>
-import { useEventBus } from 'epic-designer'
+import { useEventBus } from '@ies/designer'
 
 const eventBus = useEventBus()
 </script>
@@ -131,7 +131,7 @@ eventBus?.off('message', handleMessage)
 </template>
 
 <script lang="ts" setup>
-import { useEventBus } from 'epic-designer'
+import { useEventBus } from '@ies/designer'
 
 const eventBus = useEventBus()
 
@@ -160,7 +160,7 @@ function sendMessage() {
 
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { useEventBus } from 'epic-designer'
+import { useEventBus } from '@ies/designer'
 
 const eventBus = useEventBus()
 const messages = ref<Array<{ id: number; content: string; timestamp: string }>>([])
@@ -176,7 +176,7 @@ eventBus?.on('chat-message', (data) => {
 ```vue
 <script lang="ts" setup>
 import { inject } from 'vue'
-import { useEventBus } from 'epic-designer'
+import { useEventBus } from '@ies/designer'
 import { Input } from 'ant-design-vue'
 
 const props = defineProps<{

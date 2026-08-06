@@ -144,8 +144,8 @@ export class FormulaEngine {
       // 逻辑表达式: &&, ||
       case 'LogicalExpression': {
         const logNode = node;
-        const left = this._execute(logNode.left, ctx);
-        const right = this._execute(logNode.right, ctx);
+        const left = this._execute(logNode.left as jsep.Expression, ctx);
+        const right = this._execute(logNode.right as jsep.Expression, ctx);
         return logNode.operator === '&&' ? left && right : left || right;
       }
 

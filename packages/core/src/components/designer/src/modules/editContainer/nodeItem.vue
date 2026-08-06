@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import type { ComponentSchema } from '@epic-designer/types';
+import type { ComponentSchema } from '@ies/types';
 
 import { computed, provide, useAttrs } from 'vue';
 
-import { EpicNode } from '@epic-designer/base-ui';
-import { NODE_ATTRS_KEY, useDesignerContext } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
+import { EpicNode } from '@ies/base-ui';
+import { NODE_ATTRS_KEY, useDesignerContext } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
 
 import EpicNodes from './nodes.vue';
 

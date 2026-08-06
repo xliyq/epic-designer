@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import type { PageManager } from '@epic-designer/manager';
-import type { PageSchema } from '@epic-designer/types';
+import type { PageManager } from '@ies/manager';
+import type { PageSchema } from '@ies/types';
 
 import { onMounted, ref } from 'vue';
 
-import { EBuilder } from '@epic-designer/core';
+import { EBuilder } from '@ies/core';
 
 const ebRef = ref<any>(null);
 const data = ref({});

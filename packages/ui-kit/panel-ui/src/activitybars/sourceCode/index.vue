@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { ref, toRaw, watch } from 'vue';
 
-import { useDesignerContext } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
-import { deepCompareAndModify, deepEqual } from '@epic-designer/utils';
+import { useDesignerContext } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
+import { deepCompareAndModify, deepEqual } from '@ies/utils';
 
 const MonacoEditor = pluginManager.component.get('monacoEditor');
 const monacoEditorRef = ref<any>(null);

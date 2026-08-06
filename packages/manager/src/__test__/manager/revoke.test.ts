@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { DesignerState } from '@epic-designer/types';
+import type { DesignerState } from '@ies/types';
 
 import { useRevoke } from '../../';
 

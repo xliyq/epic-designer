@@ -1,11 +1,12 @@
 <script lang="ts" setup>
-import type { ComponentSchema, FormDataModel } from '@epic-designer/types';
+import type { ComponentSchema, FormDataModel } from '@ies/types';
 
 import type { VNode } from 'vue';
 
 import { computed, ref } from 'vue';
 
-import { provideBuilderDisabled, useForm } from '@epic-designer/hooks';
+import { provideBuilderDisabled, useForm } from '@ies/hooks';
+import { deepCompareAndModify } from '@ies/utils';
 import { Form } from 'ant-design-vue';
 
 interface FormInstance extends InstanceType<typeof Form> {
@@ -65,11 +66,12 @@ async function validate() {
 }
 
 /**
- * 设置表单数据
+ * 设置表单数据（深合并，保留响应式引用与子表单未覆盖字段）
  * @param data
  */
 function setData(data: FormDataModel) {
-  Object.assign(formData, data);
+  if (!data) return;
+  deepCompareAndModify(formData, data, false);
 }
 
 /**

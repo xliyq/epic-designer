@@ -16,9 +16,9 @@
     },
     "epic-examples#dev": {
       "dependsOn": [
-        "@epic-designer/antd#stub",
-        "@epic-designer/element-plus#stub",
-        "@epic-designer/naive-ui#stub"
+        "@ies/antd#stub",
+        "@ies/element-plus#stub",
+        "@ies/naive-ui#stub"
       ],
       "cache": false,
       "persistent": true

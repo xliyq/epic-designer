@@ -1,0 +1,220 @@
+<script lang="ts" setup>
+import { computed } from 'vue'
+import type { ViewTypeConfig, DesignerMode, MultiViewLabels } from '../types'
+
+import { EpicIcon } from '@ies/base-ui'
+import { pluginManager } from '@ies/manager'
+
+const Button = pluginManager.component.get('button');
+
+const props = withDefaults(defineProps<{
+  currentMode: DesignerMode
+  currentViewTypeId: string
+  viewTypes: ViewTypeConfig[]
+  title?: string
+  canAddView?:boolean
+  canDeleteView?:boolean
+  labels?: Partial<MultiViewLabels>
+}>(), {
+  canAddView: true,
+  canDeleteView: true,
+  labels: () => ({
+    model: '数据模型',
+    view: '视图设计',
+  }),
+})
+
+// 合并默认值（与父组件一致，防止外部直接使用 ViewToolbar 时无 labels）
+const mergedLabels = computed(() => ({
+  model: '数据模型',
+  view: '视图设计',
+  ...props.labels,
+}))
+
+const emit = defineEmits<{
+  switchMode: [mode: DesignerMode]
+  selectView: [id: string]
+  addView: []
+  removeView: [id: string]
+  renameView: [id: string, newName: string]
+  save: []
+  preview: []
+}>()
+
+function handleRenameView(id: string, event: Event) {
+  const target = event.target as HTMLElement
+  const newName = target.textContent?.trim()
+  if (newName) emit('renameView', id, newName)
+}
+</script>
+
+<template>
+  <header class="mv-header">
+    <div class="mv-header-left">
+      <slot name="prefix" />
+      <slot name="title">
+        {{ title ?? '多视图设计器' }}
+      </slot>
+    </div>
+
+    <div class="mv-header-center">
+      <div class="mv-mode-switch">
+        <button
+          :class="{ active: currentMode === 'model' }"
+          @click="emit('switchMode', 'model')"
+        >
+          {{ mergedLabels.model }}
+        </button>
+        <button
+          :class="{ active: currentMode === 'view' }"
+          @click="emit('switchMode', 'view')"
+        >
+          {{ mergedLabels.view }}
+        </button>
+      </div>
+
+      <div v-if="currentMode === 'view'" class="mv-view-tabs">
+        <span
+          v-for="vt in viewTypes"
+          :key="vt.id"
+          class="mv-view-tab"
+          :class="{ active: vt.id === currentViewTypeId }"
+          @click="emit('selectView', vt.id)"
+        >
+          <span
+            class="mv-view-tab-name"
+            :contenteditable="vt.id === currentViewTypeId"
+            @blur="handleRenameView(vt.id, $event)"
+          >
+            {{ vt.name }}
+          </span>
+          <span
+            v-if="viewTypes.length > 1 && canDeleteView"
+            class="mv-view-tab-close"
+            @click.stop="emit('removeView', vt.id)"
+          >
+            ×
+          </span>
+        </span>
+        <button v-if="canAddView" class="mv-view-add-btn" @click="emit('addView')">+</button>
+
+      </div>
+    </div>
+
+    <div class="mv-header-right">
+      <slot name="right-prefix" />
+      <slot name="right-action">
+        <div>
+          <Button size="small" @click="emit('preview')">
+            <span class="flex! h-full items-center">
+              <EpicIcon name="icon--epic--eye" class="mr-4px" />
+              预览
+            </span>
+          </Button>
+        </div>
+        <div class="ml-2">
+          <Button size="small" @click="emit('save')">
+            <span class="flex! h-full items-center">
+              <EpicIcon name="icon--epic--save-outline-rounded" class="mr-4px" />
+              保存
+            </span>
+          </Button>
+        </div>
+      </slot>
+      <slot name="right-suffix" />
+    </div>
+  </header>
+</template>
+
+<style scoped>
+.mv-header {
+  display: flex;
+  align-items: center;
+  min-height: 60px;
+  background: var(--ep-designer-background);
+  color: var(--ep-text-main);
+  border-bottom: 1px solid var(--ep-border);
+  font-size: 14px;
+  gap: 16px;
+  padding: 4px 12px;
+}
+.mv-header-left {
+  flex-shrink: 0;
+  font-weight: 600;
+  font-size: 15px;
+}
+.mv-header-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 8px;
+}
+.mv-mode-switch {
+  display: flex;
+  border: 1px solid var(--ep-border);
+  border-radius: var(--ep-radius);
+  overflow: hidden;
+}
+.mv-mode-switch button {
+  padding: 4px 16px;
+  font-size: 13px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ep-text-secondary);
+  transition: all 0.2s;
+}
+.mv-mode-switch button.active {
+  background: var(--ep-primary);
+  color: var(--ep-primary-foreground);
+}
+.mv-view-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.mv-view-tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: var(--ep-radius);
+  cursor: pointer;
+  background: var(--ep-muted);
+  transition: all 0.2s;
+}
+.mv-view-tab.active {
+  background: var(--ep-primary);
+  color: var(--ep-primary-foreground);
+}
+.mv-view-tab-name {
+  outline: none;
+  min-width: 24px;
+}
+.mv-view-tab-close {
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.6;
+  cursor: pointer;
+}
+.mv-view-tab-close:hover {
+  opacity: 1;
+}
+.mv-view-add-btn {
+  padding: 4px 12px;
+  border: 1px dashed var(--ep-border);
+  border-radius: var(--ep-radius);
+  cursor: pointer;
+  background: transparent;
+  color: var(--ep-text-secondary);
+  font-size: 14px;
+}
+.mv-header-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+</style>

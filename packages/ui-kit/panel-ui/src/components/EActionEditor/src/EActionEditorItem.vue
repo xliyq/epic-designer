@@ -3,9 +3,9 @@ import type { PropType } from 'vue';
 
 import { VueDraggable } from 'vue-draggable-plus';
 
-import { EpicIcon } from '@epic-designer/base-ui';
-import { useDesignerContext } from '@epic-designer/hooks';
-import { findSchemaById } from '@epic-designer/utils';
+import { EpicIcon } from '@ies/base-ui';
+import { useDesignerContext } from '@ies/hooks';
+import { findSchemaById } from '@ies/utils';
 
 const props = defineProps({
   allEvents: {

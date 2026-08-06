@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { ref, watchEffect } from 'vue';
 
-import { useDesignerContext } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
+import { useDesignerContext } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
 import { useClipboard } from '@vueuse/core';
 
 const Modal = pluginManager.component.get('modal');

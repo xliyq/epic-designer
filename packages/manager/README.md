@@ -1,11 +1,11 @@
-# @epic-designer/manager
+# @ies/manager
 
 Epic Designer 管理器模块，提供页面管理、插件管理、撤销重做等功能。
 
 ## 安装
 
 ```bash
-pnpm add @epic-designer/manager
+pnpm add @ies/manager
 ```
 
 ## 使用
@@ -13,7 +13,7 @@ pnpm add @epic-designer/manager
 ### 页面管理器 (PageManager)
 
 ```typescript
-import { pageManager, usePageManager } from '@epic-designer/manager';
+import { pageManager, usePageManager } from '@ies/manager';
 
 // 使用页面管理器
 const { find, findAll, findInstance, addComponentInstance } = pageManager;
@@ -25,7 +25,7 @@ const pageManager = usePageManager();
 ### 插件管理器 (PluginManager)
 
 ```typescript
-import { pluginManager } from '@epic-designer/manager';
+import { pluginManager } from '@ies/manager';
 
 // 注册组件
 pluginManager.component.register({
@@ -48,7 +48,7 @@ pluginManager.publicMethods.add({
 ### 撤销重做管理器 (RevokeManager)
 
 ```typescript
-import { useRevoke } from '@epic-designer/manager';
+import { useRevoke } from '@ies/manager';
 
 const { push, undo, redo } = useRevoke(pageSchema, designerState, setSelectedNode);
 ```

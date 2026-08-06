@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import type { FieldStates, PageSchema } from '@epic-designer/types';
+import type { FieldStates, PageSchema } from '@ies/types';
 
 import { onMounted, ref } from 'vue';
 
-import { EBuilder } from '@epic-designer/core';
+import { EBuilder } from '@ies/core';
 import { Alert } from 'ant-design-vue';
 
 const ebRef = ref<InstanceType<typeof EBuilder>>();

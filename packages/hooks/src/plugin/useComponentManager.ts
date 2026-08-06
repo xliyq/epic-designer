@@ -5,13 +5,13 @@ import type {
   Components,
   ComponentSchemaGroups,
   ComponentType,
-} from '@epic-designer/types';
+} from '@ies/types';
 
 import type { AsyncComponentLoader } from 'vue';
 
 import { ref } from 'vue';
 
-import { loadAsyncComponent } from '@epic-designer/utils';
+import { loadAsyncComponent } from '@ies/utils';
 
 export function useComponentManager() {
   // 基础组件type，切换ui时，可先移除该数组记录的type

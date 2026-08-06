@@ -92,3 +92,123 @@
     align-content: flex-start;
   }
 }
+
+// 网格布局处理
+.grid-content{
+  min-height: 60px;
+  & > .ep-draggable-range:has(> .ep-node-item) {
+    display: contents !important;
+  }
+}
+
+// 弹窗选择组件样式
+.ep-modal-picker {
+  width: 100%;
+
+  &__trigger {
+    cursor: pointer;
+
+    .el-input__inner {
+      cursor: pointer;
+    }
+
+    .el-input.is-disabled .el-input__inner {
+      cursor: not-allowed;
+    }
+  }
+
+  // 覆盖 ElInput 的 prefix 默认样式（nowrap + flex-shrink:0 → 无法换行）
+  &__trigger .el-input__prefix {
+    flex-shrink: 1;
+    white-space: normal;
+    overflow: hidden;
+    max-width: 100%;
+  }
+
+  // 有 tags 时，收起 input 元素，让 prefix 撑满，避免右侧空白导致提前换行
+  &__trigger--has-tags {
+    cursor: pointer;
+
+    .el-input__wrapper,
+    .el-input__wrapper * {
+      cursor: pointer;
+    }
+    .el-input__inner {
+      flex: 0;
+      width: 0;
+      min-width: 0;
+      padding: 0;
+      margin: 0;
+    }
+    .el-input__prefix {
+      width: 100%;
+    }
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 0;
+    width: 100%;
+
+    .el-tag {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  // 多选时输入框内 tags 占据空间，需要增加最小高度
+  &__trigger .el-input__wrapper {
+    min-height: 32px;
+    height: auto;
+    align-items: flex-start;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    overflow: visible;
+  }
+}
+
+// 弹窗 append-to-body 后脱离 .ep-modal-picker 容器，需全局匹配
+.ep-modal-picker__dialog {
+  .el-dialog__body {
+    padding: 16px;
+    height: auto !important;
+    max-height: calc(100vh - 200px);
+    overflow: auto;
+  }
+
+  .ep-modal-picker__search {
+    margin-bottom: 16px;
+
+    .el-form--inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  }
+
+  .ep-modal-picker__table-wrapper {
+    margin-bottom: 16px;
+    max-height: 55vh;
+    overflow-y: auto;
+
+    .el-table {
+      width: 100%;
+    }
+
+    // 单选高亮选中行
+    .el-table__row.is-selected {
+      background-color: var(--el-color-primary-light-9, #ecf5ff);
+    }
+  }
+
+  .ep-modal-picker__pagination {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px 0;
+  }
+}

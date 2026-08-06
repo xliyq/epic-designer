@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 
-import { EpicIcon, EpicTree } from '@epic-designer/base-ui';
-import { useDesignerContext } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
-import { findSchemaInfoById, generateNewSchema } from '@epic-designer/utils';
+import { EpicIcon, EpicTree } from '@ies/base-ui';
+import { useDesignerContext } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
+import { findSchemaInfoById, generateNewSchema } from '@ies/utils';
 
 const designer = useDesignerContext();
 const pageSchema = designer.pageSchema;

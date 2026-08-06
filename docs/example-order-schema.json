@@ -1,0 +1,284 @@
+{
+  "schemas": [
+    {
+      "id": "root",
+      "label": "页面",
+      "type": "page",
+      "children": [
+        {
+          "id": "form_order",
+          "label": "订单表单",
+          "type": "form",
+          "props": {
+            "name": "default",
+            "labelWidth": 120,
+            "labelLayout": "fixed",
+            "labelAlign": "right",
+            "layout": "horizontal"
+          },
+          "children": [
+            {
+              "id": "input_createStaffName",
+              "type": "input",
+              "label": "创建人姓名",
+              "field": "createStaffName",
+              "input": true,
+              "props": { "placeholder": "请输入创建人姓名" }
+            },
+            {
+              "id": "input_customerName",
+              "type": "input",
+              "label": "客户名称",
+              "field": "customerName",
+              "input": true,
+              "props": { "placeholder": "请输入客户名称" }
+            },
+            {
+              "id": "checkbox_selectedOffers",
+              "type": "checkbox",
+              "label": "选择套餐",
+              "field": "selectedOffers",
+              "input": true,
+              "props": {
+                "placeholder": "请选择套餐",
+                "options": [
+                  { "label": "企业学培-尊享包", "value": "2025999480006336" },
+                  { "label": "企业学培-基础包", "value": "2025999480006337" }
+                ]
+              }
+            },
+            {
+              "id": "subform_packages",
+              "type": "subForm",
+              "label": "包裹信息",
+              "field": "packages",
+              "props": {
+                "title": "包裹信息",
+                "bordered": true,
+                "collapsible": false
+              },
+              "children": [
+                {
+                  "id": "input_offerName",
+                  "type": "input",
+                  "label": "商品名称",
+                  "field": "offerName",
+                  "input": true,
+                  "props": { "placeholder": "请输入商品名称" }
+                },
+                {
+                  "id": "input_packageNum",
+                  "type": "input",
+                  "label": "包裹编号",
+                  "field": "packageNum",
+                  "input": true,
+                  "props": { "placeholder": "请输入包裹编号" }
+                },
+                {
+                  "id": "attrgroup_poordCharacters",
+                  "type": "attribute-group",
+                  "label": "商品属性",
+                  "field": "poordCharacters",
+                  "input": true,
+                  "props": {
+                    "title": "商品属性",
+                    "bordered": true,
+                    "collapsible": true,
+                    "gridEnable": true,
+                    "gridCols": 2
+                  },
+                  "children": [
+                    {
+                      "id": "attr_8044",
+                      "type": "select",
+                      "label": "一级渠道类型",
+                      "field": "",
+                      "input": true,
+                      "props": {
+                        "charNum": "8044",
+                        "syncFields": ["charValue", "charDisplay"],
+                        "placeholder": "请选择渠道类型",
+                        "options": [
+                          { "label": "政企渠道", "value": "政企渠道" },
+                          { "label": "BC融合渠道", "value": "BC融合渠道" },
+                          { "label": "其他渠道", "value": "其他渠道" }
+                        ]
+                      }
+                    },
+                    {
+                      "id": "attr_8028",
+                      "type": "input",
+                      "label": "发展渠道编码",
+                      "field": "",
+                      "input": true,
+                      "props": {
+                        "charNum": "8028",
+                        "syncFields": ["charValue"],
+                        "placeholder": "输入发展渠道编码"
+                      }
+                    },
+                    {
+                      "id": "attr_8043",
+                      "type": "input",
+                      "label": "发展渠道名称",
+                      "field": "",
+                      "input": true,
+                      "props": {
+                        "charNum": "8043",
+                        "syncFields": ["charValue"],
+                        "placeholder": "输入发展渠道名称"
+                      }
+                    },
+                    {
+                      "id": "attr_8045",
+                      "type": "select",
+                      "label": "业务用途",
+                      "field": "",
+                      "input": true,
+                      "props": {
+                        "charNum": "8045",
+                        "syncFields": ["charValue", "charDisplay"],
+                        "placeholder": "请选择业务用途",
+                        "options": [
+                          { "label": "自用业务", "value": "1" },
+                          { "label": "测试业务", "value": "2" }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "sectiongroup_prodordSkus",
+                  "type": "section-group",
+                  "label": "套餐信息",
+                  "field": "prodordSkus",
+                  "input": true,
+                  "props": {
+                    "title": "套餐信息",
+                    "keyField": "skuNum",
+                    "selectionField": "selectedOffers",
+                    "bordered": true,
+                    "collapsible": false
+                  },
+                  "children": [
+                    {
+                      "id": "tpl_sku_36",
+                      "type": "section-template",
+                      "label": "企业学培-尊享包",
+                      "props": { "optionKey": "2025999480006336" },
+                      "children": [
+                        {
+                          "id": "sku_36_name",
+                          "type": "input",
+                          "label": "套餐名称",
+                          "field": "skuName",
+                          "input": true,
+                          "props": { "placeholder": "请输入套餐名称" }
+                        },
+                        {
+                          "id": "sku_36_type",
+                          "type": "select",
+                          "label": "产品类型",
+                          "field": "productType",
+                          "input": true,
+                          "props": {
+                            "placeholder": "请选择产品类型",
+                            "options": [
+                              { "label": "集团产品", "value": "2" },
+                              { "label": "个人产品", "value": "1" }
+                            ]
+                          }
+                        },
+                        {
+                          "id": "attrgroup_prodordCharacters",
+                          "type": "attribute-group",
+                          "label": "套餐属性",
+                          "field": "prodordCharacters",
+                          "input": true,
+                          "props": {
+                            "title": "套餐属性",
+                            "bordered": true,
+                            "collapsible": true,
+                            "gridEnable": true,
+                            "gridCols": 2
+                          },
+                          "children": [
+                            {
+                              "id": "sku_attr_001",
+                              "type": "select",
+                              "label": "统付类型",
+                              "field": "",
+                              "input": true,
+                              "props": {
+                                "charNum": "6001702001",
+                                "syncFields": ["charValue", "charDisplay"],
+                                "placeholder": "请选择统付类型",
+                                "options": [
+                                  { "label": "统付", "value": "01" },
+                                  { "label": "个付", "value": "02" }
+                                ]
+                              }
+                            },
+                            {
+                              "id": "sku_attr_002",
+                              "type": "input",
+                              "label": "企业管理员姓名",
+                              "field": "",
+                              "input": true,
+                              "props": {
+                                "charNum": "6001702002",
+                                "syncFields": ["charValue"],
+                                "placeholder": "请输入管理员姓名"
+                              }
+                            },
+                            {
+                              "id": "sku_attr_003",
+                              "type": "input",
+                              "label": "企业管理员手机号",
+                              "field": "",
+                              "input": true,
+                              "props": {
+                                "charNum": "6001702003",
+                                "syncFields": ["charValue"],
+                                "placeholder": "请输入手机号"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "tpl_sku_37",
+                      "type": "section-template",
+                      "label": "企业学培-基础包",
+                      "props": { "optionKey": "2025999480006337" },
+                      "children": [
+                        {
+                          "id": "sku_37_name",
+                          "type": "input",
+                          "label": "套餐名称",
+                          "field": "skuName",
+                          "input": true,
+                          "props": { "placeholder": "请输入套餐名称" }
+                        },
+                        {
+                          "id": "sku_37_count",
+                          "type": "input-number",
+                          "label": "成员数量",
+                          "field": "skuCount",
+                          "input": true,
+                          "props": { "placeholder": "请输入成员数量", "min": 0 }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "script": ""
+}

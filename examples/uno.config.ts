@@ -1,2 +1,1 @@
-// uno.config.ts
-export * from 'epic-designer/uno.config';
+export * from '@ies/designer/uno.config';

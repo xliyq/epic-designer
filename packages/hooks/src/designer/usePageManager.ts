@@ -1,4 +1,4 @@
-import type { PageManager } from '@epic-designer/manager';
+import type { PageManager } from '@ies/manager';
 
 import type { InjectionKey } from 'vue';
 

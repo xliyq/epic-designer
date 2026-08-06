@@ -1,10 +1,10 @@
-import type { PluginManager } from '@epic-designer/manager';
-import type { SetupConfig } from '@epic-designer/types';
+import type { PluginManager } from '@ies/manager';
+import type { SetupConfig } from '@ies/types';
 
 import { watchEffect } from 'vue';
 
 // 注册ant-design-vue ui
-import { pluginManager as pManager } from '@epic-designer/manager';
+import { pluginManager as pManager } from '@ies/manager';
 import { message, version } from 'ant-design-vue';
 
 import Button from './button';

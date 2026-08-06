@@ -1,4 +1,4 @@
-import type { PluginManager } from '@epic-designer/manager';
+import type { PluginManager } from '@ies/manager';
 
 import { setupActivitybar } from './activitybars';
 import { setupComponent } from './components';
@@ -6,7 +6,7 @@ import { setupRightSidebar } from './rightSidebars';
 
 import './index.less';
 
-export { setupPage } from './components';
+export { setupComponent, setupPage } from './components';
 
 /**
  * 初始化面板，调用多个设置函数来设置活动栏、右侧边栏和组件。

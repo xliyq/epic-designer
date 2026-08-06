@@ -1,6 +1,6 @@
 {
-  "name": "@epic-designer/manager",
-  "version": "1.1.13",
+  "name": "@ies/manager",
+  "version": "0.0.4",
   "description": "Epic Designer 管理器模块，提供页面管理、插件管理、撤销重做等功能",
   "private": false,
   "author": "kchengz",
@@ -18,9 +18,9 @@
     "vue": "catalog:"
   },
   "dependencies": {
-    "@epic-designer/hooks": "workspace:*",
-    "@epic-designer/types": "workspace:*",
-    "@epic-designer/utils": "workspace:*",
+    "@ies/hooks": "workspace:*",
+    "@ies/types": "workspace:*",
+    "@ies/utils": "workspace:*",
     "rollup-plugin-node-externals": "catalog:"
   }
 }

@@ -1,0 +1,497 @@
+[
+  {
+    "id": "root",
+    "label": "表单",
+    "type": "form",
+    "props": {
+      "colon": true,
+      "labelAlign": "right",
+      "labelCol": {
+        "span": 5
+      },
+      "labelLayout": "fixed",
+      "labelPlacement": "left",
+      "labelWidth": "120px",
+      "layout": "horizontal",
+      "name": "default",
+      "wrapperCol": {
+        "span": 19
+      },
+      "labelSuffix": ":"
+    },
+    "children": [
+      {
+        "label": "账务信息",
+        "type": "card",
+        "props": {
+          "style": {
+            "margin": "10px"
+          },
+          "gridCols": 4,
+          "gridEnable": true
+        },
+        "children": [
+          {
+            "field": "select_8002",
+            "input": true,
+            "label": "账期生效规则",
+            "props": {
+              "placeholder": "请选择",
+              "effect": "light",
+              "options": [
+                {
+                  "label": "立即生效",
+                  "value": "1"
+                }
+              ],
+              "placement": "bottom-start",
+              "size": "default"
+            },
+            "type": "select",
+            "id": "select_8002",
+            "rules": [
+              {
+                "message": "必填项",
+                "required": true,
+                "trigger": [
+                  "change"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "field": "select_8001",
+            "input": true,
+            "label": "支付模式",
+            "props": {
+              "placeholder": "请选择",
+              "effect": "light",
+              "options": [
+                {
+                  "label": "主办省一点受理，一点支付",
+                  "value": "3"
+                },
+                {
+                  "label": "本省受理,本省支付",
+                  "value": "5"
+                }
+              ],
+              "placement": "bottom-start",
+              "size": "default"
+            },
+            "type": "select",
+            "id": "select_8001",
+            "rules": [
+              {
+                "message": "必填项",
+                "required": true,
+                "trigger": [
+                  "change"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "field": "select_7001",
+            "input": true,
+            "label": "付费类型",
+            "props": {
+              "placeholder": "付费类型",
+              "effect": "light",
+              "options": [
+                {
+                  "label": "预付费",
+                  "value": "1"
+                },
+                {
+                  "label": "后付费",
+                  "value": "2"
+                }
+              ],
+              "placement": "bottom-start",
+              "size": "default"
+            },
+            "type": "select",
+            "id": "select_7001"
+          },
+          {
+            "field": "select_7002",
+            "input": true,
+            "label": "缴费周期",
+            "props": {
+              "placeholder": "缴费周期",
+              "effect": "light",
+              "options": [
+                {
+                  "label": "按月付",
+                  "value": "0"
+                },
+                {
+                  "label": "季付",
+                  "value": "1"
+                },
+                {
+                  "label": "半年付",
+                  "value": "2"
+                },
+                {
+                  "label": "年付",
+                  "value": "3"
+                },
+                {
+                  "label": "一次性付费",
+                  "value": "4"
+                },
+                {
+                  "label": "按验收阶段付款",
+                  "value": "5"
+                }
+              ],
+              "placement": "bottom-start",
+              "size": "default"
+            },
+            "type": "select",
+            "id": "select_7002"
+          },
+          {
+            "field": "input_7003",
+            "input": true,
+            "label": "缴费周期时长",
+            "props": {
+              "placeholder": "缴费周期时长"
+            },
+            "type": "input",
+            "id": "input_7003"
+          }
+        ],
+        "id": "card_ngp5x4r3"
+      },
+      {
+        "label": "渠道信息",
+        "type": "card",
+        "props": {
+          "style": {
+            "margin": "10px"
+          },
+          "gridCols": 4,
+          "gridEnable": true
+        },
+        "children": [
+          {
+            "field": "select_8044",
+            "input": true,
+            "label": "一级渠道类型",
+            "props": {
+              "placeholder": "请选择渠道类型",
+              "effect": "light",
+              "options": [
+                {
+                  "label": "政企渠道",
+                  "value": "政企渠道"
+                },
+                {
+                  "label": "BC融合渠道",
+                  "value": "BC融合渠道"
+                },
+                {
+                  "label": "其他渠道",
+                  "value": "其他渠道"
+                }
+              ],
+              "placement": "bottom-start",
+              "size": "default"
+            },
+            "type": "select",
+            "id": "select_8044"
+          },
+          {
+            "field": "input_8028",
+            "input": true,
+            "label": "发展渠道编码",
+            "props": {
+              "placeholder": "输入发展渠道编码"
+            },
+            "type": "input",
+            "id": "input_8028"
+          },
+          {
+            "field": "input_8043",
+            "input": true,
+            "label": "发展渠道名称",
+            "props": {
+              "placeholder": "输入发展渠道名称"
+            },
+            "type": "input",
+            "id": "input_8043"
+          },
+          {
+            "field": "input_8029",
+            "input": true,
+            "label": "维护渠道编码",
+            "props": {
+              "placeholder": "输入维护渠道编码"
+            },
+            "type": "input",
+            "id": "input_8029"
+          },
+          {
+            "field": "input_8032",
+            "input": true,
+            "label": "酬金结算比例",
+            "props": {
+              "placeholder": "请输入发展渠道酬金结算比例"
+            },
+            "type": "input",
+            "id": "input_8032"
+          }
+        ],
+        "id": "card_5sucfwc6"
+      },
+      {
+        "label": "经办人信息",
+        "type": "card",
+        "props": {
+          "style": {
+            "margin": "10px"
+          },
+          "gridCols": 4,
+          "gridEnable": true
+        },
+        "children": [
+          {
+            "field": "input_8004",
+            "input": true,
+            "label": "经办人姓名",
+            "props": {
+              "placeholder": "经办人姓名"
+            },
+            "type": "input",
+            "id": "input_8004"
+          },
+          {
+            "field": "input_8005",
+            "input": true,
+            "label": "经办人电话",
+            "props": {
+              "placeholder": "经办人电话"
+            },
+            "type": "input",
+            "id": "input_8005"
+          },
+          {
+            "field": "input_8006",
+            "input": true,
+            "label": "证件类型",
+            "props": {
+              "placeholder": "经办人证件类型"
+            },
+            "type": "input",
+            "id": "input_8006"
+          },
+          {
+            "field": "input_8007",
+            "input": true,
+            "label": "证件编号",
+            "props": {
+              "placeholder": "经办人证件编号"
+            },
+            "type": "input",
+            "id": "input_8007"
+          }
+        ],
+        "id": "card_gjrbu087"
+      },
+      {
+        "label": "业务标签",
+        "type": "card",
+        "props": {
+          "style": {
+            "margin": "10px"
+          },
+          "gridCols": 4,
+          "gridEnable": true
+        },
+        "children": [
+          {
+            "field": "select_8045",
+            "input": true,
+            "label": "业务用途",
+            "props": {
+              "placeholder": "请选择业务用途",
+              "effect": "light",
+              "options": [
+                {
+                  "label": "自用业务",
+                  "value": "1"
+                },
+                {
+                  "label": "测试业务",
+                  "value": "2"
+                }
+              ],
+              "placement": "bottom-start",
+              "size": "default"
+            },
+            "type": "select",
+            "id": "select_8045"
+          },
+          {
+            "field": "select_8046",
+            "input": true,
+            "label": "统谈统签统付业务",
+            "props": {
+              "placeholder": "请选择统谈统签统付业务",
+              "effect": "light",
+              "options": [
+                {
+                  "label": "否",
+                  "value": "0"
+                },
+                {
+                  "label": "是",
+                  "value": "1"
+                }
+              ],
+              "placement": "bottom-start",
+              "size": "default"
+            },
+            "type": "select",
+            "id": "select_8046"
+          },
+          {
+            "field": "select_8047",
+            "input": true,
+            "label": "统谈级别",
+            "props": {
+              "placeholder": "请选择统谈级别",
+              "effect": "light",
+              "options": [
+                {
+                  "label": "全国",
+                  "value": "1"
+                },
+                {
+                  "label": "全省",
+                  "value": "2"
+                },
+                {
+                  "label": "地市",
+                  "value": "3"
+                },
+                {
+                  "label": "区县",
+                  "value": "4"
+                }
+              ],
+              "placement": "bottom-start",
+              "size": "default"
+            },
+            "type": "select",
+            "id": "select_8047"
+          },
+          {
+            "field": "input_8048",
+            "input": true,
+            "label": "统谈催缴人姓名",
+            "props": {
+              "placeholder": "统谈催缴人姓名"
+            },
+            "type": "input",
+            "id": "input_8048"
+          },
+          {
+            "field": "input_8049",
+            "input": true,
+            "label": "统谈催缴人电话",
+            "props": {
+              "placeholder": "统谈催缴人电话"
+            },
+            "type": "input",
+            "id": "input_8049"
+          },
+          {
+            "field": "select_8050",
+            "input": true,
+            "label": "付费主体一级标签",
+            "props": {
+              "placeholder": "请选择付费主体一级标签",
+              "effect": "light",
+              "options": [
+                {
+                  "label": "政府类",
+                  "value": "1"
+                },
+                {
+                  "label": "企业类",
+                  "value": "2"
+                }
+              ],
+              "placement": "bottom-start",
+              "size": "default"
+            },
+            "type": "select",
+            "id": "select_8050"
+          },
+          {
+            "field": "select_8051",
+            "input": true,
+            "label": "付费主体二级标签",
+            "props": {
+              "placeholder": "请选择付费主体二级标签",
+              "effect": "light",
+              "options": [
+                {
+                  "label": "省市政府机关",
+                  "value": "11"
+                },
+                {
+                  "label": "县乡及以下级别政府机关",
+                  "value": "12"
+                },
+                {
+                  "label": "事业单位",
+                  "value": "13"
+                },
+                {
+                  "label": "平台公司",
+                  "value": "14"
+                },
+                {
+                  "label": "军队",
+                  "value": "15"
+                },
+                {
+                  "label": "央国企",
+                  "value": "21"
+                },
+                {
+                  "label": "大型民企",
+                  "value": "22"
+                },
+                {
+                  "label": "中型民企",
+                  "value": "23"
+                },
+                {
+                  "label": "小微企业",
+                  "value": "24"
+                },
+                {
+                  "label": "个体工商户",
+                  "value": "25"
+                }
+              ],
+              "placement": "bottom-start",
+              "size": "default"
+            },
+            "type": "select",
+            "id": "select_8051"
+          }
+        ],
+        "id": "card_j7vspls6"
+      }
+    ]
+  }
+]

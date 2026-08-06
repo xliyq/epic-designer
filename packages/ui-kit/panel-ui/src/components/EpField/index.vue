@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { pluginManager } from '@epic-designer/manager';
+import { pluginManager } from '@ies/manager';
 
 const Input = pluginManager.component.get('input');
 const modelValue = defineModel<string>();

@@ -1,6 +1,6 @@
 {
   "name": "epic-examples",
-  "version": "1.1.13",
+  "version": "0.0.4",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,6 +14,7 @@
     "ant-design-vue": "catalog:",
     "dayjs": "catalog:",
     "element-plus": "catalog:",
+    "jsonc-parser": "^3.3.1",
     "magic-string": "catalog:",
     "monaco-editor": "catalog:",
     "shiki": "catalog:",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "catalog:",
+    "lodash-es": "^4.18.1",
     "typescript": "catalog:",
     "unocss": "catalog:",
     "vite": "catalog:",

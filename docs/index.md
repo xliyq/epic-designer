@@ -17,7 +17,7 @@ hero:
       link: /guide/start/index
     - theme: alt
       text: EpicDesigner 源码
-      link: https://gitee.com/kcz66
+      link: https://github.com/xliyq/epic-designer
 
 features:
   - icon: 💡

@@ -25,7 +25,7 @@
 ## 动态切换模式
 
 ```tsx
-import { useTheme } from 'epic-designer'
+import { useTheme } from '@ies/designer'
 const { toggleDark } = useTheme()
 
 // 切换主题模式
@@ -51,7 +51,7 @@ html.dark {
 
 ```tsx
 // main.ts
-import "epic-designer/dist/style.css";
+
 import './styles/dark-vars.css'
 ```
 

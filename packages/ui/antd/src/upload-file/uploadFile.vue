@@ -7,8 +7,8 @@ import type {
 
 import { computed, nextTick, ref, useAttrs, watch } from 'vue';
 
-import { pluginManager } from '@epic-designer/manager';
-import { getUUID } from '@epic-designer/utils';
+import { pluginManager } from '@ies/manager';
+import { getUUID } from '@ies/utils';
 import { Button, Form, message, Upload } from 'ant-design-vue';
 
 const props = withDefaults(

@@ -22,7 +22,7 @@
 
 ### 新建designer-extensions/index.ts(扩展函数)
 ```ts
-import { pluginManager } from "epic-designer";
+import { pluginManager } from "@ies/designer";
 
 // 安装扩展
 export function setupDesignerExtensions(): void {

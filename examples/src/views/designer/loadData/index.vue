@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import type { PageSchema } from '@epic-designer/types';
+import type { PageSchema } from '@ies/types';
 
 import { onMounted, ref } from 'vue';
 
-import { EDesigner } from '@epic-designer/core';
+import { EDesigner } from '@ies/core';
 
 const designerRef = ref<InstanceType<typeof EDesigner>>();
 
@@ -175,6 +175,34 @@ const pageSchema = {
           type: 'textarea',
           id: 'textarea_6128',
         },
+        {
+      "field": "select_5439",
+      "input": true,
+      "label": "选择框",
+      "props": {
+        "effect": "light",
+        "placeholder": "请选择",
+        "placement": "bottom-start",
+        "size": "default",
+        "dataSource": {
+          "type": "http",
+          "config": {
+            "url": "",
+            "method": "GET",
+            "params": {},
+            "headers": {},
+            "dataPath": "data",
+            "labelKey": "label",
+            "valueKey": "value",
+            "childrenKey": "children",
+            "cache": true,
+            "autoLoad": true
+          }
+        }
+      },
+      "type": "select",
+      "id": "select_5439"
+    }
       ],
     },
   ],

@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 
-import { useDesignerContext, usePageManager } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
+import { useDesignerContext, usePageManager } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
 
 const MonacoEditor = pluginManager.component.get('monacoEditor');
 const MonacoEditorConfig = {
@@ -21,6 +21,9 @@ const hasScriptError = computed(() => pageManager.scriptError.value !== null);
   <div class="flex h-full flex-col">
     <div class="pb-2">
       <span>自定义函数编辑</span>
+    </div>
+    <div class="mb-2 text-xs text-gray-400">
+      提示：脚本为页面级别，所有组件的自定义函数均在此定义
     </div>
     <MonacoEditor
       v-model="pageSchema.script"

@@ -1,4 +1,4 @@
-import type { ComponentSchema } from '@epic-designer/types';
+﻿import type { ComponentSchema } from '@ies/designer';
 
 import type { PropType } from 'vue';
 

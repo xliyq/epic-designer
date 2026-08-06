@@ -1,4 +1,4 @@
-import { PageSchema } from '@epic-designer/types';
+import { PageSchema } from '@ies/types';
 
 export interface TableColumn {
   columnName: string;
@@ -11,6 +11,12 @@ export interface TableMeta {
   tableRemark: string;
   tableType: string;
 }
+/**
+ * attribute-group 运行时需要的 API 属性定义数据。
+ * key = attribute-group 的 field 名，value = 该属性组的 API 定义数组
+ */
+export type AttributeMeta = Record<string, any[]>;
+
 export interface DesignerProps {
   canvasMode?: 'desktop' | 'mobile' | 'tablet';
   canvasPadding?: number | string;

@@ -1,0 +1,245 @@
+import type { ComponentSchema, PageSchema } from '@ies/types'
+import { computed, reactive, ref } from 'vue'
+import { deepClone } from '@ies/utils'
+import type { DesignerMode, ViewTypeConfig } from '../types'
+
+/**
+ * 多视图设计器核心状态管理
+ *
+ * dataModel 和 views 中的每个视图都是标准 PageSchema，结构完全一致。
+ * 模式切换时通过交换 pageSchema.schemas[0].children 来实现画布内容切换。
+ */
+export function useViewDesigner() {
+  // ── 模式 ──
+  const mode = ref<DesignerMode>('model')
+
+  // ── 数据模型（标准 PageSchema） ──
+  const dataModel = reactive<PageSchema>({
+    schemas: [{
+      id: 'root',
+      label: '表单',
+      type: 'form',
+      props: {
+        colon: true,
+        labelAlign: 'right',
+        labelCol: { span: 5 },
+        labelLayout: 'fixed',
+        labelPlacement: 'left',
+        labelWidth: 100,
+        layout: 'horizontal',
+        name: 'default',
+        wrapperCol: { span: 19 },
+      },
+      children: [],
+    }],
+    script: '',
+  })
+
+  // ── 视图类型列表 ──
+  const viewTypes = ref<ViewTypeConfig[]>([])
+
+  // ── 视图集合（Record<string, PageSchema>） ──
+  const views = reactive<Record<string, PageSchema>>({})
+
+  // ── 视图历史记录（每个视图独立的撤销/重做栈） ──
+  // key: 'model' 存数据模型的历史，key: viewId 存各视图的历史
+  const viewHistories = reactive<Record<string, any>>({})
+
+  /** 保存某个上下文（model 或 viewId）的历史记录 */
+  function saveHistory(key: string, history: any) {
+    viewHistories[key] = history
+  }
+
+  /** 获取某个上下文的历史记录 */
+  function getHistory(key: string): any {
+    return viewHistories[key] ?? null
+  }
+
+  /** 删除某个视图的历史记录 */
+  function removeHistory(key: string) {
+    delete viewHistories[key]
+  }
+
+  // 为当前 viewTypes 中尚未创建视图的项创建默认视图
+  function initDefaultViews() {
+    for (const vt of viewTypes.value) {
+      if (!views[vt.id]) {
+        views[vt.id] = {
+          schemas: [{
+            id: 'root',
+            label: '表单',
+            type: 'form',
+            props: { ...dataModel.schemas[0].props },
+            children: [],
+          }],
+          script: dataModel.script ?? '',
+        }
+      }
+    }
+  }
+
+  // ── 当前选中的视图 ID ──
+  const currentViewId = ref<string>('')
+
+  // ── 全局编辑模式 ──
+  const globalMode = ref(false)
+
+  // ── 当前视图的 PageSchema ──
+  const currentView = computed(() => {
+    if (!currentViewId.value) return null
+    return views[currentViewId.value] ?? null
+  })
+
+  // ── 字段列表 ──
+  const modelFields = computed(() => dataModel.schemas[0]?.children ?? [])
+
+  // ════════════════════════════════════════
+  //  模式切换
+  // ════════════════════════════════════════
+
+  function setMode(newMode: DesignerMode) {
+    mode.value = newMode
+  }
+
+  // ════════════════════════════════════════
+  //  视图类型 CRUD
+  // ════════════════════════════════════════
+
+  function selectView(id: string) {
+    currentViewId.value = id
+  }
+
+  function addViewType(name: string, id?: string) {
+    id = id ?? `view_${Date.now()}`
+    viewTypes.value.push({ id, name })
+    views[id] = {
+      schemas: [{
+        id: 'root',
+        label: '表单',
+        type: 'form',
+        props: { ...dataModel.schemas[0].props },
+        children: [],
+      }],
+      script: dataModel.script ?? '',
+    }
+    currentViewId.value = id
+  }
+
+  function removeViewType(id: string) {
+    const index = viewTypes.value.findIndex(v => v.id === id)
+    if (index === -1) return
+    viewTypes.value.splice(index, 1)
+    delete views[id]
+    removeHistory(id)
+    if (currentViewId.value === id) {
+      currentViewId.value = viewTypes.value[0]?.id ?? ''
+    }
+  }
+
+  function renameViewType(id: string, name: string) {
+    const vt = viewTypes.value.find(v => v.id === id)
+    if (vt) vt.name = name
+  }
+
+  // ════════════════════════════════════════
+  //  全局编辑同步
+  // ════════════════════════════════════════
+
+  function setGlobalMode(v: boolean) {
+    globalMode.value = v
+  }
+
+  /**
+   * 同步字段变更到数据模型和其他视图
+   */
+  function syncFieldToAll(fieldId: string, changedField: ComponentSchema) {
+    // 同步到数据模型
+    const modelChild = dataModel.schemas[0]?.children?.find(f => f.id === fieldId)
+    if (modelChild) {
+      Object.assign(modelChild, deepClone(changedField))
+    }
+
+    // 同步到其他视图
+    for (const [viewId, view] of Object.entries(views)) {
+      if (viewId === currentViewId.value) continue
+      const viewChild = view.schemas[0]?.children?.find(f => f.id === fieldId)
+      if (viewChild) {
+        Object.assign(viewChild, deepClone(changedField))
+      }
+    }
+  }
+
+  // ════════════════════════════════════════
+  //  数据导入/导出
+  // ════════════════════════════════════════
+
+  function setDataModel(schema: PageSchema) {
+    Object.assign(dataModel, deepClone(schema))
+  }
+
+  function setViews(allViews: Record<string, PageSchema>) {
+    for (const key of Object.keys(views)) {
+      delete views[key]
+    }
+    for (const [key, val] of Object.entries(allViews)) {
+      views[key] = deepClone(val) as PageSchema
+    }
+  }
+
+  function getDataModel(): PageSchema {
+    return deepClone(dataModel) as PageSchema
+  }
+
+  function getViews(): Record<string, PageSchema> {
+    return deepClone(views) as Record<string, PageSchema>
+  }
+
+  function getViewTypes(): ViewTypeConfig[] {
+    return [...viewTypes.value]
+  }
+
+  function setAll(dataModel_?: PageSchema, viewTypes_?: ViewTypeConfig[], views_?: Record<string, PageSchema>) {
+    if (dataModel_) setDataModel(dataModel_)
+    if (viewTypes_) {
+      viewTypes.value = viewTypes_.map(v => ({ ...v }))
+    } else {
+      viewTypes.value = []
+    }
+    if (views_) {
+      setViews(views_)
+    } else {
+      initDefaultViews()
+    }
+    if (!currentViewId.value && viewTypes.value.length > 0) {
+      currentViewId.value = viewTypes.value[0].id
+    }
+  }
+
+  return {
+    mode,
+    dataModel,
+    viewTypes,
+    views,
+    currentViewId,
+    globalMode,
+    currentView,
+    modelFields,
+
+    setMode,
+    setGlobalMode,
+    selectView,
+    addViewType,
+    removeViewType,
+    renameViewType,
+    syncFieldToAll,
+    setDataModel,
+    setViews,
+    getDataModel,
+    getViews,
+    getViewTypes,
+    setAll,
+    saveHistory,
+    getHistory,
+    removeHistory,
+  }
+}

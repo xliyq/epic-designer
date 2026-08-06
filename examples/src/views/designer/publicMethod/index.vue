@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import type { PageSchema } from '@epic-designer/types';
+import type { PageSchema } from '@ies/types';
 
 import { onMounted, ref } from 'vue';
 
-import { EDesigner } from '@epic-designer/core';
-import { pluginManager } from '@epic-designer/manager';
+import { EDesigner } from '@ies/core';
+import { pluginManager } from '@ies/manager';
 
 // 模拟器api返回数据
 const fetchData = () => {

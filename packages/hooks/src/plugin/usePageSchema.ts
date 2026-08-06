@@ -1,7 +1,7 @@
 import { reactive } from 'vue';
 
-import { PageSchema } from '@epic-designer/types';
-import { deepClone, deepCompareAndModify } from '@epic-designer/utils';
+import { PageSchema } from '@ies/types';
+import { deepClone, deepCompareAndModify } from '@ies/utils';
 
 // 兼容旧数据的映射关系
 const legacyModeMap = {

@@ -73,7 +73,7 @@ button:hover {
 [ComponentConfigModel 配置字段类型](#componentconfigmodel-类型及字段注释)
 
 ```ts
-import { type ComponentConfigModel } from 'epic-designer'
+import { type ComponentConfigModel } from '@ies/designer'
 
 export default {
   component: async () => await import('./index.vue'),
@@ -123,7 +123,7 @@ export default {
 
 #### 新建designer-extensions/index.ts(扩展函数)
 ```ts
-import { pluginManager } from "epic-designer";
+import { pluginManager } from "@ies/designer";
 import Test from "./test";
 
 // 安装扩展
@@ -169,7 +169,7 @@ setupDesignerExtensions();
 ### 示例
 
 ```ts
-import { pluginManager, type ComponentConfigModel } from 'epic-designer'
+import { pluginManager, type ComponentConfigModel } from '@ies/designer'
 
 const Test = {
   // 组件，可以是异步加载函数
@@ -352,7 +352,7 @@ export interface ComponentConfigModel {
 
 ---
 
-组件扩展是 epic-designer 的强大特性，它允许您根据业务需求自定义组件库。通过遵循本文档的最佳实践，您可以创建高质量、易用的扩展组件，丰富设计器的功能，满足各种复杂的业务场景需求。
+组件扩展是 @ies/designer 的强大特性，它允许您根据业务需求自定义组件库。通过遵循本文档的最佳实践，您可以创建高质量、易用的扩展组件，丰富设计器的功能，满足各种复杂的业务场景需求。
 
 如果您在组件扩展过程中遇到问题，可以参考 demo 仓库或提交 issue 寻求帮助。
 

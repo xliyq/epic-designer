@@ -3,7 +3,7 @@ import type {
   ComponentSchema,
   EpNodeInstance,
   FieldStateType,
-} from '@epic-designer/types';
+} from '@ies/types';
 
 import type { AsyncComponentLoader } from 'vue';
 
@@ -11,6 +11,7 @@ import {
   computed,
   defineComponent,
   getCurrentInstance,
+  inject,
   onBeforeUnmount,
   provide,
   reactive,
@@ -31,16 +32,17 @@ import {
   useFieldPathPrefix,
   useFormItem,
   usePageManager,
-} from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
+} from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
 import {
   capitalizeFirstLetter,
   deepClone,
   deepCompareAndModify,
   deepEqual,
+  deleteValueByPath,
   getValueByPath,
   setValueByPath,
-} from '@epic-designer/utils';
+} from '@ies/utils';
 
 import dynamicFormItem from './dynamicFormItem.vue';
 
@@ -53,6 +55,7 @@ interface EpNodeProps {
 }
 defineOptions({
   name: 'EpNode',
+  inheritAttrs: false,
 });
 
 const props = withDefaults(defineProps<EpNodeProps>(), {
@@ -78,10 +81,26 @@ const pageManager = usePageManager();
 // 校验前缀字段
 const fieldPathPrefix = useFieldPathPrefix();
 const scopeName = computed(() => {
-  if (fieldPathPrefix) {
-    return fieldPathPrefix.join('.');
+  const prefix = fieldPathPrefix.value;
+  if (prefix && prefix.length > 0) {
+    return prefix.join('.');
   }
   return 'default';
+});
+
+/**
+ * 计算带前缀的完整字段路径。
+ * 用于读写 formData / 派发 formChange / 匹配 fieldStateMap。
+ * 例如：SubForm(field=a) 内的 field=x 会被拼接为 'a.x'。
+ */
+const fullField = computed<string | undefined>(() => {
+  const field = innerSchema.field;
+  if (!field) return field as any;
+  const prefix = fieldPathPrefix.value;
+  if (prefix && prefix.length > 0) {
+    return `${prefix.join('.')}.${field}`;
+  }
+  return field;
 });
 
 // 内部schema数据
@@ -117,7 +136,7 @@ watch(
  * 获取表单项 数据
  */
 function getBindValue() {
-  return props.modelValue ?? getValueByPath(formData, innerSchema.field ?? '');
+  return props.modelValue ?? getValueByPath(formData, fullField.value ?? '');
 }
 
 /**
@@ -157,7 +176,7 @@ const fieldStateType = ref<FieldStateType | null>(null);
 const fieldRequired = ref<boolean | null | undefined>(null);
 
 watchEffect(() => {
-  const fieldName = innerSchema?.field;
+  const fieldName = fullField.value;
   const currentFieldState = fieldName && fieldStateMap.value?.[fieldName];
 
   if (!currentFieldState) {
@@ -194,6 +213,26 @@ const show = computed(() => {
 
   return innerSchema.show?.({ values: formData }) ?? true;
 });
+
+/**
+ * 提交数据开关：通过 provide/inject 实现父子级联
+ * - 父组件 submitData=false → 子组件继承 false（除非子组件显式覆盖）
+ * - 默认 true（不显式设置时）
+ */
+const parentSubmitData = inject('parentSubmitData', ref(true));
+
+const effectiveSubmitData = computed(() => {
+  return innerSchema.props?.submitData ?? parentSubmitData.value;
+});
+
+provide('parentSubmitData', effectiveSubmitData);
+
+/**
+ * 隐藏但需要提交数据时，是否静默渲染子组件以触发初始化
+ */
+const shouldRenderHiddenChildren = computed(
+  () => !show && !pageManager.isDesignMode.value && effectiveSubmitData.value && !!innerSchema.children?.length,
+);
 
 // 获取FormItemProps
 const getFormItemProps = computed<ComponentSchema>(() => {
@@ -244,24 +283,37 @@ const getFormItemProps = computed<ComponentSchema>(() => {
   if (props.ruleField && props.ruleField.length > 0) {
     // 设置为父级传入的校验字段
     model = props.ruleField;
-  } else if (fieldPathPrefix && innerSchema.field) {
+  } else if (
+    fieldPathPrefix.value &&
+    fieldPathPrefix.value.length > 0 &&
+    innerSchema.field
+  ) {
     // 添加校验字段前缀
-    model = deepClone(fieldPathPrefix) as [];
+    model = deepClone(fieldPathPrefix.value) as [];
     model.push(innerSchema.field);
   }
 
   const style = innerSchema.props?.style ?? {};
+  const span = innerSchema.props?.span;
   const formItemProps = {
     ...innerSchema,
     ...attrs,
     field: model,
     rule: rules,
     rules,
+    span,
     style: {
       ...style,
       width: undefined,
+      ...(span && innerSchema.type !== 'col' ? { gridColumn: `span ${span}` } : {}),
     },
   } as ComponentSchema;
+
+  // hideLabel：隐藏标签并清除标签占位空间，保留表单校验
+  if (innerSchema.hideLabel) {
+    formItemProps.label = '';
+    formItemProps.labelWidth = '0';
+  }
 
   // 移除元素只读属性 children
   if (formItemProps.children) {
@@ -301,18 +353,24 @@ const getProps = computed(() => {
       });
   }
 
-  const style = innerSchema.props?.style ?? {};
+  const innerProps = innerSchema.props ?? {}
+  const { span, ...restInnerProps } = innerProps
+  const style = innerProps.style ?? {};
+  // span 对 Col 组件是栅格跨度（el-col-12），对其他组件是 grid 占列
+  const shouldAddGridColumn = span && innerSchema.type !== 'col'
+  // Col 需要保留 span 作为 prop，其他组件的 span 已转为 gridColumn，不再下传
+  const finalInnerProps = innerSchema.type === 'col' ? innerProps : restInnerProps
   const finalStyle = hasFormItem.value
     ? Object.fromEntries(
         (['height', 'width'] as const)
           .filter((k) => style[k] !== undefined && style[k] !== null)
           .map((k) => [k, style[k]]),
       )
-    : style;
+    : { ...style, ...(shouldAddGridColumn ? { gridColumn: `span ${span}` } : {}) };
   return {
     ...props,
     ...attrs,
-    ...innerSchema.props,
+    ...finalInnerProps,
     bindModel,
     disabled:
       fieldStateType.value !== 'WRITE' &&
@@ -398,7 +456,8 @@ async function initComponent() {
   if (innerSchema.props?.defaultValue !== undefined) {
     const defaultValue = pageManager.isDesignMode.value
       ? innerSchema.props?.defaultValue
-      : (formData[innerSchema.field!] ?? innerSchema.props?.defaultValue);
+      : (getValueByPath(formData, fullField.value ?? '') ??
+          innerSchema.props?.defaultValue);
 
     handleUpdate(deepClone(defaultValue), true);
   }
@@ -453,12 +512,13 @@ function handleUpdate(value: any, isInit?: boolean) {
   if (value === oldValue) {
     return;
   }
-  if (innerSchema.field) {
-    setValueByPath(formData, innerSchema.field, value);
+  const writePath = fullField.value;
+  if (writePath) {
+    setValueByPath(formData, writePath, value);
     // 触发formChange钩子
     if (!isInit) {
       pageManager.hook.execute('formChange', {
-        field: innerSchema.field,
+        field: writePath,
         formData,
         value,
       });
@@ -485,6 +545,20 @@ watch(
     deep: true,
     immediate: true,
   },
+);
+
+// 当 hidden=true 且 submitData=false 时，从 formData 中清除值
+watch(
+  [() => innerSchema.props?.hidden, effectiveSubmitData],
+  () => {
+    if (innerSchema.props?.hidden && !effectiveSubmitData.value) {
+      const writePath = fullField.value;
+      if (writePath) {
+        deleteValueByPath(formData, writePath);
+      }
+    }
+  },
+  { immediate: true },
 );
 
 // 添加组件实例
@@ -525,4 +599,14 @@ onBeforeUnmount(handleVnodeUnmounted);
       <!-- 渲染布局设计子组件列表 end -->
     </component>
   </dynamicFormItem>
+  <!-- 隐藏但需要提交数据时，静默渲染子组件以触发初始化 -->
+  <template v-if="shouldRenderHiddenChildren">
+    <div style="display:none" aria-hidden="true">
+      <EpNode
+        v-for="child in innerSchema.children"
+        :key="child.id"
+        :component-schema="child"
+      />
+    </div>
+  </template>
 </template>

@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import type { EventModel } from '@epic-designer/types';
+import type { EventModel } from '@ies/types';
 
 import { computed } from 'vue';
 
-import { useDesignerContext } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
-import { getValueByPath, setValueByPath } from '@epic-designer/utils';
+import { useDesignerContext } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
+import { getValueByPath, setValueByPath } from '@ies/utils';
 
 const designer = useDesignerContext();
 const revoke = designer.revoke;
@@ -14,6 +14,12 @@ const EActionEditor = pluginManager.component.get('EActionEditor');
 const componentConfigs = pluginManager.component.getComponentConfigs();
 const selectedNode = computed(() => {
   return designer.state.selectedNode;
+});
+
+const selectedNodeLabel = computed(() => {
+  if (!selectedNode.value) return '';
+  const config = componentConfigs[selectedNode.value.type ?? ''];
+  return selectedNode.value.label ?? config?.defaultSchema.label ?? '';
 });
 
 // 定义事件组的类型
@@ -96,6 +102,7 @@ function handleSetValue(value: any, field: string) {
         :key="selectedNode.id"
         :event-list="eventList"
         :model-value="getValueByPath(selectedNode!, `on`)"
+        :component-label="selectedNodeLabel"
         @update:model-value="handleSetValue($event, `on`)"
       />
     </div>

@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import type { RightSidebarModel } from '@epic-designer/types';
+import type { RightSidebarModel } from '@ies/types';
 
 import { computed, ref, shallowRef } from 'vue';
 
-import { EpicIcon } from '@epic-designer/base-ui';
-import { pluginManager } from '@epic-designer/manager';
+import { EpicIcon } from '@ies/base-ui';
+import { pluginManager } from '@ies/manager';
 
 import EpicBreadcrumb from './breadcrumb.vue';
 
@@ -50,6 +50,7 @@ function handleClick(item: RightSidebarModel, index: number) {
     <!-- 折叠按钮 end -->
 
     <div class="ep-right-sidebar w-308px" :class="{ hide: hideRightMain }">
+      <slot name="sidebarRightTop" />
       <EpicBreadcrumb />
       <ul class="ep-actions-container">
         <li

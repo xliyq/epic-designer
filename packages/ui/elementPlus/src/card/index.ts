@@ -1,4 +1,4 @@
-import type { ComponentConfigModel } from '@epic-designer/types';
+﻿import type { ComponentConfigModel } from '@ies/designer';
 
 export default {
   component: () => import('./card'),
@@ -36,6 +36,29 @@ export default {
         label: '隐藏',
         type: 'switch',
       },
+     {
+        field:'props.gridEnable',
+        label:'网格布局',
+        type:'switch',
+        onChange: ({ value, values }) => {
+          const props = values.props ?? {}
+          if(value){
+            props.gridCols = 2;
+          }else{
+            delete props.gridCols;
+          }
+        }
+      },
+      {
+        field:'props.gridCols',
+        label:'栅格列数',
+        props:{
+          min:2,
+          max:4,
+        },
+        show:({ values }) => values.props?.gridEnable,
+        type:'number',
+      }
     ],
   },
   defaultSchema: {

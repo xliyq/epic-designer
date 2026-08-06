@@ -1,4 +1,5 @@
-import type { ComponentConfigModel } from '@epic-designer/types';
+﻿import type { ComponentConfigModel } from '@ies/designer';
+import { createDefaultDataSource } from '@ies/utils';
 
 export default {
   component: () => import('./cascader.vue'),
@@ -145,14 +146,11 @@ export default {
         type: 'switch',
       },
       {
-        description: '配置选项',
-        field: 'props.options',
-        label: '选项管理',
+        description: '配置数据来源：静态选项或远程 HTTP 请求',
+        field: 'props.dataSource',
         layout: 'vertical',
-        props: {
-          tree: true,
-        },
-        type: 'EOptionsEditor',
+        type: 'DataSourceEditor',
+        props: { tree: true },
       },
       {
         description: '校验规则需要配合表单使用',
@@ -185,20 +183,11 @@ export default {
     input: true,
     label: '级联选择器',
     props: {
-      options: [
-        {
-          label: '选项1',
-          value: '选项1',
-        },
-        {
-          label: '选项2',
-          value: '选项2',
-        },
-      ],
       placeholder: '请选择',
       props: {
         expandTrigger: 'click',
       },
+      dataSource: createDefaultDataSource(),
     },
     type: 'cascader',
   },

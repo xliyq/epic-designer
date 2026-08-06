@@ -1,9 +1,9 @@
-import type { UploadProps, UploadUserFile } from 'element-plus';
+﻿import type { UploadProps, UploadUserFile } from 'element-plus';
 
 import { computed, defineComponent, h, ref, watch } from 'vue';
 
-import { pluginManager } from '@epic-designer/manager';
-import { getFileNameByUrl, getUUID } from '@epic-designer/utils';
+import { pluginManager } from '@ies/designer';
+import { getFileNameByUrl, getUUID } from '@ies/designer';
 import { ElButton, ElMessage, ElUpload } from 'element-plus';
 
 export default defineComponent({

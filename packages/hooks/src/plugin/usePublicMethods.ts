@@ -1,7 +1,7 @@
 import type {
   PublicMethodModel,
   PublicMethodsModel,
-} from '@epic-designer/types';
+} from '@ies/types';
 
 export function usePublicMethods() {
   // 公共方法模型，存储插件的公共方法
@@ -45,6 +45,7 @@ export function usePublicMethods() {
     const description = publicMethod.describe ?? publicMethod.description;
 
     methodsMap[name] = {
+      argsConfigs: publicMethod.argsConfigs,
       description,
       handler,
       name,

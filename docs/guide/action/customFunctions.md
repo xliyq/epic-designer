@@ -267,12 +267,12 @@ epic.json 数据
 </ConfigProvider>
 
 <script setup>
-import "epic-designer/dist/style.css";
-import { EDesigner,EBuilder,pluginManager } from "epic-designer";
+import "@ies/designer/dist/designer.css";
+import { EDesigner,EBuilder,pluginManager } from "@ies/designer";
 import { ref, onMounted } from 'vue';
-import { setupAntd } from "@epic-designer/antd";
+import { setupAntd } from "@ies/antd";
 import { ConfigProvider, theme } from 'ant-design-vue'
-import { useTheme } from '@epic-designer/hooks'
+import { useTheme } from '@ies/hooks'
 const { isDark } = useTheme()
 setupAntd(pluginManager);
 

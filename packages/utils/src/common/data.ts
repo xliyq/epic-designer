@@ -1,8 +1,8 @@
-import type { ComponentSchema, PageSchema } from '@epic-designer/types';
+import type { ComponentSchema, PageSchema } from '@ies/types';
 
 import { isProxy, isRef, toRaw } from 'vue';
 
-import { pluginManager } from '@epic-designer/manager';
+import { pluginManager } from '@ies/manager';
 
 import { getUUID } from './string';
 
@@ -210,6 +210,11 @@ export function deepCompareAndModify(
 
   // 循环遍历obj2的所有属性
   for (const [key, val2] of Object.entries(obj2)) {
+    // 如果双方都是数组 → 直接替换整个数组（不递归逐元素合并）
+    if (Array.isArray(typedObj1[key]) && Array.isArray(val2)) {
+      typedObj1[key] = val2;
+      continue;
+    }
     // 如果obj1的属性值是对象或数组，则递归调用该函数
     if (
       typedObj1[key] &&
@@ -520,11 +525,12 @@ export function setValueByPath(object: object, path: string, value: unknown) {
   for (let i = 0; i < pathArray.length - 1; i++) {
     const key = pathArray[i];
 
-    // 如果当前对象的属性不存在，则创建一个新对象或数组
     // eslint-disable-next-line eqeqeq
     if (current[key] == null) {
-      // 如果路径部分是数字，创建数组；否则，创建对象
-      current[key] = Number.isNaN(Number(pathArray[i + 1])) ? {} : [];
+      // 统一创建对象，不因数字键创建数组。
+      // 表单 schema 的 field 可能是纯数字字符串（如 "1"、"2"），
+      // 它们应作为对象键而非数组索引。
+      current[key] = {};
     }
 
     current = current[key];
@@ -532,6 +538,38 @@ export function setValueByPath(object: object, path: string, value: unknown) {
 
   // 在路径的最后一层设置值
   current[pathArray[pathArray.length - 1]] = value;
+
+  return object;
+}
+
+/**
+ * 在嵌套对象中删除指定路径的值
+ * @param object - 要修改的对象
+ * @param path - 点分隔的路径字符串
+ * @returns 修改后的对象
+ */
+export function deleteValueByPath(object: object, path: string) {
+  if (!path) {
+    return object;
+  }
+
+  const pathArray = path
+    .replaceAll(/\[(\d+)\]/g, '.$1')
+    .split('.')
+    .filter(Boolean);
+
+  let current: any = object;
+
+  for (let i = 0; i < pathArray.length - 1; i++) {
+    const key = pathArray[i];
+    if (current[key] == null) {
+      return object;
+    }
+    current = current[key];
+  }
+
+  // 用 delete 彻底删除属性，而非设为 undefined（JSON.stringify 会忽略 undefined，但响应式系统中 delete 更干净）
+  delete current[pathArray[pathArray.length - 1]];
 
   return object;
 }
@@ -577,8 +615,12 @@ export function getFormSchemas(
     },
     false,
     (currentNode: ComponentSchema) => {
-      // 过滤子表单子节点
-      return currentNode.type !== 'subform';
+      // 过滤子表单、属性组、区块组子节点
+      return (
+        currentNode.type !== 'subform' &&
+        currentNode.type !== 'attribute-group' &&
+        currentNode.type !== 'section-group'
+      );
     },
   ) as ComponentSchema[];
 
@@ -1011,12 +1053,15 @@ export function reorganizeSchemasForTableView(
   formSchemas.forEach((form) => {
     if (!form.children?.length) return;
     const subTables: ComponentSchema[] = [];
+    const subForms: ComponentSchema[] = [];
 
     const inputSchemas = findSchemas(
       form.children,
       (child) => {
         const config = pluginManager.component.getConfigByType(child.type);
-        const isInput = Boolean(child.input && config && !config.isSubTable);
+        const isInput = Boolean(
+          child.input && config && !config.isSubTable && !config.isSubForm,
+        );
         if (isInput && fullWidthTypes.includes(child.type)) {
           child.class = 'ep-full-width';
         }
@@ -1030,10 +1075,21 @@ export function reorganizeSchemasForTableView(
           subTables.push(item);
           return false;
         }
+        if (config?.isSubForm) {
+          item.class = 'ep-sub-form-block ep-full-width';
+          subForms.push(item);
+          return false;
+        }
+        if (config?.isAttributeGroup || config?.isSectionGroup) {
+          item.class = 'ep-sub-form-block ep-full-width';
+          subForms.push(item);
+          return false;
+        }
         return true;
       },
     ) as ComponentSchema[];
     form.children = inputSchemas.reverse();
+    form.children.push(...subForms);
     form.children.push(...subTables);
   });
 

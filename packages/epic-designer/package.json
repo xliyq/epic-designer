@@ -1,58 +1,68 @@
 {
-  "name": "epic-designer",
-  "version": "1.1.13",
-  "description": "基于vue3的设计器,可视化开发页面表单",
+  "name": "@ies/designer",
+  "version": "0.0.4",
+  "description": "A low-code drag-and-drop form designer based on Vue 3",
   "private": false,
   "keywords": [
-    "表单设计",
-    "表单设计器",
-    "低代码",
-    "可视化",
-    "设计器",
-    "页面设计",
-    "设计工具",
-    "工作流",
     "form",
     "designer",
-    "epic-designer"
+    "low-code",
+    "visual",
+    "form-builder"
   ],
-  "bugs": {
-    "url": "https://github.com/Kchengz/epic-designer/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Kchengz/epic-designer"
-  },
-  "author": "kchengz",
+  "author": "",
+  "license": "MIT",
   "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./uno.config": "./uno.config.ts",
+    "./dist/style.css": "./dist/style.css",
+    "./dist/designer.css": "./dist/designer.css",
+    "./style.css": "./dist/style.css"
+  },
+  "sideEffects": [
+    "**/*.css",
+    "**/*.less"
+  ],
   "scripts": {
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest",
-    "lint": "eslint . --fix --ext .js,.jsx,.json,.ts,.tsx,.vue"
+    "test": "vitest"
   },
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "typings": "dist/epic-designer/index.d.ts",
+  "publishConfig": {
+    "registry": "https://npm.ies.work/"
+  },
   "peerDependencies": {
     "monaco-editor": ">=0.48.0",
     "vue": ">=3.1.0"
   },
   "dependencies": {
-    "vue-draggable-plus": "catalog:"
+    "@vueuse/core": "^13.0.0",
+    "jsep": "^1.4.0",
+    "vue-draggable-plus": "^0.6.1"
   },
   "optionalDependencies": {
-    "@epic-designer/antd": ">=1.1.2",
-    "@epic-designer/element-plus": ">=1.1.2",
-    "@epic-designer/naive-ui": ">=1.1.2"
+    "@ies/antd": ">=0.0.4",
+    "@ies/element-plus": ">=0.0.4",
+    "@ies/naive-ui": ">=0.0.4"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "@unocss/preset-rem-to-px": "catalog:",
-    "rollup-plugin-copy": "catalog:",
-    "rollup-plugin-node-externals": "catalog:",
-    "unocss": "catalog:",
-    "vitest": "catalog:",
-    "vue-tsc": "catalog:"
+    "@types/node": "^22.10.6",
+    "@unocss/preset-rem-to-px": "^0.65.3",
+    "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-node-externals": "^8.0.0",
+    "unocss": "^0.65.3",
+    "vitest": "^2.1.8",
+    "vue-tsc": "^2.2.0"
   }
 }

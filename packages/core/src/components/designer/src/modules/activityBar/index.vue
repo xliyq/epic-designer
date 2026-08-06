@@ -1,14 +1,18 @@
 <script lang="ts" setup>
-import type { ActivitybarModel } from '@epic-designer/types';
+import type { ActivitybarModel } from '@ies/types';
 
 import { computed, ref, shallowRef } from 'vue';
 
-import { EpicIcon, EpTooltip } from '@epic-designer/base-ui';
-import { pluginManager } from '@epic-designer/manager';
+import { EpicIcon, EpTooltip } from '@ies/base-ui';
+import { pluginManager } from '@ies/manager';
 
 defineOptions({
   name: 'EActivityBar',
 });
+
+const emit = defineEmits<{
+  collapse: [value: boolean]
+}>()
 const activityBars = computed(() => {
   return pluginManager.panel.activityBars.value
     .filter((item) => item.visible)
@@ -25,14 +29,16 @@ sidebarComponent.value = activityBars.value[0].component;
 function handleClick(item: ActivitybarModel, index: number) {
   if (activityBarCheckedIndex.value === index) {
     activityBarCheckedIndex.value = null;
+    emit('collapse', true);
     return false;
   }
   sidebarComponent.value = item.component;
   activityBarCheckedIndex.value = index;
+  emit('collapse', false);
 }
 </script>
 <template>
-  <div class="relative flex">
+  <div class="ep-activity-bar relative flex">
     <div class="ep-action-bar">
       <ul class="ep-actions-container flex-center flex-col gap-1">
         <EpTooltip

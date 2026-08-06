@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
 
-import { EpicIcon, EpTooltip } from '@epic-designer/base-ui';
-import { useDesignerContext, useStore } from '@epic-designer/hooks';
-import { pluginManager } from '@epic-designer/manager';
+import { EpicIcon, EpTooltip } from '@ies/base-ui';
+import { useDesignerContext, useStore } from '@ies/hooks';
+import { pluginManager } from '@ies/manager';
 import {
   convertKFormData,
   deepCompareAndModify,
   migrateComponentProps,
-} from '@epic-designer/utils';
+} from '@ies/utils';
 
 import EpicPreviewJson from './previewJson.vue';
 

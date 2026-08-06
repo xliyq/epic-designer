@@ -1,5 +1,5 @@
-<script lang="ts" setup>
-import type { ComponentSchema } from '@epic-designer/types';
+﻿<script lang="ts" setup>
+import type { ComponentSchema } from '@ies/designer';
 
 import { computed, useAttrs } from 'vue';
 
@@ -29,7 +29,7 @@ const getProps = computed<Record<string, any>>(() => ({
   ...attrs,
   class: 'ep-el-modal ep-scoped',
   'destroy-on-close': true,
-  title: props.componentSchema?.label ?? '',
+  title: attrs.title ?? props.componentSchema?.label ?? '',
 }));
 
 const children = computed(() => props.componentSchema?.children ?? []);
@@ -50,7 +50,7 @@ function handleClose() {
 <template>
   <ElDialog
     v-bind="getProps"
-    :title="getProps.label ?? ''"
+    :title="getProps.title ?? ''"
     destroy-on-close
     append-to-body
     @update:model-value="updateModelValue"

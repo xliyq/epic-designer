@@ -1,4 +1,4 @@
-import { pluginManager } from '@epic-designer/manager';
+import { pluginManager } from '@ies/manager';
 
 import customValidateComponent, {
   CUSTOM_VALIDATE_COMPONENT_TYPE,

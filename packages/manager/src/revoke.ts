@@ -2,7 +2,7 @@ import type {
   ComponentSchema,
   DesignerState,
   PageSchema,
-} from '@epic-designer/types';
+} from '@ies/types';
 
 import { ref } from 'vue';
 
@@ -10,7 +10,7 @@ import {
   debounce,
   deepCompareAndModify,
   findSchemaById,
-} from '@epic-designer/utils';
+} from '@ies/utils';
 
 /**
  * 历史记录模型 - 用于存储页面状态的快照

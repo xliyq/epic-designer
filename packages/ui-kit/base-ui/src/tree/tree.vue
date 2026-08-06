@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import type { ComponentSchema } from '@epic-designer/types';
+import type { ComponentSchema } from '@ies/types';
 
 import type { TreeProps } from './types';
 
-import { computed, provide, ref, useSlots } from 'vue';
+import { computed, provide, ref, useSlots, watch } from 'vue';
 
-import { EpicIcon } from '@epic-designer/base-ui';
-import { pluginManager } from '@epic-designer/manager';
+import { EpicIcon } from '@ies/base-ui';
+import { pluginManager } from '@ies/manager';
 
 import ETreeNodes from './treeNodes.vue';
 import { TREE_CONTEXT_KEY } from './useTreeContext';
@@ -47,12 +47,24 @@ const getTreeData = computed({
   },
 });
 
+// 数据到达后自动展开第一个（根）节点
+watch(getTreeData, (val) => {
+  if (val.length > 0 && val[0]?.id) {
+    if (!expandedKeys.value.includes(val[0].id)) {
+      expandedKeys.value.push(val[0].id);
+    }
+  }
+}, { immediate: true });
+
 /**
  * 通过label 过滤节点
  * @param tree 节点树
  * @param labelToFilter 过滤关键字
  */
 function filterTreeByLabel(tree, labelToFilter) {
+  // 无搜索关键字时直接返回原数组，保持引用不变，Vue 可追踪 children 变化
+  if (!labelToFilter) return tree;
+
   const filteredTree: ComponentSchema[] = [];
 
   tree.forEach((item: ComponentSchema) => {

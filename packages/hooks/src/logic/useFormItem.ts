@@ -1,4 +1,4 @@
-import type { FormDataModel } from '@epic-designer/types';
+import type { FormDataModel } from '@ies/types';
 
 import { inject, reactive } from 'vue';
 

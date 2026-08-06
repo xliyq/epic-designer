@@ -1,4 +1,4 @@
-import type { ComponentSchema } from '@epic-designer/types';
+import type { ComponentSchema } from '@ies/types';
 
 export interface TreeProps {
   draggable?: boolean;

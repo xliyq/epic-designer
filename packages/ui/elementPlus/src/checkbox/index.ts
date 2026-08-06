@@ -1,4 +1,5 @@
-import type { ComponentConfigModel } from '@epic-designer/types';
+﻿import type { ComponentConfigModel } from '@ies/designer';
+import { createDefaultDataSource } from '@ies/utils';
 
 export default {
   component: () => import('./checkbox'),
@@ -88,10 +89,10 @@ export default {
         type: 'switch',
       },
       {
-        field: 'props.options',
-        label: '选项管理',
+        description: '配置数据来源：静态选项或远程 HTTP 请求',
+        field: 'props.dataSource',
         layout: 'vertical',
-        type: 'EOptionsEditor',
+        type: 'DataSourceEditor',
       },
       {
         description: '校验规则需要配合表单使用',
@@ -116,20 +117,25 @@ export default {
     input: true,
     label: '复选框',
     props: {
-      options: [
-        {
-          label: '选项1',
-          value: '选项1',
-        },
-        {
-          label: '选项2',
-          value: '选项2',
-        },
-      ],
+      dataSource: createDefaultDataSource(),
     },
     type: 'checkbox',
   },
   groupName: '表单',
   icon: 'icon--epic--dialogs-outline-rounded',
   sort: 860,
+  attributeSync: {
+    charValue: {
+      write: (rawValue) =>
+        Array.isArray(rawValue) ? rawValue.join(',') : String(rawValue ?? ''),
+      read: (fieldValue) =>
+        fieldValue ? String(fieldValue).split(',') : [],
+      source: '选中值列表 (逗号拼接)',
+    },
+    charDisplay: {
+      write: (rawValue) =>
+        Array.isArray(rawValue) ? rawValue.join(',') : String(rawValue ?? ''),
+      source: '选中项中文名 (逗号拼接)',
+    },
+  },
 } as ComponentConfigModel;

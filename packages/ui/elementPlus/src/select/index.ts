@@ -1,7 +1,8 @@
-import type { ComponentConfigModel } from '@epic-designer/types';
+﻿import type { ComponentConfigModel } from '@ies/designer';
+import { createDefaultDataSource } from '@ies/utils';
 
 export default {
-  component: () => import('./select'),
+  component: () => import('./select.vue'),
   config: {
     attribute: [
       {
@@ -226,11 +227,10 @@ export default {
         type: 'switch',
       },
       {
-        description: '配置选项',
-        field: 'props.options',
-        label: '选项管理',
+        description: '配置数据来源：静态选项或远程 HTTP 请求',
+        field: 'props.dataSource',
         layout: 'vertical',
-        type: 'EOptionsEditor',
+        type: 'DataSourceEditor',
       },
       {
         description: '校验规则需要配合表单使用',
@@ -253,23 +253,25 @@ export default {
     label: '选择框',
     props: {
       effect: 'light',
-      options: [
-        {
-          label: '选项1',
-          value: '选项1',
-        },
-        {
-          label: '选项2',
-          value: '选项2',
-        },
-      ],
       placeholder: '请选择',
       placement: 'bottom-start',
       size: 'default',
+      dataSource: createDefaultDataSource(),
     },
     type: 'select',
   },
   groupName: '表单',
   icon: 'icon--epic--select',
   sort: 900,
+  attributeSync: {
+    charValue: {
+      write: (rawValue) => rawValue,
+      read: (fieldValue) => fieldValue,
+      source: '选中值 (value)',
+    },
+    charDisplay: {
+      write: (rawValue, extra) => extra?.option?.label ?? null,
+      source: '选中项中文名 (label)',
+    },
+  },
 } as ComponentConfigModel;
