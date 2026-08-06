@@ -12,8 +12,10 @@
 import { execSync } from 'node:child_process';
 import { existsSync, renameSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = resolve(import.meta.dirname, '..');
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const root = resolve(__dirname, '..');
 const dest = resolve(root, '..');
 
 const packages = [
