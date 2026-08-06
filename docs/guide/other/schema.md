@@ -55,6 +55,7 @@ interface ComponentSchema {
 | `readonly` | `boolean` | 只读 |
 | `disabled` | `boolean` | 禁用 |
 | `hidden` | `boolean` | 隐藏 |
+| `submitData` | `boolean` | 隐藏时是否提交数据（默认 `true`，仅 `hidden=true` 时生效） |
 | `span` | `number` | 网格模式下当前字段占几列 |
 | `rules` | `FormItemRule[]` | 校验规则 |
 

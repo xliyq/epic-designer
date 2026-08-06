@@ -75,6 +75,10 @@ export default defineConfig({
               text: '暗黑模式',
             },
             {
+              link: '/guide/start/layoutGuide',
+              text: '布局指南',
+            },
+            {
               link: '/guide/other/hotkeys',
               text: '快捷键',
             },
@@ -95,11 +99,19 @@ export default defineConfig({
               link: '/guide/components/EBuilder',
               text: 'Builder 生成器',
             },
+            {
+              link: '/guide/components/EMultiViewDesigner',
+              text: 'MultiViewDesigner 多视图设计器',
+            },
           ],
         },
         {
           text: '事件动作',
           items: [
+            {
+              link: '/guide/action/presetActions',
+              text: '预制动作',
+            },
             {
               link: '/guide/action/customFunctions',
               text: '自定义函数',
