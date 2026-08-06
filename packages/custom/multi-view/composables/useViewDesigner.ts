@@ -72,7 +72,7 @@ export function useViewDesigner() {
             props: { ...dataModel.schemas[0].props },
             children: [],
           }],
-          script: '',
+          script: dataModel.script ?? '',
         }
       }
     }
@@ -120,7 +120,7 @@ export function useViewDesigner() {
         props: { ...dataModel.schemas[0].props },
         children: [],
       }],
-      script: '',
+      script: dataModel.script ?? '',
     }
     currentViewId.value = id
   }

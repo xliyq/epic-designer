@@ -159,6 +159,13 @@ function setCanvasChildren(children: ComponentSchema[]) {
 }
 
 /**
+ * 设置页面脚本（script 为页面级共享字段，不随视图切换而交换）
+ */
+function setScript(script: string) {
+  pageSchema.script = script;
+}
+
+/**
  * 返回当前页面数据的 PageSchema 对象，包含页面当前的 schemas 和 script 数据。
  */
 function getData(): PageSchema {
@@ -213,6 +220,7 @@ defineExpose({
   save: handleSave,
   setCanvasChildren,
   setData,
+  setScript,
 });
 </script>
 <template>

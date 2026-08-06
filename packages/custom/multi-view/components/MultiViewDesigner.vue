@@ -90,9 +90,10 @@ if (props.dataModel || props.viewTypes || props.views) {
 watch(() => props.dataModel, (newModel) => {
   if (!newModel) return
   setDataModel(newModel)
-  // 数据模型模式下，实时更新画布
+  // 数据模型模式下，实时更新画布和 script
   if (mode.value === 'model') {
     designerRef.value?.setCanvasChildren(deepClone(newModel.schemas[0]?.children ?? []))
+    designerRef.value?.setScript(newModel.script ?? '')
   }
 }, { deep: true })
 
@@ -232,6 +233,11 @@ function handleDesignerReady() {
   if (mode.value === 'model' && dataModel.schemas[0]?.children?.length) {
     designerRef.value?.setCanvasChildren(deepClone(dataModel.schemas[0]?.children ?? []))
   }
+  // 根据模式推送对应的 script
+  const script = mode.value === 'model'
+    ? dataModel.script
+    : currentView.value?.script
+  designerRef.value?.setScript(script ?? '')
   nextTick(() => emit('ready'))
 }
 
@@ -319,10 +325,11 @@ function switchToView(viewId: string) {
   const schema = getDesignerData()
   if (!schema) return
 
-  // 保存当前 children 到数据模型
+  // 保存当前 children 和 script 到数据模型
   if (dataModel.schemas[0]) {
     dataModel.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
   }
+  dataModel.script = schema.script ?? ''
 
   // 保存数据模型的历史记录
   saveCurrentHistory('model')
@@ -331,8 +338,10 @@ function switchToView(viewId: string) {
   const view = views[viewId]
   if (view) {
     designerRef.value?.setCanvasChildren(deepClone(view.schemas[0]?.children ?? []))
+    designerRef.value?.setScript(view.script ?? '')
   } else {
     designerRef.value?.setCanvasChildren([])
+    designerRef.value?.setScript('')
   }
 
   // 恢复视图的历史记录
@@ -346,15 +355,17 @@ function switchToModel() {
   const schema = getDesignerData()
   if (!schema) return
 
-  // 保存当前 children 和历史记录到当前视图
+  // 保存当前 children 和 script 到当前视图
   const view = currentView.value
   if (view) {
     view.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
+    view.script = schema.script ?? ''
     saveCurrentHistory(currentViewId.value)
   }
 
-  // 恢复数据模型字段
+  // 恢复数据模型字段和 script
   designerRef.value?.setCanvasChildren(deepClone(dataModel.schemas[0]?.children ?? []))
+  designerRef.value?.setScript(dataModel.script ?? '')
 
   // 恢复数据模型的历史记录
   restoreHistory('model')
@@ -366,12 +377,13 @@ function switchToModel() {
 function handleSwitchView(newViewId: string) {
   if (mode.value !== 'view' || newViewId === currentViewId.value) return
 
-  // 保存当前视图的 children 和历史记录（此时 currentView 还是旧视图）
+  // 保存当前视图的 children、script 和历史记录（此时 currentView 还是旧视图）
   const schema = getDesignerData()
   if (schema) {
     const oldView = currentView.value
     if (oldView) {
       oldView.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
+      oldView.script = schema.script ?? ''
       saveCurrentHistory(currentViewId.value)
     }
   }
@@ -389,6 +401,7 @@ function switchToAnotherView(newViewId: string) {
   const newView = views[newViewId]
   if (newView) {
     designerRef.value?.setCanvasChildren(deepClone(newView.schemas[0]?.children ?? []))
+    designerRef.value?.setScript(newView.script ?? '')
   }
 
   // 恢复新视图的历史记录
@@ -480,10 +493,12 @@ function handleSave() {
   if (schema) {
     if (mode.value === 'model') {
       dataModel.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
+      dataModel.script = schema.script ?? ''
     } else {
       const view = currentView.value
       if (view) {
         view.schemas[0].children = deepClone(schema.schemas[0]?.children ?? [])
+        view.script = schema.script ?? ''
       }
     }
   }
