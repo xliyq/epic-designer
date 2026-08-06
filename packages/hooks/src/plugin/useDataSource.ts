@@ -9,6 +9,7 @@ import type { ComputedRef, Ref } from 'vue';
 import { ref, watch } from 'vue';
 
 import { pluginManager } from '@ies/manager';
+import { deepClone } from '@ies/utils';
 
 /**
  * 通用数据源加载 composable
@@ -133,20 +134,21 @@ export function useDataSource(
     { deep: true, immediate: true },
   );
 
-  // 获取当前完整选项数组
+  // 获取当前完整选项数组（深拷贝快照，避免返回响应式代理对象）
   function getOptions(): DataSourceOption[] {
-    return options.value ?? [];
+    return deepClone(options.value ?? []);
   }
 
-  // 获取当前选中项的完整数据对象（按 value 字段匹配，非仅 value）
+  // 获取当前选中项的完整数据对象（按 value 字段匹配，非仅 value；深拷贝快照，避免返回响应式代理对象）
   function getSelected(): any {
     const val = modelValueRef?.value;
     if (val == null) return null;
     const opts = options.value ?? [];
     if (Array.isArray(val)) {
-      return opts.filter((opt: any) => val.includes(opt.value));
+      return deepClone(opts.filter((opt: any) => val.includes(opt.value)));
     }
-    return opts.find((opt: any) => opt.value === val) ?? null;
+    const found = opts.find((opt: any) => opt.value === val) ?? null;
+    return found ? deepClone(found) : null;
   }
 
   return {

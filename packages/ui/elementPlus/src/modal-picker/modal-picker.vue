@@ -25,6 +25,7 @@ import zhCn from 'element-plus/es/locale/lang/zh-cn';
 
 import { useFormData } from '@ies/hooks';
 import { pluginManager } from '@ies/manager';
+import { deepClone } from '@ies/utils';
 
 // 样式导入
 import 'element-plus/es/components/button/style/css';
@@ -99,6 +100,15 @@ const modalTitle = computed(() => (attrs.modalTitle as string) || '请选择');
 const modalWidth = computed(() => (attrs.modalWidth as string) || '800px');
 
 const modelValue = computed(() => attrs.modelValue);
+
+// 本地同步缓存 modelValue，确认/清空时立即写入，解决 attrs 异步更新导致 getSelected 拿到旧值
+const modelValueRef = ref(attrs.modelValue);
+watch(
+  () => attrs.modelValue,
+  (val) => {
+    modelValueRef.value = val;
+  },
+);
 
 // 判断是否服务端分页
 const isServerPaged = computed(() => {
@@ -392,14 +402,15 @@ function rowClassName({ row }: { row: any }) {
 function handleConfirm() {
   const values = tempSelected.value.map((item) => getItemValue(item));
   const newVal = multiple.value ? values : (values[0] ?? null);
-  emit('update:modelValue', newVal);
-  emit('change', newVal);
-  // 更新缓存
+  // 先更新缓存和本地值，保证 change 回调里调 getSelected() 能取到数据
   const newCache = new Map<any, any>();
   for (const item of tempSelected.value) {
     newCache.set(getItemValue(item), item);
   }
   selectedCache.value = newCache;
+  modelValueRef.value = newVal;
+  emit('update:modelValue', newVal);
+  emit('change', newVal);
   dialogVisible.value = false;
 }
 
@@ -408,15 +419,40 @@ function handleCancel() {
   dialogVisible.value = false;
 }
 
+// ============ Expose ============
+
+defineExpose({
+  /** 获取当前所有选项列表（深拷贝快照，避免返回响应式代理对象） */
+  getOptions() {
+    // 前端分页时 allData 是全量，服务端分页时返回当前页数据
+    return deepClone(allData.value.length > 0 ? allData.value : tableData.value);
+  },
+  /** 获取当前选中项的完整数据对象（按 rowKey 字段匹配，与 select 的 getSelected 行为一致；深拷贝快照） */
+  getSelected() {
+    const val = modelValueRef.value;
+    if (val == null) return null;
+    if (Array.isArray(val)) {
+      return val
+        .map((v) => selectedCache.value.get(v))
+        .filter(Boolean)
+        .map((item) => deepClone(item));
+    }
+    const item = selectedCache.value.get(val);
+    return item ? deepClone(item) : null;
+  },
+});
+
 // ============ 外部交互 ============
 
 // 清空
 function handleClear(e: Event) {
   e.stopPropagation();
-  emit('update:modelValue', multiple.value ? [] : null);
-  emit('change', multiple.value ? [] : null);
+  const newVal = multiple.value ? [] : null;
   selectedCache.value = new Map();
   tempSelected.value = [];
+  modelValueRef.value = newVal;
+  emit('update:modelValue', newVal);
+  emit('change', newVal);
 }
 
 // 多选 tag 关闭
@@ -425,10 +461,11 @@ function handleTagClose(value: any) {
   const val = modelValue.value;
   if (!Array.isArray(val)) return;
   const newVal = val.filter((v) => v !== value);
-  emit('update:modelValue', newVal);
-  emit('change', newVal);
   selectedCache.value.delete(value);
   selectedCache.value = new Map(selectedCache.value);
+  modelValueRef.value = newVal;
+  emit('update:modelValue', newVal);
+  emit('change', newVal);
 }
 
 // ============ 回显机制 ============

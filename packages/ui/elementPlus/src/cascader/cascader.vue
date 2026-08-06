@@ -2,6 +2,7 @@
 import { computed, ref, useAttrs, watch } from 'vue';
 import { ElCascader } from 'element-plus';
 import { useDataSource, useFormData } from '@ies/hooks';
+import { deepClone } from '@ies/utils';
 
 const props = withDefaults(
   defineProps<{
@@ -71,19 +72,22 @@ function getSelected(): any {
 
   // 多选模式：val 是路径数组的数组
   if (Array.isArray(val) && Array.isArray(val[0])) {
-    return val
-      .map((path: any[]) => findNodesByPath(opts, path))
-      .filter((nodes: any[]) => nodes.length > 0);
+    return deepClone(
+      val
+        .map((path: any[]) => findNodesByPath(opts, path))
+        .filter((nodes: any[]) => nodes.length > 0),
+    );
   }
 
   // 单选 + emitPath: true：val 是路径数组
   if (Array.isArray(val)) {
     const nodes = findNodesByPath(opts, val);
-    return nodes.length > 0 ? nodes : null;
+    return nodes.length > 0 ? deepClone(nodes) : null;
   }
 
   // 单选 + emitPath: false：val 是叶子值
-  return findLeafNode(opts, val);
+  const leaf = findLeafNode(opts, val);
+  return leaf ? deepClone(leaf) : null;
 }
 
 defineExpose({ getOptions, getSelected });
