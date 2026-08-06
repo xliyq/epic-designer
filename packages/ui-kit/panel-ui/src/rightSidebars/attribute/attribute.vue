@@ -142,7 +142,24 @@ function handleComponentTypeChange(newType: string) {
 
     const baseAttributes =
       componentConfigs[selectedNode.value.type]?.config?.attribute ?? [];
-    const allAttributes = [...baseAttributes];
+    const allAttributes: ComponentSchema[] = [];
+
+    // 拷贝组件自身属性，并在 hidden 属性后紧跟插入 submitData
+    for (const attr of baseAttributes) {
+      allAttributes.push(attr);
+      if (attr.field === 'props.hidden') {
+        allAttributes.push({
+          field: 'props.submitData',
+          label: '提交数据',
+          type: 'switch',
+          props: {
+            defaultValue: true,
+          },
+          show: ({ values }) => values.props?.hidden === true,
+          description: '组件隐藏时，是否仍提交表单数据',
+        });
+      }
+    }
 
     // 所有组件统一注入公共属性
     allAttributes.push({

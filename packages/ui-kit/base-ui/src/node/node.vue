@@ -11,6 +11,7 @@ import {
   computed,
   defineComponent,
   getCurrentInstance,
+  inject,
   onBeforeUnmount,
   provide,
   reactive,
@@ -38,6 +39,7 @@ import {
   deepClone,
   deepCompareAndModify,
   deepEqual,
+  deleteValueByPath,
   getValueByPath,
   setValueByPath,
 } from '@ies/utils';
@@ -53,6 +55,7 @@ interface EpNodeProps {
 }
 defineOptions({
   name: 'EpNode',
+  inheritAttrs: false,
 });
 
 const props = withDefaults(defineProps<EpNodeProps>(), {
@@ -210,6 +213,26 @@ const show = computed(() => {
 
   return innerSchema.show?.({ values: formData }) ?? true;
 });
+
+/**
+ * 提交数据开关：通过 provide/inject 实现父子级联
+ * - 父组件 submitData=false → 子组件继承 false（除非子组件显式覆盖）
+ * - 默认 true（不显式设置时）
+ */
+const parentSubmitData = inject('parentSubmitData', ref(true));
+
+const effectiveSubmitData = computed(() => {
+  return innerSchema.props?.submitData ?? parentSubmitData.value;
+});
+
+provide('parentSubmitData', effectiveSubmitData);
+
+/**
+ * 隐藏但需要提交数据时，是否静默渲染子组件以触发初始化
+ */
+const shouldRenderHiddenChildren = computed(
+  () => !show && !pageManager.isDesignMode.value && effectiveSubmitData.value && !!innerSchema.children?.length,
+);
 
 // 获取FormItemProps
 const getFormItemProps = computed<ComponentSchema>(() => {
@@ -524,6 +547,20 @@ watch(
   },
 );
 
+// 当 hidden=true 且 submitData=false 时，从 formData 中清除值
+watch(
+  [() => innerSchema.props?.hidden, effectiveSubmitData],
+  () => {
+    if (innerSchema.props?.hidden && !effectiveSubmitData.value) {
+      const writePath = fullField.value;
+      if (writePath) {
+        deleteValueByPath(formData, writePath);
+      }
+    }
+  },
+  { immediate: true },
+);
+
 // 添加组件实例
 handleAddComponentInstance();
 
@@ -562,4 +599,14 @@ onBeforeUnmount(handleVnodeUnmounted);
       <!-- 渲染布局设计子组件列表 end -->
     </component>
   </dynamicFormItem>
+  <!-- 隐藏但需要提交数据时，静默渲染子组件以触发初始化 -->
+  <template v-if="shouldRenderHiddenChildren">
+    <div style="display:none" aria-hidden="true">
+      <EpNode
+        v-for="child in innerSchema.children"
+        :key="child.id"
+        :component-schema="child"
+      />
+    </div>
+  </template>
 </template>

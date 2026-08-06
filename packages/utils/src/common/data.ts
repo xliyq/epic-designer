@@ -543,6 +543,38 @@ export function setValueByPath(object: object, path: string, value: unknown) {
 }
 
 /**
+ * 在嵌套对象中删除指定路径的值
+ * @param object - 要修改的对象
+ * @param path - 点分隔的路径字符串
+ * @returns 修改后的对象
+ */
+export function deleteValueByPath(object: object, path: string) {
+  if (!path) {
+    return object;
+  }
+
+  const pathArray = path
+    .replaceAll(/\[(\d+)\]/g, '.$1')
+    .split('.')
+    .filter(Boolean);
+
+  let current: any = object;
+
+  for (let i = 0; i < pathArray.length - 1; i++) {
+    const key = pathArray[i];
+    if (current[key] == null) {
+      return object;
+    }
+    current = current[key];
+  }
+
+  // 用 delete 彻底删除属性，而非设为 undefined（JSON.stringify 会忽略 undefined，但响应式系统中 delete 更干净）
+  delete current[pathArray[pathArray.length - 1]];
+
+  return object;
+}
+
+/**
  *  获取表单字段
  * @param schemas 页面结构数据
  * @param formName 表单name
